@@ -1,0 +1,25 @@
+{
+  "name": "logseq-omnivore",
+  "version": "0.0.1",
+  "description": "Read Omnivore using Logseq blocks.",
+  "main": "dist/index.html",
+  "targets": {
+    "main": false
+  },
+  "default": "dist/index.html",
+  "author": "Logseq",
+  "scripts": {
+    "dev": "parcel ./index.html --public-url ./",
+    "build": "parcel build --public-url . --no-source-maps index.html"
+  },
+  "license": "MIT",
+  "logseq": {
+    "id": "_rw0rys037"
+  },
+  "dependencies": {
+    "@logseq/libs": "^0.0.1-alpha.22"
+  },
+  "devDependencies": {
+    "parcel": "^2.0.0"
+  }
+}
