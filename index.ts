@@ -14,16 +14,16 @@ async function loadOmnivoreData(token: string) {
       "content-type": "application/json",
       authorization: token,
     },
-    body: '{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            cursor\\n            node {\\n              id\\n              title\\n              slug\\n              url\\n              pageType\\n              contentReader\\n              createdAt\\n              isArchived\\n              readingProgressPercent\\n              readingProgressAnchorIndex\\n              author\\n              image\\n              description\\n              publishedAt\\n              ownedByViewer\\n              originalArticleUrl\\n              uploadFileId\\n              labels {\\n                id\\n                name\\n                color\\n              }\\n              pageId\\n              shortId\\n              quote\\n              annotation\\n              state\\n              siteName\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n            hasPreviousPage\\n            startCursor\\n            endCursor\\n            totalCount\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"0","first":1}}',
+    body: '{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            cursor\\n            node {\\n              id\\n              title\\n              slug\\n              url\\n              pageType\\n              contentReader\\n              createdAt\\n              isArchived\\n              readingProgressPercent\\n              readingProgressAnchorIndex\\n              author\\n              image\\n              description\\n              publishedAt\\n              ownedByViewer\\n              originalArticleUrl\\n              uploadFileId\\n              labels {\\n                id\\n                name\\n                color\\n              }\\n              pageId\\n              shortId\\n              quote\\n              annotation\\n              state\\n              siteName\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n            hasPreviousPage\\n            startCursor\\n            endCursor\\n            totalCount\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"0","first":10}}',
     method: "POST",
   }).then((res) => res.json());
 
   const ret = edges || [];
 
-  return ret.map(({ node }, i) => {
-    const { title, url, author, description, slug } = node;
+  return ret.map(({ node }) => {
+    const { title, url, author, description } = node;
 
-    return `${i}. [${title}](${url}) [:small.opacity-50 "🔥 ${author} 💬 ${slug}"]
+    return `[${title}](${url}) [:small.opacity-50 "${author}"]
 collapsed:: true    
 > ${description}`;
   });
@@ -78,7 +78,7 @@ function main(baseInfo: LSPluginBaseInfo) {
           `## 🔖 Omnivore - ${blockTitle}`
         );
       } catch (e) {
-        logseq.App.showMsg(e.toString(), "warning");
+        logseq.UI.showMsg(e.toString(), "warning");
         console.error(e);
       } finally {
         loading = false;
