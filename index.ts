@@ -4,7 +4,7 @@ import { LSPluginBaseInfo } from "@logseq/libs/dist/LSPlugin";
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t));
 
 async function loadOmnivoreData(token: string) {
-  const endpoint = "http://localhost:4000/api/graphql";
+  const endpoint = "https://api-demo.omnivore.app/api/graphql";
   const {
     data: {
       search: { edges },
