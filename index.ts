@@ -4,11 +4,12 @@ import { LSPluginBaseInfo } from "@logseq/libs/dist/libs";
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t));
 
 async function loadOmnivoreData(token: string) {
+  const endpoint = "http://localhost:4000/api/graphql";
   const {
     data: {
       search: { edges },
     },
-  } = await fetch("http://localhost:4000/api/graphql", {
+  } = await fetch(endpoint, {
     headers: {
       "content-type": "application/json",
       authorization: token,
@@ -88,15 +89,13 @@ function main(baseInfo: LSPluginBaseInfo) {
   logseq.App.registerUIItem("toolbar", {
     key: "logseq-omnivore",
     template: `
-      <a data-on-click="loadOmnivore"
-         class="button">
-        <i class="ti ti-brand-reddit"></i>
-      </a>
+      <a data-on-click="loadOmnivore" style="font-size: initial;"
+         class="button">O</a>
     `,
   });
 
   logseq.provideStyle(`
-    [data-injected-ui=logseq-reddit-${baseInfo.id}] {
+    [data-injected-ui=logseq-omnivore-${baseInfo.id}] {
       display: flex;
       align-items: center;
     }

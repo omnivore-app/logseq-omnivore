@@ -7,7 +7,11 @@
     "main": false
   },
   "default": "dist/index.html",
-  "author": "Logseq",
+  "author": "Hongbo Wu",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sywhb/logseq-omnivore"
+  },
   "scripts": {
     "dev": "parcel ./index.html --public-url ./",
     "build": "parcel build --public-url . --no-source-maps index.html"
