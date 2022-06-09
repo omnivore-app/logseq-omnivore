@@ -3,7 +3,7 @@ import { LSPluginBaseInfo } from "@logseq/libs/dist/LSPlugin";
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t));
 
-async function loadOmnivoreData(token: string) {
+async function loadOmnivoreData(token: string): Promise<any[]> {
   const endpoint = "https://api-demo.omnivore.app/api/graphql";
   const {
     data: {
@@ -65,13 +65,11 @@ function main(baseInfo: LSPluginBaseInfo) {
           { before: true }
         );
 
-        let blocks = await loadOmnivoreData(token);
+        const blocks = await loadOmnivoreData(token);
 
-        blocks = blocks.map((it) => ({ content: it }));
-
-        await logseq.Editor.insertBatchBlock(targetBlock.uuid, blocks, {
-          sibling: false,
-        });
+        for (const block of blocks) {
+          await logseq.Editor.insertBlock(targetBlock.uuid, block);
+        }
 
         await logseq.Editor.updateBlock(
           targetBlock.uuid,
