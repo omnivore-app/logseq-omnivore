@@ -2,9 +2,30 @@ import "@logseq/libs";
 import { LSPluginBaseInfo } from "@logseq/libs/dist/LSPlugin";
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t));
+const endpoint = "https://api-demo.omnivore.app/api/graphql";
 
-async function loadOmnivoreData(token: string): Promise<any[]> {
-  const endpoint = "https://api-demo.omnivore.app/api/graphql";
+async function loadArticle(
+  username: string,
+  slug: string,
+  token: string
+): Promise<any> {
+  const {
+    data: {
+      article: { article },
+    },
+  } = await fetch(endpoint, {
+    headers: {
+      "content-type": "application/json",
+      authorization: token,
+    },
+    body: `{\"query\":\"\\n  query GetArticle(\\n    $username: String!\\n    $slug: String!\\n    $includeFriendsHighlights: Boolean\\n  ) {\\n    article(username: $username, slug: $slug) {\\n      ... on ArticleSuccess {\\n        article {\\n          ...ArticleFields\\n          content\\n          highlights(input: { includeFriends: $includeFriendsHighlights }) {\\n            ...HighlightFields\\n          }\\n          labels {\\n            ...LabelFields\\n          }\\n        }\\n      }\\n      ... on ArticleError {\\n        errorCodes\\n      }\\n    }\\n  }\\n  \\n  fragment ArticleFields on Article {\\n    id\\n    title\\n    url\\n    author\\n    image\\n    savedAt\\n    createdAt\\n    publishedAt\\n    contentReader\\n    originalArticleUrl\\n    readingProgressPercent\\n    readingProgressAnchorIndex\\n    slug\\n    isArchived\\n    description\\n    linkId\\n    state\\n  }\\n\\n  \\n  fragment HighlightFields on Highlight {\\n    id\\n    shortId\\n    quote\\n    prefix\\n    suffix\\n    patch\\n    annotation\\n    createdByMe\\n    updatedAt\\n    sharedAt\\n  }\\n\\n  \\n  fragment LabelFields on Label {\\n    id\\n    name\\n    color\\n    description\\n    createdAt\\n  }\\n\\n\",\"variables\":{\"username\":\"${username}\",\"slug\":\"${slug}\",\"includeFriendsHighlights\":false}}`,
+    method: "POST",
+  }).then((res) => res.json());
+
+  return article;
+}
+
+async function loadArticles(username: string, token: string): Promise<any[]> {
   const {
     data: {
       search: { edges },
@@ -18,15 +39,22 @@ async function loadOmnivoreData(token: string): Promise<any[]> {
     method: "POST",
   }).then((res) => res.json());
 
-  const ret = edges || [];
+  const ret = [];
 
-  return ret.map(({ node }) => {
-    const { title, url, author, description } = node;
+  for (const { node } of edges) {
+    const { title, url, author, description, slug } = node;
 
-    return `[${title}](${url}) [:small.opacity-50 "${author}"]
+    const { highlights } = await loadArticle(username, slug, token);
+
+    ret.push({
+      content: `[${title}](${url}) [:small.opacity-50 "${author}"]
 collapsed:: true    
-> ${description}`;
-  });
+> ${description}.`,
+      highlights: highlights.map((h) => h.quote),
+    });
+  }
+
+  return ret;
 }
 
 /**
@@ -35,7 +63,7 @@ collapsed:: true
  */
 function main(baseInfo: LSPluginBaseInfo) {
   let loading = false;
-  const { token } = logseq.settings;
+  const { token, username } = logseq.settings;
 
   logseq.provideModel({
     async loadOmnivore() {
@@ -43,7 +71,8 @@ function main(baseInfo: LSPluginBaseInfo) {
       if (loading) return;
 
       const pageName = "Omnivore";
-      const blockTitle = new Date().toLocaleString();
+      const blockTitle = "## 🔖 Articles";
+      const highlightTitle = "### 🔍 Highlights";
 
       logseq.App.pushState("page", { name: pageName });
 
@@ -65,16 +94,26 @@ function main(baseInfo: LSPluginBaseInfo) {
           { before: true }
         );
 
-        const blocks = await loadOmnivoreData(token);
+        const blocks = await loadArticles(username, token);
 
-        for (const block of blocks) {
-          await logseq.Editor.insertBlock(targetBlock.uuid, block);
+        for (const { content, highlights } of blocks) {
+          const articleBlock = await logseq.Editor.insertBlock(
+            targetBlock.uuid,
+            content
+          );
+          if (highlights.length) {
+            const highlightBlock = await logseq.Editor.insertBlock(
+              articleBlock.uuid,
+              highlightTitle
+            );
+
+            for (const highlight of highlights) {
+              await logseq.Editor.insertBlock(highlightBlock.uuid, highlight);
+            }
+          }
         }
 
-        await logseq.Editor.updateBlock(
-          targetBlock.uuid,
-          `## 🔖 Omnivore - ${blockTitle}`
-        );
+        await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle);
       } catch (e) {
         logseq.UI.showMsg(e.toString(), "warning");
         console.error(e);
