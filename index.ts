@@ -73,6 +73,7 @@ function main(baseInfo: LSPluginBaseInfo) {
       const pageName = "Omnivore";
       const blockTitle = "## 🔖 Articles";
       const highlightTitle = "### 🔍 Highlights";
+      const labelTitle = "### 🏷 Labels";
 
       logseq.App.pushState("page", { name: pageName });
 
