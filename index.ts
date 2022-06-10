@@ -2,7 +2,7 @@ import "@logseq/libs";
 import { LSPluginBaseInfo } from "@logseq/libs/dist/LSPlugin";
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t));
-const endpoint = "https://api-demo.omnivore.app/api/graphql";
+const endpoint = "https://api.omnivore.app/api/graphql";
 
 async function loadArticle(
   username: string,
