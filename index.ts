@@ -91,27 +91,63 @@ function main(baseInfo: LSPluginBaseInfo) {
 
         targetBlock = await logseq.Editor.insertBlock(
           targetBlock.uuid,
-          "🚀 Fetching Omnivore ...",
+          "🚀 Fetching articles ...",
           { before: true }
         );
 
-        const blocks = await loadArticles(username, token);
+        const size = 100;
+        let after = 0;
+        while (true) {
+          const [blocks, hasNextPage] = await loadArticles(token, after, size);
 
-        for (const { content, highlights } of blocks) {
-          const articleBlock = await logseq.Editor.insertBlock(
-            targetBlock.uuid,
-            content
-          );
-          if (highlights.length) {
-            const highlightBlock = await logseq.Editor.insertBlock(
-              articleBlock.uuid,
-              highlightTitle
+          for (const { content, slug } of blocks) {
+            const { labels, highlights } = await loadArticle(
+              username,
+              slug,
+              token
             );
 
-            for (const highlight of highlights) {
-              await logseq.Editor.insertBlock(highlightBlock.uuid, highlight);
+            const articleBlock = await logseq.Editor.insertBlock(
+              targetBlock.uuid,
+              content
+            );
+
+            if (labels?.length) {
+              const labelBlock = await logseq.Editor.insertBlock(
+                articleBlock.uuid,
+                labelTitle
+              );
+
+              for (const label of labels) {
+                await logseq.Editor.insertBlock(
+                  labelBlock.uuid,
+                  `[[${label.name}]]`
+                );
+              }
             }
+
+            if (highlights?.length) {
+              const highlightBlock = await logseq.Editor.insertBlock(
+                articleBlock.uuid,
+                highlightTitle
+              );
+
+              for (const highlight of highlights) {
+                await logseq.Editor.insertBlock(
+                  highlightBlock.uuid,
+                  highlight.quote
+                );
+              }
+            }
+
+            // sleep for a second to avoid rate limit
+            await delay(1000);
           }
+
+          if (!hasNextPage) {
+            break;
+          }
+          after += size;
         }
 
         await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle);
