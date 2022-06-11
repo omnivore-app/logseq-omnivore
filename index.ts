@@ -47,7 +47,7 @@ async function loadArticles(
   for (const { node } of edges) {
     const { title, url, author, description, slug } = node;
     ret.push({
-      content: `[${title}](${url}) [:small.opacity-50 By "${author}"]
+      content: `[${title}](${url}) [:small.opacity-50 "By ${author}"]
 collapsed:: true    
 > ${description}.`,
       slug,
@@ -74,6 +74,7 @@ function main(baseInfo: LSPluginBaseInfo) {
       const blockTitle = "## 🔖 Articles";
       const highlightTitle = "### 🔍 Highlights";
       const labelTitle = "### 🏷 Labels";
+      const dateTitle = "### 📅 Date";
 
       logseq.App.pushState("page", { name: pageName });
 
@@ -101,7 +102,7 @@ function main(baseInfo: LSPluginBaseInfo) {
           const [blocks, hasNextPage] = await loadArticles(token, after, size);
 
           for (const { content, slug } of blocks) {
-            const { labels, highlights } = await loadArticle(
+            const { labels, highlights, savedAt } = await loadArticle(
               username,
               slug,
               token
@@ -110,6 +111,15 @@ function main(baseInfo: LSPluginBaseInfo) {
             const articleBlock = await logseq.Editor.insertBlock(
               targetBlock.uuid,
               content
+            );
+
+            const dateBlock = await logseq.Editor.insertBlock(
+              articleBlock.uuid,
+              dateTitle
+            );
+            await logseq.Editor.insertBlock(
+              dateBlock.uuid,
+              `[[${new Date(savedAt).toDateString()}]]`
             );
 
             if (labels?.length) {
