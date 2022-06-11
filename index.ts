@@ -47,7 +47,7 @@ async function loadArticles(
   for (const { node } of edges) {
     const { title, url, author, description, slug } = node;
     ret.push({
-      content: `[${title}](${url}) [:small.opacity-50 "${author}"]
+      content: `[${title}](${url}) [:small.opacity-50 By "${author}"]
 collapsed:: true    
 > ${description}.`,
       slug,
