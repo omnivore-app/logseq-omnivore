@@ -26,6 +26,7 @@ async function loadArticle(
 }
 
 async function loadArticles(
+  username: string,
   token: string,
   after: number = 0,
   first: number = 10
@@ -45,9 +46,9 @@ async function loadArticles(
 
   const ret = [];
   for (const { node } of edges) {
-    const { title, url, author, description, slug } = node;
+    const { title, author, description, slug } = node;
     ret.push({
-      content: `[${title}](${url}) [:small.opacity-50 "By ${author}"]
+      content: `[${title}](https://omnivore.app/${username}/${slug}) [:small.opacity-50 "By ${author}"]
 collapsed:: true    
 > ${description}.`,
       slug,
@@ -99,7 +100,7 @@ function main(baseInfo: LSPluginBaseInfo) {
         const size = 100;
         let after = 0;
         while (true) {
-          const [blocks, hasNextPage] = await loadArticles(token, after, size);
+          const [blocks, hasNextPage] = await loadArticles(username, token, after, size);
 
           for (const { content, slug } of blocks) {
             const { labels, highlights, savedAt } = await loadArticle(
