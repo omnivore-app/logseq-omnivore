@@ -10,7 +10,7 @@
   "author": "Hongbo Wu",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sywhb/logseq-omnivore"
+    "url": "https://github.com/omnivore-app/logseq-omnivore"
   },
   "scripts": {
     "dev": "parcel ./index.html --public-url ./",
