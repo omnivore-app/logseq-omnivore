@@ -57,7 +57,8 @@ async function loadArticles(
  */
 function main(baseInfo: LSPluginBaseInfo) {
   let loading = false;
-  const { token, username } = logseq.settings;
+  const token = logseq.settings?.["token"];
+  const username = logseq.settings?.["username"];
 
   logseq.provideModel({
     async loadOmnivore() {
@@ -91,9 +92,9 @@ function main(baseInfo: LSPluginBaseInfo) {
           }
           await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle);
         } else {
-          targetBlock = await logseq.Editor.insertBlock("", fetchingTitle, {
+          targetBlock = (await logseq.Editor.insertBlock("", fetchingTitle, {
             before: true,
-          });
+          }))!;
         }
 
         const size = 100;
@@ -109,16 +110,16 @@ function main(baseInfo: LSPluginBaseInfo) {
           for (const { title, author, description, slug } of articles) {
             const content = `[${title}](https://omnivore.app/${username}/${slug}) [:small.opacity-50 "By ${author.replace(
               /"/g,
-              "'"
+              '\\"'
             )}"]
             collapsed:: true    
             > ${description}.`;
 
-            const articleBlock = await logseq.Editor.insertBlock(
+            const articleBlock = (await logseq.Editor.insertBlock(
               targetBlock.uuid,
               content,
               { before: true, sibling: false }
-            );
+            ))!;
 
             const { labels, highlights, savedAt } = await loadArticle(
               username,
@@ -126,20 +127,20 @@ function main(baseInfo: LSPluginBaseInfo) {
               token
             );
 
-            const dateBlock = await logseq.Editor.insertBlock(
+            const dateBlock = (await logseq.Editor.insertBlock(
               articleBlock.uuid,
               dateTitle
-            );
+            ))!;
             await logseq.Editor.insertBlock(
               dateBlock.uuid,
               `[[${new Date(savedAt).toDateString()}]]`
             );
 
             if (labels?.length) {
-              const labelBlock = await logseq.Editor.insertBlock(
+              const labelBlock = (await logseq.Editor.insertBlock(
                 articleBlock.uuid,
                 labelTitle
-              );
+              ))!;
 
               for (const label of labels) {
                 await logseq.Editor.insertBlock(
@@ -150,10 +151,10 @@ function main(baseInfo: LSPluginBaseInfo) {
             }
 
             if (highlights?.length) {
-              const highlightBlock = await logseq.Editor.insertBlock(
+              const highlightBlock = (await logseq.Editor.insertBlock(
                 articleBlock.uuid,
                 highlightTitle
-              );
+              ))!;
 
               for (const highlight of highlights) {
                 await logseq.Editor.insertBlock(
