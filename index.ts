@@ -29,7 +29,8 @@ async function loadArticles(
   username: string,
   token: string,
   after: number = 0,
-  first: number = 10
+  first: number = 10,
+  savedAfter: string = ""
 ): Promise<[any[], boolean]> {
   const {
     data: {
@@ -40,7 +41,9 @@ async function loadArticles(
       "content-type": "application/json",
       authorization: token,
     },
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            cursor\\n            node {\\n              id\\n              title\\n              slug\\n              url\\n              pageType\\n              contentReader\\n              createdAt\\n              isArchived\\n              readingProgressPercent\\n              readingProgressAnchorIndex\\n              author\\n              image\\n              description\\n              publishedAt\\n              ownedByViewer\\n              originalArticleUrl\\n              uploadFileId\\n              labels {\\n                id\\n                name\\n                color\\n              }\\n              pageId\\n              shortId\\n              quote\\n              annotation\\n              state\\n              siteName\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n            hasPreviousPage\\n            startCursor\\n            endCursor\\n            totalCount\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}}}`,
+    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            cursor\\n            node {\\n              id\\n              title\\n              slug\\n              url\\n              pageType\\n              contentReader\\n              createdAt\\n              isArchived\\n              readingProgressPercent\\n              readingProgressAnchorIndex\\n              author\\n              image\\n              description\\n              publishedAt\\n              ownedByViewer\\n              originalArticleUrl\\n              uploadFileId\\n              labels {\\n                id\\n                name\\n                color\\n              }\\n              pageId\\n              shortId\\n              quote\\n              annotation\\n              state\\n              siteName\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n            hasPreviousPage\\n            startCursor\\n            endCursor\\n            totalCount\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
+      savedAfter ? "saved:" + savedAfter : ""
+    } sort:saved-asc"}}`,
     method: "POST",
   }).then((res) => res.json());
 
@@ -68,7 +71,7 @@ function main(baseInfo: LSPluginBaseInfo) {
 
   logseq.provideModel({
     async loadOmnivore() {
-      const info = await logseq.App.getUserConfigs();
+      // const info = await logseq.App.getUserConfigs();
       if (loading) return;
 
       const pageName = "Omnivore";
@@ -76,6 +79,7 @@ function main(baseInfo: LSPluginBaseInfo) {
       const highlightTitle = "### 🔍 Highlights";
       const labelTitle = "### 🏷 Labels";
       const dateTitle = "### 📅 Date";
+      const fetchingTitle = "🚀 Fetching articles ...";
 
       logseq.App.pushState("page", { name: pageName });
 
@@ -90,17 +94,30 @@ function main(baseInfo: LSPluginBaseInfo) {
 
         const pageBlocksTree = await logseq.Editor.getCurrentPageBlocksTree();
         let targetBlock = pageBlocksTree[0]!;
-
-        targetBlock = await logseq.Editor.insertBlock(
-          targetBlock.uuid,
-          "🚀 Fetching articles ...",
-          { before: true }
-        );
+        let lastUpdateAt = "";
+        if (targetBlock.content) {
+          if (targetBlock.content.split(" - ").length == 2) {
+            lastUpdateAt = targetBlock.content.split(" - ")[1];
+          }
+          await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle);
+        } else {
+          targetBlock = await logseq.Editor.insertBlock(
+            targetBlock.uuid,
+            fetchingTitle,
+            { before: true }
+          );
+        }
 
         const size = 100;
         let after = 0;
         while (true) {
-          const [blocks, hasNextPage] = await loadArticles(username, token, after, size);
+          const [blocks, hasNextPage] = await loadArticles(
+            username,
+            token,
+            after,
+            size,
+            lastUpdateAt
+          );
 
           for (const { content, slug } of blocks) {
             const { labels, highlights, savedAt } = await loadArticle(
@@ -111,7 +128,8 @@ function main(baseInfo: LSPluginBaseInfo) {
 
             const articleBlock = await logseq.Editor.insertBlock(
               targetBlock.uuid,
-              content
+              content,
+              { before: true }
             );
 
             const dateBlock = await logseq.Editor.insertBlock(
@@ -161,7 +179,10 @@ function main(baseInfo: LSPluginBaseInfo) {
           after += size;
         }
 
-        await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle);
+        await logseq.Editor.updateBlock(
+          targetBlock.uuid,
+          `${blockTitle} - ${new Date().toISOString()}`
+        );
       } catch (e) {
         logseq.UI.showMsg(e.toString(), "warning");
         console.error(e);
