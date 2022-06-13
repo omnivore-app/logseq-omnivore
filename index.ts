@@ -26,7 +26,6 @@ async function loadArticle(
 }
 
 async function loadArticles(
-  username: string,
   token: string,
   after: number = 0,
   first: number = 10,
@@ -47,18 +46,9 @@ async function loadArticles(
     method: "POST",
   }).then((res) => res.json());
 
-  const ret = [];
-  for (const { node } of edges) {
-    const { title, author, description, slug } = node;
-    ret.push({
-      content: `[${title}](https://omnivore.app/${username}/${slug}) [:small.opacity-50 "By ${author}"]
-collapsed:: true    
-> ${description}.`,
-      slug,
-    });
-  }
+  const articles = edges.map((e) => e.node);
 
-  return [ret, pageInfo.hasNextPage];
+  return [articles, pageInfo.hasNextPage];
 }
 
 /**
@@ -109,25 +99,31 @@ function main(baseInfo: LSPluginBaseInfo) {
         const size = 100;
         let after = 0;
         while (true) {
-          const [blocks, hasNextPage] = await loadArticles(
-            username,
+          const [articles, hasNextPage] = await loadArticles(
             token,
             after,
             size,
             lastUpdateAt
           );
 
-          for (const { content, slug } of blocks) {
-            const { labels, highlights, savedAt } = await loadArticle(
-              username,
-              slug,
-              token
-            );
+          for (const { title, author, description, slug } of articles) {
+            const content = `[${title}](https://omnivore.app/${username}/${slug}) [:small.opacity-50 "By ${author.replace(
+              /"/g,
+              "'"
+            )}"]
+            collapsed:: true    
+            > ${description}.`;
 
             const articleBlock = await logseq.Editor.insertBlock(
               targetBlock.uuid,
               content,
               { before: true, sibling: false }
+            );
+
+            const { labels, highlights, savedAt } = await loadArticle(
+              username,
+              slug,
+              token
             );
 
             const dateBlock = await logseq.Editor.insertBlock(
