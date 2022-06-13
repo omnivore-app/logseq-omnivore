@@ -108,7 +108,7 @@ function main(baseInfo: LSPluginBaseInfo) {
           );
 
           for (const { title, author, description, slug } of articles) {
-            const content = `[${title}](https://omnivore.app/${username}/${slug}) [:small.opacity-50 "By ${author.replace(
+            const content = `[${title}](https://omnivore.app/${username}/${slug}) [:small.opacity-50 "By ${author?.replace(
               /"/g,
               '\\"'
             )}"]
