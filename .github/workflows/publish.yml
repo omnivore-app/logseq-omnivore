@@ -22,7 +22,7 @@ jobs:
       - name: Build
         id: build
         run: |
-          yarn build
+          yarn install && yarn build
           mkdir ${{ env.PLUGIN_NAME }}
           cp README.md package.json ${{ env.PLUGIN_NAME }}
           mv dist ${{ env.PLUGIN_NAME }}
