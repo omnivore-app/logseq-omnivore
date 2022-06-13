@@ -95,17 +95,15 @@ function main(baseInfo: LSPluginBaseInfo) {
         const pageBlocksTree = await logseq.Editor.getCurrentPageBlocksTree();
         let targetBlock = pageBlocksTree[0]!;
         let lastUpdateAt = "";
-        if (targetBlock.content) {
+        if (targetBlock) {
           if (targetBlock.content.split(" - ").length == 2) {
             lastUpdateAt = targetBlock.content.split(" - ")[1];
           }
           await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle);
         } else {
-          targetBlock = await logseq.Editor.insertBlock(
-            targetBlock.uuid,
-            fetchingTitle,
-            { before: true }
-          );
+          targetBlock = await logseq.Editor.insertBlock("", fetchingTitle, {
+            before: true,
+          });
         }
 
         const size = 100;
@@ -129,7 +127,7 @@ function main(baseInfo: LSPluginBaseInfo) {
             const articleBlock = await logseq.Editor.insertBlock(
               targetBlock.uuid,
               content,
-              { before: true }
+              { before: true, sibling: false }
             );
 
             const dateBlock = await logseq.Editor.insertBlock(
