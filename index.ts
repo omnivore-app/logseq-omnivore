@@ -87,8 +87,11 @@ function main(baseInfo: LSPluginBaseInfo) {
         let targetBlock = pageBlocksTree[0]!;
         let lastUpdateAt = "";
         if (targetBlock) {
-          if (targetBlock.content.split(" - ").length == 2) {
-            lastUpdateAt = targetBlock.content.split(" - ")[1];
+          const matches = targetBlock.content.match(
+            /(\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2}).(\d{3})Z/g
+          );
+          if (matches) {
+            lastUpdateAt = matches[0];
           }
           await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle);
         } else {
@@ -108,10 +111,18 @@ function main(baseInfo: LSPluginBaseInfo) {
           );
 
           for (const { title, author, description, slug } of articles) {
+            const { labels, highlights, savedAt } = await loadArticle(
+              username,
+              slug,
+              token
+            );
+
             const content = `[${title}](https://omnivore.app/${username}/${slug}) [:small.opacity-50 "By ${author?.replace(
               /"/g,
               '\\"'
-            )}"]
+            )}"] 📅 [[${new Date(savedAt).toDateString()}]] ${
+              labels ? " 🏷 " + labels.map((l) => `[[${l.name}]]`).join(" ") : ""
+            }
             collapsed:: true    
             > ${description}.`;
 
@@ -120,35 +131,6 @@ function main(baseInfo: LSPluginBaseInfo) {
               content,
               { before: true, sibling: false }
             ))!;
-
-            const { labels, highlights, savedAt } = await loadArticle(
-              username,
-              slug,
-              token
-            );
-
-            const dateBlock = (await logseq.Editor.insertBlock(
-              articleBlock.uuid,
-              dateTitle
-            ))!;
-            await logseq.Editor.insertBlock(
-              dateBlock.uuid,
-              `[[${new Date(savedAt).toDateString()}]]`
-            );
-
-            if (labels?.length) {
-              const labelBlock = (await logseq.Editor.insertBlock(
-                articleBlock.uuid,
-                labelTitle
-              ))!;
-
-              for (const label of labels) {
-                await logseq.Editor.insertBlock(
-                  labelBlock.uuid,
-                  `[[${label.name}]]`
-                );
-              }
-            }
 
             if (highlights?.length) {
               const highlightBlock = (await logseq.Editor.insertBlock(
@@ -176,7 +158,7 @@ function main(baseInfo: LSPluginBaseInfo) {
 
         await logseq.Editor.updateBlock(
           targetBlock.uuid,
-          `${blockTitle} - ${new Date().toISOString()}`
+          `${blockTitle} [:small.opacity-20 "fetched at ${new Date().toISOString()}"]`
         );
       } catch (e) {
         logseq.UI.showMsg(e.toString(), "warning");
