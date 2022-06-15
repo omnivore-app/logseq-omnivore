@@ -18,7 +18,9 @@
   },
   "license": "MIT",
   "logseq": {
-    "id": "_logseq-omnivore"
+    "id": "_logseq-omnivore",
+    "title": "logseq-omnivore",
+    "icon": "./icon.png"
   },
   "dependencies": {
     "@logseq/libs": "^0.0.6"

@@ -1,8 +1,11 @@
 # logseq-omnivore
 
-This is a Logseq Omnivore plugin
+This plugin helps you to read Omnivore articles and highlights from Logseq.
 
-## Running the Sample
+## Installation
 
-- `yarn install && yarn build` in terminal to install dependencies.
-- `Load unpacked plugin` in Logseq Desktop client.
+1. Install the plugin from the marketplace or build it from source and load unpacked plugin.
+2. Open settings and add your api key and username.
+3. Click on the "O" button on the toolbar.
+
+## Demo
