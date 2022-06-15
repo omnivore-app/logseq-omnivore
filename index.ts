@@ -57,7 +57,7 @@ async function loadArticles(
  */
 function main(baseInfo: LSPluginBaseInfo) {
   let loading = false;
-  const token = logseq.settings?.["token"];
+  const token = logseq.settings?.["api key"];
   const username = logseq.settings?.["username"];
 
   logseq.provideModel({
@@ -79,6 +79,8 @@ function main(baseInfo: LSPluginBaseInfo) {
       loading = true;
 
       try {
+        logseq.UI.showMsg("🚀 Fetching articles ...");
+
         const currentPage = await logseq.Editor.getCurrentPage();
         if (currentPage?.originalName !== pageName)
           throw new Error("page error");
@@ -160,6 +162,7 @@ function main(baseInfo: LSPluginBaseInfo) {
           targetBlock.uuid,
           `${blockTitle} [:small.opacity-20 "fetched at ${new Date().toISOString()}"]`
         );
+        logseq.UI.showMsg("🔖 Articles fetched");
       } catch (e) {
         logseq.UI.showMsg(e.toString(), "warning");
         console.error(e);
