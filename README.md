@@ -9,3 +9,6 @@ This plugin helps you to read Omnivore articles and highlights from Logseq.
 3. Click on the "O" button on the toolbar.
 
 ## Demo
+
+![settings](./settings-demo.gif)
+![loading](./loading-demo.gif)
