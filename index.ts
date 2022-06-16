@@ -1,5 +1,6 @@
 import "@logseq/libs";
 import { LSPluginBaseInfo } from "@logseq/libs/dist/LSPlugin";
+import icon from "./icon.png";
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t));
 const endpoint = "https://api-prod.omnivore.app/api/graphql";
@@ -14,7 +15,6 @@ async function loadArticle(
       article: { article },
     },
   } = await fetch(endpoint, {
-    mode: "cors",
     headers: {
       "content-type": "application/json",
       authorization: token,
@@ -45,7 +45,6 @@ async function loadArticles(
       savedAfter ? "saved:" + savedAfter : ""
     } sort:saved-asc"}}`,
     method: "POST",
-    mode: "cors",
   }).then((res) => res.json());
 
   const articles = edges.map((e) => e.node);
@@ -177,8 +176,9 @@ function main(baseInfo: LSPluginBaseInfo) {
   logseq.App.registerUIItem("toolbar", {
     key: "logseq-omnivore",
     template: `
-      <a data-on-click="loadOmnivore" style="font-size: initial;"
-         class="button">O</a>
+      <a data-on-click="loadOmnivore" class="button" style="width:3rem;height:3rem;">
+        <img src="${icon}">
+      </a>
     `,
   });
 
