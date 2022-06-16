@@ -14,6 +14,7 @@ async function loadArticle(
       article: { article },
     },
   } = await fetch(endpoint, {
+    mode: "cors",
     headers: {
       "content-type": "application/json",
       authorization: token,
@@ -44,6 +45,7 @@ async function loadArticles(
       savedAfter ? "saved:" + savedAfter : ""
     } sort:saved-asc"}}`,
     method: "POST",
+    mode: "cors",
   }).then((res) => res.json());
 
   const articles = edges.map((e) => e.node);

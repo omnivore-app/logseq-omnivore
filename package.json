@@ -1,6 +1,6 @@
 {
   "name": "logseq-omnivore",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Read Omnivore using Logseq blocks.",
   "main": "dist/index.html",
   "targets": {
