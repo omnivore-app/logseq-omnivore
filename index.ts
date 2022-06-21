@@ -89,7 +89,7 @@ const loadArticles = async (
       'content-type': 'application/json',
       authorization: token,
     },
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              image\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
+    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       savedAfter ? 'saved:' + savedAfter : ''
     } sort:saved-asc"}}`,
     method: 'POST',
@@ -124,7 +124,7 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
 
       const pageName = 'Omnivore'
       const blockTitle = '## 🔖 Articles'
-      const highlightTitle = '### 🔍 Highlights'
+      const highlightTitle = '### 🔍 [[Highlights]]'
       const fetchingTitle = '🚀 Fetching articles ...'
 
       logseq.App.pushState('page', { name: pageName })
@@ -171,24 +171,22 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
             lastUpdateAt
           )
 
-          for (const { title, author, description, slug } of articles) {
+          for (const { title, author, slug, description } of articles) {
             const { labels, highlights, savedAt } = await loadArticle(
               username,
               slug,
               token
             )
 
-            const content = `[${title}](https://omnivore.app/${username}/${slug}) [:small.opacity-50 "By ${author?.replace(
-              /"/g,
-              '\\"'
-            )}"] 📅 [[${new Date(savedAt).toDateString()}]] ${
+            const content = `[${title}](https://omnivore.app/${username}/${slug})
+            author:: ${author}
+            description:: ${description}
+            labels:: ${
               labels
-                ? ' 🏷 ' +
-                  labels.map((l: { name: string }) => `[[${l.name}]]`).join(' ')
-                : ''
+                ? labels.map((l: { name: string }) => `[[${l.name}]]`).join(' ')
+                : 'null'
             }
-            collapsed:: true    
-            > ${description}.`
+            date:: ${new Date(savedAt).toDateString()}`
 
             const articleBlock = await logseq.Editor.insertBlock(
               targetBlock.uuid,
