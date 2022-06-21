@@ -63,12 +63,12 @@ const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
 const loadArticle = async (
   username: string,
   slug: string,
-  token: string
+  apiKey: string
 ): Promise<Article> => {
   const res = await fetch(endpoint, {
     headers: {
       'content-type': 'application/json',
-      authorization: token,
+      authorization: apiKey,
     },
     body: `{"query":"\\n  query GetArticle(\\n    $username: String!\\n    $slug: String!\\n  ) {\\n    article(username: $username, slug: $slug) {\\n      ... on ArticleSuccess {\\n        article {\\n          ...ArticleFields\\n          highlights {\\n            ...HighlightFields\\n          }\\n          labels {\\n            ...LabelFields\\n          }\\n        }\\n      }\\n      ... on ArticleError {\\n        errorCodes\\n      }\\n    }\\n  }\\n  \\n  fragment ArticleFields on Article {\\n    savedAt\\n  }\\n\\n  \\n  fragment HighlightFields on Highlight {\\n    quote\\n  }\\n\\n  \\n  fragment LabelFields on Label {\\n    name\\n  }\\n\\n","variables":{"username":"${username}","slug":"${slug}"}}`,
     method: 'POST',
@@ -79,7 +79,7 @@ const loadArticle = async (
 }
 
 const loadArticles = async (
-  token: string,
+  apiKey: string,
   after = 0,
   first = 10,
   savedAfter = ''
@@ -87,7 +87,7 @@ const loadArticles = async (
   const res = await fetch(endpoint, {
     headers: {
       'content-type': 'application/json',
-      authorization: token,
+      authorization: apiKey,
     },
     body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       savedAfter ? 'saved:' + savedAfter : ''
@@ -108,15 +108,16 @@ const loadArticles = async (
 const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
   console.log('logseq-omnivore loaded')
 
-  let loading = false
-  const token = logseq.settings?.['api key'] as string
+  const apiKey = logseq.settings?.['api key'] as string
   const username = logseq.settings?.['username'] as string
 
-  if (!token || !username) {
-    await logseq.UI.showMsg('missing username or token', 'error')
+  if (!apiKey || !username) {
+    await logseq.UI.showMsg('missing username or api key', 'error')
 
     return
   }
+
+  let loading = false
 
   logseq.provideModel({
     async loadOmnivore() {
@@ -165,7 +166,7 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
         /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
         while (true) {
           const [articles, hasNextPage] = await loadArticles(
-            token,
+            apiKey,
             after,
             size,
             lastUpdateAt
@@ -175,7 +176,7 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
             const { labels, highlights, savedAt } = await loadArticle(
               username,
               slug,
-              token
+              apiKey
             )
 
             const content = `[${title}](https://omnivore.app/${username}/${slug})
