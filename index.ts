@@ -2,9 +2,6 @@ import '@logseq/libs'
 import { LSPluginBaseInfo } from '@logseq/libs/dist/LSPlugin'
 import * as icon from './icon.png'
 
-const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
-const endpoint = 'https://api-prod.omnivore.app/api/graphql'
-
 interface GetArticleResponse {
   data: {
     article: {
@@ -42,17 +39,20 @@ interface Highlight {
   quote: string
 }
 
-async function loadArticle(
+const endpoint = 'https://api-prod.omnivore.app/api/graphql'
+const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
+
+const loadArticle = async (
   username: string,
   slug: string,
   token: string
-): Promise<Article> {
+): Promise<Article> => {
   const res = await fetch(endpoint, {
     headers: {
       'content-type': 'application/json',
       authorization: token,
     },
-    body: `{"query":"\\n  query GetArticle(\\n    $username: String!\\n    $slug: String!\\n    $includeFriendsHighlights: Boolean\\n  ) {\\n    article(username: $username, slug: $slug) {\\n      ... on ArticleSuccess {\\n        article {\\n          ...ArticleFields\\n          content\\n          highlights(input: { includeFriends: $includeFriendsHighlights }) {\\n            ...HighlightFields\\n          }\\n          labels {\\n            ...LabelFields\\n          }\\n        }\\n      }\\n      ... on ArticleError {\\n        errorCodes\\n      }\\n    }\\n  }\\n  \\n  fragment ArticleFields on Article {\\n    id\\n    title\\n    url\\n    author\\n    image\\n    savedAt\\n    createdAt\\n    publishedAt\\n    contentReader\\n    originalArticleUrl\\n    readingProgressPercent\\n    readingProgressAnchorIndex\\n    slug\\n    isArchived\\n    description\\n    linkId\\n    state\\n  }\\n\\n  \\n  fragment HighlightFields on Highlight {\\n    id\\n    shortId\\n    quote\\n    prefix\\n    suffix\\n    patch\\n    annotation\\n    createdByMe\\n    updatedAt\\n    sharedAt\\n  }\\n\\n  \\n  fragment LabelFields on Label {\\n    id\\n    name\\n    color\\n    description\\n    createdAt\\n  }\\n\\n","variables":{"username":"${username}","slug":"${slug}","includeFriendsHighlights":false}}`,
+    body: `{"query":"\\n  query GetArticle(\\n    $username: String!\\n    $slug: String!\\n  ) {\\n    article(username: $username, slug: $slug) {\\n      ... on ArticleSuccess {\\n        article {\\n          ...ArticleFields\\n          highlights {\\n            ...HighlightFields\\n          }\\n          labels {\\n            ...LabelFields\\n          }\\n        }\\n      }\\n      ... on ArticleError {\\n        errorCodes\\n      }\\n    }\\n  }\\n  \\n  fragment ArticleFields on Article {\\n    savedAt\\n  }\\n\\n  \\n  fragment HighlightFields on Highlight {\\n    quote\\n  }\\n\\n  \\n  fragment LabelFields on Label {\\n    name\\n  }\\n\\n","variables":{"username":"${username}","slug":"${slug}"}}`,
     method: 'POST',
   })
   const response = (await res.json()) as GetArticleResponse
@@ -60,25 +60,24 @@ async function loadArticle(
   return response.data.article.article
 }
 
-async function loadArticles(
+const loadArticles = async (
   token: string,
   after = 0,
   first = 10,
   savedAfter = ''
-): Promise<[Article[], boolean]> {
+): Promise<[Article[], boolean]> => {
   const res = await fetch(endpoint, {
     headers: {
       'content-type': 'application/json',
       authorization: token,
     },
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            cursor\\n            node {\\n              id\\n              title\\n              slug\\n              url\\n              pageType\\n              contentReader\\n              createdAt\\n              isArchived\\n              readingProgressPercent\\n              readingProgressAnchorIndex\\n              author\\n              image\\n              description\\n              publishedAt\\n              ownedByViewer\\n              originalArticleUrl\\n              uploadFileId\\n              labels {\\n                id\\n                name\\n                color\\n              }\\n              pageId\\n              shortId\\n              quote\\n              annotation\\n              state\\n              siteName\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n            hasPreviousPage\\n            startCursor\\n            endCursor\\n            totalCount\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
+    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              image\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       savedAfter ? 'saved:' + savedAfter : ''
     } sort:saved-asc"}}`,
     method: 'POST',
   })
 
   const jsonRes = (await res.json()) as SearchResponse
-
   const articles = jsonRes.data.search.edges.map((e) => e.node)
 
   return [articles, jsonRes.data.search.pageInfo.hasNextPage]
@@ -88,21 +87,18 @@ async function loadArticles(
  * main entry
  * @param baseInfo
  */
-function main(baseInfo: LSPluginBaseInfo) {
+const main = (baseInfo: LSPluginBaseInfo) => {
   let loading = false
   const token = logseq.settings?.['api key'] as string
   const username = logseq.settings?.['username'] as string
 
   logseq.provideModel({
     async loadOmnivore() {
-      // const info = await logseq.App.getUserConfigs();
       if (loading) return
 
       const pageName = 'Omnivore'
       const blockTitle = '## 🔖 Articles'
       const highlightTitle = '### 🔍 Highlights'
-      const labelTitle = '### 🏷 Labels'
-      const dateTitle = '### 📅 Date'
       const fetchingTitle = '🚀 Fetching articles ...'
 
       logseq.App.pushState('page', { name: pageName })
@@ -119,7 +115,7 @@ function main(baseInfo: LSPluginBaseInfo) {
           throw new Error('page error')
 
         const pageBlocksTree = await logseq.Editor.getCurrentPageBlocksTree()
-        let targetBlock = pageBlocksTree[0]!
+        let targetBlock = pageBlocksTree.length > 0 ? pageBlocksTree[0] : null
         let lastUpdateAt = ''
         if (targetBlock) {
           const matches = targetBlock.content.match(
@@ -130,9 +126,12 @@ function main(baseInfo: LSPluginBaseInfo) {
           }
           await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
         } else {
-          targetBlock = (await logseq.Editor.insertBlock('', fetchingTitle, {
+          targetBlock = await logseq.Editor.insertBlock('', fetchingTitle, {
             before: true,
-          }))!
+          })
+        }
+        if (!targetBlock) {
+          throw new Error('block error')
         }
 
         const size = 100
@@ -165,17 +164,23 @@ function main(baseInfo: LSPluginBaseInfo) {
             collapsed:: true    
             > ${description}.`
 
-            const articleBlock = (await logseq.Editor.insertBlock(
+            const articleBlock = await logseq.Editor.insertBlock(
               targetBlock.uuid,
               content,
               { before: true, sibling: false }
-            ))!
+            )
+            if (!articleBlock) {
+              throw new Error('block error')
+            }
 
             if (highlights?.length) {
-              const highlightBlock = (await logseq.Editor.insertBlock(
+              const highlightBlock = await logseq.Editor.insertBlock(
                 articleBlock.uuid,
                 highlightTitle
-              ))!
+              )
+              if (!highlightBlock) {
+                throw new Error('block error')
+              }
 
               for (const highlight of highlights) {
                 await logseq.Editor.insertBlock(
@@ -212,7 +217,7 @@ function main(baseInfo: LSPluginBaseInfo) {
   logseq.App.registerUIItem('toolbar', {
     key: 'logseq-omnivore',
     template: `
-      <a data-on-click="loadOmnivore" class="button" style="width:2rem;height:2rem;">
+      <a data-on-click="loadOmnivore" class="button" style="width:3rem;height:3rem;">
         <img src="${icon as string}">
       </a>
     `,
