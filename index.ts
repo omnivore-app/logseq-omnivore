@@ -1,5 +1,5 @@
 import '@logseq/libs'
-import { LSPluginBaseInfo } from '@logseq/libs/dist/LSPlugin'
+import { LSPluginBaseInfo, SettingSchemaDesc } from '@logseq/libs/dist/LSPlugin'
 import * as icon from './icon.png'
 
 interface GetArticleResponse {
@@ -38,6 +38,24 @@ interface Label {
 interface Highlight {
   quote: string
 }
+
+const settings: SettingSchemaDesc[] = [
+  {
+    key: 'api key',
+    type: 'string',
+    title: 'Enter Omnivore Api Key',
+    description: 'Enter Omnivore Api Key here',
+    default: '',
+  },
+  {
+    key: 'username',
+    type: 'string',
+    title: 'Enter Omnivore username',
+    description: 'Enter Omnivore username here',
+    default: '',
+  },
+]
+logseq.useSettingsSchema(settings)
 
 const endpoint = 'https://api-prod.omnivore.app/api/graphql'
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
@@ -87,10 +105,18 @@ const loadArticles = async (
  * main entry
  * @param baseInfo
  */
-const main = (baseInfo: LSPluginBaseInfo) => {
+const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
+  console.log('logseq-omnivore loaded')
+
   let loading = false
   const token = logseq.settings?.['api key'] as string
   const username = logseq.settings?.['username'] as string
+
+  if (!token || !username) {
+    await logseq.UI.showMsg('missing username or token', 'error')
+
+    return
+  }
 
   logseq.provideModel({
     async loadOmnivore() {
