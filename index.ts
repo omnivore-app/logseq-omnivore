@@ -146,9 +146,10 @@ const loadOmnivore = async (
       }
       await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
     } else {
-      targetBlock = await logseq.Editor.insertBlock('', fetchingTitle, {
-        before: true,
-      })
+      targetBlock = await logseq.Editor.appendBlockInPage(
+        currentPage.uuid,
+        fetchingTitle
+      )
     }
     if (!targetBlock) {
       throw new Error('block error')
