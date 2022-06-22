@@ -58,6 +58,13 @@ const settings: SettingSchemaDesc[] = [
     description: 'Enter Omnivore username here',
     default: '',
   },
+  {
+    key: 'frequency',
+    type: 'number',
+    title: 'Enter sync with Omnivore frequency',
+    description: 'Enter sync with Omnivore frequency in minutes here',
+    default: 60,
+  },
 ]
 const endpoint = 'https://api-prod.omnivore.app/api/graphql'
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
@@ -242,6 +249,7 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
 
   logseq.useSettingsSchema(settings)
 
+  const frequency = (logseq.settings?.frequency as number) || 60
   let apiKey = logseq.settings?.['api key'] as string
   let username = logseq.settings?.['username'] as string
 
@@ -278,7 +286,7 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
   // fetch articles every minute
   setInterval(async () => {
     await loadOmnivore(apiKey, username)
-  }, 60000)
+  }, frequency * 1000 * 60)
 }
 
 // bootstrap
