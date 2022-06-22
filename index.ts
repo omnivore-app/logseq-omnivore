@@ -177,7 +177,7 @@ const loadOmnivore = async (
         lastUpdateAt
       )
 
-      for (const { title, author, slug } of articles) {
+      for (const { title, author, slug, description } of articles) {
         const { labels, highlights, savedAt } = await loadArticle(
           username,
           slug,
@@ -185,13 +185,15 @@ const loadOmnivore = async (
         )
 
         const content = `[${title}](https://omnivore.app/${username}/${slug})
-            author:: ${author}
-            labels:: ${
-              labels
-                ? labels.map((l: { name: string }) => `[[${l.name}]]`).join(' ')
-                : 'null'
-            }
-            date:: ${new Date(savedAt).toDateString()}`
+        collapsed:: true
+        author:: ${author}
+        labels:: ${
+          labels
+            ? labels.map((l: { name: string }) => `[[${l.name}]]`).join(' ')
+            : 'null'
+        }
+        date:: ${new Date(savedAt).toDateString()}
+        > ${description}`
 
         const articleBlock = await logseq.Editor.insertBlock(
           targetBlock.uuid,
