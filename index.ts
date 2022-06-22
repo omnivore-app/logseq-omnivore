@@ -186,7 +186,7 @@ const loadOmnivore = async (
 
         const content = `[${title}](https://omnivore.app/${username}/${slug})
         collapsed:: true
-        author:: ${author}
+        author:: "${author}"
         labels:: ${
           labels
             ? labels.map((l: { name: string }) => `[[${l.name}]]`).join(' ')
