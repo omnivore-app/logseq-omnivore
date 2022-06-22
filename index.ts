@@ -151,8 +151,10 @@ const loadOmnivore = async (
       )
       if (matches) {
         lastUpdateAt = matches[0]
-        lastSavedAt = lastUpdateAt
+      } else {
+        lastUpdateAt = logseq.settings?.['synced at'] as string
       }
+      lastSavedAt = lastUpdateAt
       await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
     } else {
       targetBlock = await logseq.Editor.appendBlockInPage(
@@ -235,13 +237,16 @@ const loadOmnivore = async (
     console.error(e)
   } finally {
     loading = false
-    targetBlock &&
-      (await logseq.Editor.updateBlock(
+    if (targetBlock) {
+      await logseq.Editor.updateBlock(
         targetBlock.uuid,
         `${blockTitle} [:small.opacity-20 "fetched at ${new Date(
           lastSavedAt
         ).toISOString()}"]`
-      ))
+      )
+
+      logseq.updateSettings({ 'synced at': lastSavedAt })
+    }
   }
 }
 
