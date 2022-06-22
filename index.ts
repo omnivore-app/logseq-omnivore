@@ -177,7 +177,7 @@ const loadOmnivore = async (
         lastUpdateAt
       )
 
-      for (const { title, author, slug, description } of articles) {
+      for (const { title, author, slug } of articles) {
         const { labels, highlights, savedAt } = await loadArticle(
           username,
           slug,
@@ -186,7 +186,6 @@ const loadOmnivore = async (
 
         const content = `[${title}](https://omnivore.app/${username}/${slug})
             author:: ${author}
-            description:: ${description}
             labels:: ${
               labels
                 ? labels.map((l: { name: string }) => `[[${l.name}]]`).join(' ')
