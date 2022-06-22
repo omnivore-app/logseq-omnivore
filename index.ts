@@ -236,7 +236,7 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
         )
         await logseq.UI.showMsg('🔖 Articles fetched')
       } catch (e) {
-        await logseq.UI.showMsg(e as string, 'warning')
+        await logseq.UI.showMsg('Failed to fetch articles', 'warning')
         console.error(e)
       } finally {
         loading = false
