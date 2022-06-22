@@ -108,14 +108,19 @@ const loadArticles = async (
 const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
   console.log('logseq-omnivore loaded')
 
-  const apiKey = logseq.settings?.['api key'] as string
-  const username = logseq.settings?.['username'] as string
+  let apiKey = logseq.settings?.['api key'] as string
+  let username = logseq.settings?.['username'] as string
 
   if (!apiKey || !username) {
     await logseq.UI.showMsg('missing username or api key', 'error')
 
     return
   }
+
+  logseq.onSettingsChanged(() => {
+    apiKey = logseq.settings?.['api key'] as string
+    username = logseq.settings?.['username'] as string
+  })
 
   let loading = false
 
