@@ -110,6 +110,12 @@ const loadOmnivore = async (
 ): Promise<void> => {
   if (loading) return
 
+  if (!apiKey || !username) {
+    await logseq.UI.showMsg('Missing Omnivore username or api key', 'warning')
+
+    return
+  }
+
   const pageName = 'Omnivore'
   const blockTitle = '## 🔖 Articles'
   const highlightTitle = '### 🔍 [[Highlights]]'
@@ -237,12 +243,6 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
 
   let apiKey = logseq.settings?.['api key'] as string
   let username = logseq.settings?.['username'] as string
-
-  if (!apiKey || !username) {
-    await logseq.UI.showMsg('missing username or api key', 'error')
-
-    return
-  }
 
   logseq.onSettingsChanged(() => {
     apiKey = logseq.settings?.['api key'] as string
