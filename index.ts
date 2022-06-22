@@ -134,6 +134,7 @@ const loadOmnivore = async (
 
   loading = true
   let targetBlock: BlockEntity | null = null
+  let lastSavedAt = ''
 
   try {
     await logseq.UI.showMsg('🚀 Fetching articles ...')
@@ -150,6 +151,7 @@ const loadOmnivore = async (
       )
       if (matches) {
         lastUpdateAt = matches[0]
+        lastSavedAt = lastUpdateAt
       }
       await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
     } else {
@@ -198,6 +200,7 @@ const loadOmnivore = async (
         if (!articleBlock) {
           throw new Error('block error')
         }
+        lastSavedAt = savedAt
 
         if (highlights?.length) {
           const highlightBlock = await logseq.Editor.insertBlock(
@@ -235,7 +238,9 @@ const loadOmnivore = async (
     targetBlock &&
       (await logseq.Editor.updateBlock(
         targetBlock.uuid,
-        `${blockTitle} [:small.opacity-20 "fetched at ${new Date().toISOString()}"]`
+        `${blockTitle} [:small.opacity-20 "fetched at ${new Date(
+          lastSavedAt
+        ).toISOString()}"]`
       ))
   }
 }
