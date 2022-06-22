@@ -1,7 +1,7 @@
 {
   "name": "logseq-omnivore",
   "version": "1.4.0",
-  "description": "Read Omnivore using Logseq blocks.",
+  "description": "Import Omnivore highlights and articles into Logseq.",
   "main": "dist/index.html",
   "targets": {
     "main": false
