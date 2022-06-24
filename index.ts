@@ -93,23 +93,21 @@ const loadArticles = async (
   apiKey: string,
   after = 0,
   first = 10,
-  savedAfter = ''
+  updatedAt = ''
 ): Promise<[Article[], boolean]> => {
   const res = await fetch(endpoint, {
     headers: {
       'content-type': 'application/json',
       authorization: apiKey,
     },
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              updatedAt\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"sort:saved-asc"}}`,
+    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              updatedAt\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
+      updatedAt ? 'updated:' + updatedAt : ''
+    } sort:updated-asc"}}`,
     method: 'POST',
   })
 
   const jsonRes = (await res.json()) as SearchResponse
-  const articles = jsonRes.data.search.edges
-    .map((e) => e.node)
-    .filter((article) =>
-      savedAfter ? new Date(article.updatedAt) > new Date(savedAfter) : true
-    )
+  const articles = jsonRes.data.search.edges.map((e) => e.node)
 
   return [articles, jsonRes.data.search.pageInfo.hasNextPage]
 }
@@ -137,7 +135,7 @@ const loadOmnivore = async (
 
   loading = true
   let targetBlock: BlockEntity | null = null
-  let lastSavedAt = ''
+  let lastFetchedAt = ''
 
   try {
     await logseq.UI.showMsg('🚀 Fetching articles ...')
@@ -157,7 +155,7 @@ const loadOmnivore = async (
       } else {
         lastUpdateAt = logseq.settings?.['synced at'] as string
       }
-      lastSavedAt = lastUpdateAt
+      lastFetchedAt = lastUpdateAt
       await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
     } else {
       targetBlock = await logseq.Editor.appendBlockInPage(
@@ -206,7 +204,6 @@ const loadOmnivore = async (
         if (!articleBlock) {
           throw new Error('block error')
         }
-        lastSavedAt = savedAt
 
         if (highlights?.length) {
           const highlightBlock = await logseq.Editor.insertBlock(
@@ -242,12 +239,14 @@ const loadOmnivore = async (
   } finally {
     loading = false
     if (targetBlock) {
+      lastFetchedAt = new Date().toISOString()
+
       await logseq.Editor.updateBlock(
         targetBlock.uuid,
-        `${blockTitle} [:small.opacity-20 "fetched at ${new Date().toISOString()}"]`
+        `${blockTitle} [:small.opacity-20 "fetched at ${lastFetchedAt}"]`
       )
 
-      logseq.updateSettings({ 'synced at': lastSavedAt })
+      logseq.updateSettings({ 'synced at': lastFetchedAt })
     }
   }
 }
