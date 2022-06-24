@@ -124,6 +124,15 @@ const fetchOmnivore = async (
         date:: ${new Date(savedAt).toDateString()}
         > ${description}`
 
+        // remove existing block for the same article
+        const existingBlocks = await logseq.DB.q<BlockEntity>(`"${slug}"`)
+        if (existingBlocks && existingBlocks.length > 0) {
+          console.log(existingBlocks)
+          for (const block of existingBlocks) {
+            await logseq.Editor.removeBlock(block.uuid)
+          }
+        }
+
         const articleBlock = await logseq.Editor.insertBlock(
           targetBlock.uuid,
           content,
