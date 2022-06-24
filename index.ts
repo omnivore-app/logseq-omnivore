@@ -32,6 +32,7 @@ interface Article {
   slug: string
   labels: Label[]
   highlights: Highlight[]
+  updatedAt: string
   savedAt: string
 }
 
@@ -99,14 +100,16 @@ const loadArticles = async (
       'content-type': 'application/json',
       authorization: apiKey,
     },
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
-      savedAfter ? 'saved:' + savedAfter : ''
-    } sort:saved-asc"}}`,
+    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              updatedAt\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"sort:saved-asc"}}`,
     method: 'POST',
   })
 
   const jsonRes = (await res.json()) as SearchResponse
-  const articles = jsonRes.data.search.edges.map((e) => e.node)
+  const articles = jsonRes.data.search.edges
+    .map((e) => e.node)
+    .filter((article) =>
+      savedAfter ? new Date(article.updatedAt) > new Date(savedAfter) : true
+    )
 
   return [articles, jsonRes.data.search.pageInfo.hasNextPage]
 }
@@ -241,9 +244,7 @@ const loadOmnivore = async (
     if (targetBlock) {
       await logseq.Editor.updateBlock(
         targetBlock.uuid,
-        `${blockTitle} [:small.opacity-20 "fetched at ${new Date(
-          lastSavedAt
-        ).toISOString()}"]`
+        `${blockTitle} [:small.opacity-20 "fetched at ${new Date().toISOString()}"]`
       )
 
       logseq.updateSettings({ 'synced at': lastSavedAt })
