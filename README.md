@@ -4,8 +4,8 @@ This plugin helps you to read [Omnivore](https://omnivore.app/) articles and hig
 
 ## Features
 
-* Read articles, highlights and labels from Omnivore
-* Create graphs based on Omnivore data
+- Read articles, highlights and labels from Omnivore
+- Create graphs based on Omnivore data
 
 ## Installation
 
@@ -21,17 +21,17 @@ This plugin helps you to read [Omnivore](https://omnivore.app/) articles and hig
 4. We will create a page "Omnivore" and a block for each article containing metadata like labels, nested with highlights underneath
 5. Clicking on the article will open the Omnivore article in a new tab
 6. We also create an internal link to each label in the article so you can group articles by label
-7. Kudos to [Brian](https://twitter.com/Bsunter) for the great [guide](https://briansunter.com/graph/#/page/omnivore-logseq-guide?anchor=ls-block-62b28de3-0e9e-456e-bf29-7e2541213aa5) on how to use Omnivore and the plugin 
+7. Kudos to [Brian](https://twitter.com/Bsunter) for the great [guide](https://briansunter.com/graph/#/page/omnivore-logseq-guide?anchor=ls-block-62b28de3-0e9e-456e-bf29-7e2541213aa5) on how to use Omnivore and the plugin
 
 ## Demo
 
 ### Settings
 
-![settings](./settings.gif)
+![settings](./src/images/settings.gif)
 
 ### Fetching
 
-![fetching](./fetching.gif)
+![fetching](./src/images/fetching.gif)
 
 ## Roadmap
 

@@ -13,14 +13,14 @@
     "url": "https://github.com/omnivore-app/logseq-omnivore"
   },
   "scripts": {
-    "dev": "parcel ./index.html --public-url ./",
-    "build": "parcel build --public-url . --no-source-maps index.html"
+    "dev": "parcel ./src/index.html --public-url ./src",
+    "build": "parcel build --public-url . --no-source-maps src/index.html"
   },
   "license": "MIT",
   "logseq": {
     "id": "_logseq-omnivore",
     "title": "logseq-omnivore",
-    "icon": "./icon.png"
+    "icon": "./src/images/icon.png"
   },
   "dependencies": {
     "@logseq/libs": "^0.0.6"
