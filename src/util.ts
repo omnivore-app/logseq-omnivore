@@ -38,6 +38,8 @@ export interface Highlight {
 
 const endpoint = 'https://api-prod.omnivore.app/api/graphql'
 
+export const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
+
 export const loadArticle = async (
   username: string,
   slug: string,
