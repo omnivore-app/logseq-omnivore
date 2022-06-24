@@ -22,13 +22,13 @@ const settings: SettingSchemaDesc[] = [
     description: 'Enter Omnivore username here',
     default: '',
   },
-  {
-    key: 'frequency',
-    type: 'number',
-    title: 'Enter sync with Omnivore frequency',
-    description: 'Enter sync with Omnivore frequency in minutes here',
-    default: 60,
-  },
+  // {
+  //   key: 'frequency',
+  //   type: 'number',
+  //   title: 'Enter sync with Omnivore frequency',
+  //   description: 'Enter sync with Omnivore frequency in minutes here',
+  //   default: 60,
+  // },
 ]
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
 let loading = false
