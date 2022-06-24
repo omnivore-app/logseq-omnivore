@@ -22,13 +22,14 @@ const settings: SettingSchemaDesc[] = [
     description: 'Enter Omnivore username here',
     default: '',
   },
-  // {
-  //   key: 'frequency',
-  //   type: 'number',
-  //   title: 'Enter sync with Omnivore frequency',
-  //   description: 'Enter sync with Omnivore frequency in minutes here',
-  //   default: 60,
-  // },
+  {
+    key: 'frequency',
+    type: 'number',
+    title: 'Enter sync with Omnivore frequency',
+    description:
+      'Enter sync with Omnivore frequency in minutes here or 0 to disable',
+    default: 60,
+  },
 ]
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
 let loading = false
@@ -172,6 +173,22 @@ const fetchOmnivore = async (
   }
 }
 
+const syncOmnivore = (
+  apiKey: string,
+  username: string,
+  frequency: number
+): number => {
+  let intervalID = 0
+  // sync every frequency minutes
+  if (frequency > 0) {
+    intervalID = setInterval(async () => {
+      await fetchOmnivore(apiKey, username, true)
+    }, frequency * 1000 * 60)
+  }
+
+  return intervalID
+}
+
 /**
  * main entry
  * @param baseInfo
@@ -184,10 +201,20 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
   // const frequency = (logseq.settings?.frequency as number) || 60
   let apiKey = logseq.settings?.['api key'] as string
   let username = logseq.settings?.['username'] as string
+  let frequency = logseq.settings?.frequency as number
+  let intervalID: number
 
   logseq.onSettingsChanged(() => {
     apiKey = logseq.settings?.['api key'] as string
     username = logseq.settings?.['username'] as string
+    const newFrequency = logseq.settings?.frequency as number
+    if (newFrequency !== frequency) {
+      if (intervalID) {
+        clearInterval(intervalID)
+      }
+      frequency = newFrequency
+      intervalID = syncOmnivore(apiKey, username, frequency)
+    }
   })
 
   logseq.provideModel({
@@ -215,10 +242,8 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
   // fetch articles on startup
   // await fetchOmnivore(apiKey, username)
 
-  // fetch articles every minute
-  // setInterval(async () => {
-  //   await fetchOmnivore(apiKey, username)
-  // }, frequency * 1000 * 60)
+  // sync every frequency minutes
+  intervalID = syncOmnivore(apiKey, username, frequency)
 }
 
 // bootstrap
