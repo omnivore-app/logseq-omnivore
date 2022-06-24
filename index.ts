@@ -181,7 +181,7 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
 
   logseq.useSettingsSchema(settings)
 
-  const frequency = (logseq.settings?.frequency as number) || 60
+  // const frequency = (logseq.settings?.frequency as number) || 60
   let apiKey = logseq.settings?.['api key'] as string
   let username = logseq.settings?.['username'] as string
 
