@@ -22,20 +22,22 @@ const settings: SettingSchemaDesc[] = [
     description: 'Enter Omnivore username here',
     default: '',
   },
-  // {
-  //   key: 'frequency',
-  //   type: 'number',
-  //   title: 'Enter sync with Omnivore frequency',
-  //   description: 'Enter sync with Omnivore frequency in minutes here',
-  //   default: 60,
-  // },
+  {
+    key: 'frequency',
+    type: 'number',
+    title: 'Enter sync with Omnivore frequency',
+    description:
+      'Enter sync with Omnivore frequency in minutes here or 0 to disable',
+    default: 60,
+  },
 ]
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
 let loading = false
 
 const fetchOmnivore = async (
   apiKey: string,
-  username: string
+  username: string,
+  inBackground = false
 ): Promise<void> => {
   if (loading) return
 
@@ -50,7 +52,7 @@ const fetchOmnivore = async (
   const highlightTitle = '### 🔍 [[Highlights]]'
   const fetchingTitle = '🚀 Fetching articles ...'
 
-  logseq.App.pushState('page', { name: pageName })
+  !inBackground && logseq.App.pushState('page', { name: pageName })
 
   await delay(300)
 
@@ -59,12 +61,17 @@ const fetchOmnivore = async (
   let lastFetchedAt = ''
 
   try {
-    await logseq.UI.showMsg('🚀 Fetching articles ...')
+    !inBackground && (await logseq.UI.showMsg('🚀 Fetching articles ...'))
 
-    const currentPage = await logseq.Editor.getCurrentPage()
-    if (currentPage?.originalName !== pageName) throw new Error('page error')
+    let omnivorePage = await logseq.Editor.getPage(pageName)
+    if (!omnivorePage) {
+      omnivorePage = await logseq.Editor.createPage(pageName)
+    }
+    if (!omnivorePage) {
+      throw new Error('Failed to create page')
+    }
 
-    const pageBlocksTree = await logseq.Editor.getCurrentPageBlocksTree()
+    const pageBlocksTree = await logseq.Editor.getPageBlocksTree(pageName)
     targetBlock = pageBlocksTree.length > 0 ? pageBlocksTree[0] : null
     let lastUpdateAt = ''
     if (targetBlock) {
@@ -80,7 +87,7 @@ const fetchOmnivore = async (
       await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
     } else {
       targetBlock = await logseq.Editor.appendBlockInPage(
-        currentPage.uuid,
+        pageName,
         fetchingTitle
       )
     }
@@ -153,9 +160,10 @@ const fetchOmnivore = async (
       after += size
     }
 
-    await logseq.UI.showMsg('🔖 Articles fetched')
+    !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
   } catch (e) {
-    await logseq.UI.showMsg('Failed to fetch articles', 'warning')
+    !inBackground &&
+      (await logseq.UI.showMsg('Failed to fetch articles', 'warning'))
     console.error(e)
   } finally {
     loading = false
@@ -172,22 +180,47 @@ const fetchOmnivore = async (
   }
 }
 
+const syncOmnivore = (
+  apiKey: string,
+  username: string,
+  frequency: number
+): number => {
+  let intervalID = 0
+  // sync every frequency minutes
+  if (frequency > 0) {
+    intervalID = setInterval(async () => {
+      await fetchOmnivore(apiKey, username, true)
+    }, frequency * 1000 * 60)
+  }
+
+  return intervalID
+}
+
 /**
  * main entry
  * @param baseInfo
  */
-const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
+const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
 
   logseq.useSettingsSchema(settings)
 
-  // const frequency = (logseq.settings?.frequency as number) || 60
   let apiKey = logseq.settings?.['api key'] as string
   let username = logseq.settings?.['username'] as string
+  let frequency = logseq.settings?.frequency as number
+  let intervalID: number
 
   logseq.onSettingsChanged(() => {
     apiKey = logseq.settings?.['api key'] as string
     username = logseq.settings?.['username'] as string
+    const newFrequency = logseq.settings?.frequency as number
+    if (newFrequency !== frequency) {
+      if (intervalID) {
+        clearInterval(intervalID)
+      }
+      frequency = newFrequency
+      intervalID = syncOmnivore(apiKey, username, frequency)
+    }
   })
 
   logseq.provideModel({
@@ -213,12 +246,10 @@ const main = async (baseInfo: LSPluginBaseInfo): Promise<void> => {
   `)
 
   // fetch articles on startup
-  // await fetchOmnivore(apiKey, username)
+  await fetchOmnivore(apiKey, username, true)
 
-  // fetch articles every minute
-  // setInterval(async () => {
-  //   await fetchOmnivore(apiKey, username)
-  // }, frequency * 1000 * 60)
+  // sync every frequency minutes
+  intervalID = syncOmnivore(apiKey, username, frequency)
 }
 
 // bootstrap
