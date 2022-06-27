@@ -59,7 +59,8 @@ export const loadArticles = async (
   apiKey: string,
   after = 0,
   first = 10,
-  updatedAt = ''
+  updatedAt = '',
+  filter = ''
 ): Promise<[Article[], boolean]> => {
   const res = await fetch(endpoint, {
     headers: {
@@ -68,7 +69,7 @@ export const loadArticles = async (
     },
     body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              url\\n              author\\n              updatedAt\\n              description\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       updatedAt ? 'updated:' + updatedAt : ''
-    } sort:updated-asc"}}`,
+    } sort:updated-asc ${filter}"}}`,
     method: 'POST',
   })
 
