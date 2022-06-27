@@ -50,7 +50,6 @@ const fetchOmnivore = async (
 
   const pageName = 'Omnivore'
   const blockTitle = '## 🔖 Articles'
-  const highlightTitle = '### 🔍 [[Highlights]]'
   const fetchingTitle = '🚀 Fetching articles ...'
 
   !inBackground && logseq.App.pushState('page', { name: pageName })
@@ -148,20 +147,14 @@ const fetchOmnivore = async (
         }
 
         if (article.highlights && article.highlights.length > 0) {
-          const highlightBlock = await logseq.Editor.insertBlock(
-            articleBlock.uuid,
-            highlightTitle
-          )
-          if (!highlightBlock) {
-            throw new Error('block error')
-          }
-
-          for (const highlight of article.highlights) {
-            await logseq.Editor.insertBlock(
-              highlightBlock.uuid,
-              highlight.quote
-            )
-          }
+          const highlightBatch = article.highlights.map(it => {
+            return {
+              content: `${it.quote} - [read](https://omnivore.app/me/${slug}#${it.id})`
+            }
+          })
+          await logseq.Editor.insertBatchBlock(articleBlock.uuid, highlightBatch, {
+            sibling: false
+          })
         }
 
         // sleep for a second to avoid rate limit
