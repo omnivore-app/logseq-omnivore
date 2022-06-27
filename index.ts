@@ -4,7 +4,7 @@ import {
   LSPluginBaseInfo,
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
-import * as icon from './icon.png'
+import icon from './icon.png'
 import { loadArticle, loadArticles } from './util'
 
 const settings: SettingSchemaDesc[] = [
@@ -240,7 +240,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
     key: 'logseq-omnivore',
     template: `
       <a data-on-click="loadOmnivore" class="button" style="width:3rem;height:3rem;">
-        <img src="${icon as string}">
+        <img src="${icon}">
       </a>
     `,
   })
