@@ -115,7 +115,6 @@ const fetchOmnivore = async (
         // remove existing block for the same article
         const existingBlocks = await logseq.DB.q<BlockEntity>(`"${slug}"`)
         if (existingBlocks && existingBlocks.length > 0) {
-          console.log(existingBlocks)
           for (const block of existingBlocks) {
             await logseq.Editor.removeBlock(block.uuid)
           }
