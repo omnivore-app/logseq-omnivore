@@ -23,12 +23,21 @@ const settings: SettingSchemaDesc[] = [
       'Enter sync with Omnivore frequency in minutes here or 0 to disable',
     default: 60,
   },
+  {
+    key: 'filter',
+    type: 'string',
+    title: 'Enter a filter for Omnivore articles',
+    description:
+      'Enter a filter for Omnivore articles here. e.g. "has:highlights"',
+    default: 'has:highlights',
+  },
 ]
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
 let loading = false
 
 const fetchOmnivore = async (
   apiKey: string,
+  filter: string,
   inBackground = false
 ): Promise<void> => {
   if (loading) return
@@ -95,7 +104,8 @@ const fetchOmnivore = async (
         apiKey,
         after,
         size,
-        lastUpdateAt
+        lastUpdateAt,
+        filter
       )
 
       for (const { title, author, slug, description } of articles) {
@@ -177,12 +187,16 @@ const fetchOmnivore = async (
   }
 }
 
-const syncOmnivore = (apiKey: string, frequency: number): number => {
+const syncOmnivore = (
+  apiKey: string,
+  frequency: number,
+  filter: string
+): number => {
   let intervalID = 0
   // sync every frequency minutes
   if (frequency > 0) {
     intervalID = setInterval(async () => {
-      await fetchOmnivore(apiKey, true)
+      await fetchOmnivore(apiKey, filter, true)
     }, frequency * 1000 * 60)
   }
 
@@ -200,23 +214,25 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
 
   let apiKey = logseq.settings?.['api key'] as string
   let frequency = logseq.settings?.frequency as number
+  let filter = logseq.settings?.filter as string
   let intervalID: number
 
   logseq.onSettingsChanged(() => {
     apiKey = logseq.settings?.['api key'] as string
+    filter = logseq.settings?.filter as string
     const newFrequency = logseq.settings?.frequency as number
     if (newFrequency !== frequency) {
       if (intervalID) {
         clearInterval(intervalID)
       }
       frequency = newFrequency
-      intervalID = syncOmnivore(apiKey, frequency)
+      intervalID = syncOmnivore(apiKey, frequency, filter)
     }
   })
 
   logseq.provideModel({
     async loadOmnivore() {
-      await fetchOmnivore(apiKey)
+      await fetchOmnivore(apiKey, filter)
     },
   })
 
@@ -237,10 +253,10 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   `)
 
   // fetch articles on startup
-  await fetchOmnivore(apiKey, true)
+  await fetchOmnivore(apiKey, filter, true)
 
   // sync every frequency minutes
-  intervalID = syncOmnivore(apiKey, frequency)
+  intervalID = syncOmnivore(apiKey, frequency, filter)
 }
 
 // bootstrap
