@@ -6,6 +6,7 @@ import {
 } from '@logseq/libs/dist/LSPlugin'
 import icon from './icon.png'
 import { loadArticle, loadArticles } from './util'
+import type { Label } from './util'
 
 const settings: SettingSchemaDesc[] = [
   {
@@ -111,16 +112,24 @@ const fetchOmnivore = async (
       for (const { title, author, slug, description } of articles) {
         const { labels, highlights, savedAt } = await loadArticle(slug, apiKey)
 
-        const content = `[${title}](https://omnivore.app/me/${slug})
-        collapsed:: true
-        author:: "${author}"
-        labels:: ${
-          labels
-            ? labels.map((l: { name: string }) => `[[${l.name}]]`).join(' ')
-            : 'null'
+        // Build content string
+        let content = `[${title}](https://omnivore.app/me/${slug})`
+        content += '\ncollapsed:: true'
+        if (author) {
+          content += `\nauthor:: ${author}`
         }
-        date:: ${new Date(savedAt).toDateString()}
-        > ${description}`
+
+        const joinedLabels = (labels ?? []).map((l: Label) => l.name).join()
+
+        if (joinedLabels.length > 0) {
+          content += `\nlabels:: ${joinedLabels}`
+        }
+
+        content += `\ndate_saved:: ${new Date(savedAt).toDateString()}`
+
+        if (description) {
+          content += `\n> ${description}`
+        }
 
         // remove existing block for the same article
         const existingBlocks = await logseq.DB.q<BlockEntity>(`"${slug}"`)
