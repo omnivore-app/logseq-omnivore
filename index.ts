@@ -16,13 +16,6 @@ const settings: SettingSchemaDesc[] = [
     default: '',
   },
   {
-    key: 'username',
-    type: 'string',
-    title: 'Enter Omnivore username',
-    description: 'Enter Omnivore username here',
-    default: '',
-  },
-  {
     key: 'frequency',
     type: 'number',
     title: 'Enter sync with Omnivore frequency',
@@ -36,13 +29,12 @@ let loading = false
 
 const fetchOmnivore = async (
   apiKey: string,
-  username: string,
   inBackground = false
 ): Promise<void> => {
   if (loading) return
 
-  if (!apiKey || !username) {
-    await logseq.UI.showMsg('Missing Omnivore username or api key', 'warning')
+  if (!apiKey) {
+    await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
 
     return
   }
@@ -107,13 +99,9 @@ const fetchOmnivore = async (
       )
 
       for (const { title, author, slug, description } of articles) {
-        const { labels, highlights, savedAt } = await loadArticle(
-          username,
-          slug,
-          apiKey
-        )
+        const { labels, highlights, savedAt } = await loadArticle(slug, apiKey)
 
-        const content = `[${title}](https://omnivore.app/${username}/${slug})
+        const content = `[${title}](https://omnivore.app/me/${slug})
         collapsed:: true
         author:: "${author}"
         labels:: ${
@@ -189,16 +177,12 @@ const fetchOmnivore = async (
   }
 }
 
-const syncOmnivore = (
-  apiKey: string,
-  username: string,
-  frequency: number
-): number => {
+const syncOmnivore = (apiKey: string, frequency: number): number => {
   let intervalID = 0
   // sync every frequency minutes
   if (frequency > 0) {
     intervalID = setInterval(async () => {
-      await fetchOmnivore(apiKey, username, true)
+      await fetchOmnivore(apiKey, true)
     }, frequency * 1000 * 60)
   }
 
@@ -215,26 +199,24 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   logseq.useSettingsSchema(settings)
 
   let apiKey = logseq.settings?.['api key'] as string
-  let username = logseq.settings?.['username'] as string
   let frequency = logseq.settings?.frequency as number
   let intervalID: number
 
   logseq.onSettingsChanged(() => {
     apiKey = logseq.settings?.['api key'] as string
-    username = logseq.settings?.['username'] as string
     const newFrequency = logseq.settings?.frequency as number
     if (newFrequency !== frequency) {
       if (intervalID) {
         clearInterval(intervalID)
       }
       frequency = newFrequency
-      intervalID = syncOmnivore(apiKey, username, frequency)
+      intervalID = syncOmnivore(apiKey, frequency)
     }
   })
 
   logseq.provideModel({
     async loadOmnivore() {
-      await fetchOmnivore(apiKey, username)
+      await fetchOmnivore(apiKey)
     },
   })
 
@@ -255,10 +237,10 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   `)
 
   // fetch articles on startup
-  await fetchOmnivore(apiKey, username, true)
+  await fetchOmnivore(apiKey, true)
 
   // sync every frequency minutes
-  intervalID = syncOmnivore(apiKey, username, frequency)
+  intervalID = syncOmnivore(apiKey, frequency)
 }
 
 // bootstrap
