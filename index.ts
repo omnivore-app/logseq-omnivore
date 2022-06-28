@@ -148,7 +148,7 @@ const fetchOmnivore = async (
 
         if (article.highlights && article.highlights.length > 0) {
           const highlightBatch = article.highlights.map(it => {
-            let noteChild = it.annotation ? { content: 'My Notes: ' + it.annotation } : undefined
+            const noteChild = it.annotation ? { content: `My Notes: ${it.annotation}` } : undefined
             return {
               content: `${it.quote} - [read](https://omnivore.app/me/${slug}#${it.id})`, 
               children: noteChild ? [noteChild] : undefined
