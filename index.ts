@@ -123,10 +123,13 @@ const fetchOmnivore = async (
 
         content += `\ndate_saved:: ${new Date(article.savedAt).toDateString()}`
 
+<<<<<<< HEAD
         if (article.description) {
           content += `\n> ${article.description}`
         }
 
+=======
+>>>>>>> 78903e4 (Show Read in Omnivore inline at end of highlights, show notes in a block, dont show description)
         // remove existing block for the same article
         const existingBlocks = await logseq.DB.q<BlockEntity>(
           `"${article.slug}"`
@@ -148,10 +151,12 @@ const fetchOmnivore = async (
 
         if (article.highlights && article.highlights.length > 0) {
           const highlightBatch = article.highlights.map(it => {
-            const noteChild = it.annotation ? { content: `My Notes: ${it.annotation}` } : undefined
+            const noteChild = it.annotation ? { content: it.annotation } : undefined
             return {
-              content: `${it.quote} - [read](https://omnivore.app/me/${slug}#${it.id})`, 
-              children: noteChild ? [noteChild] : undefined
+              content: `>> ${it.quote} -- [Read in Omnivore](https://omnivore.app/me/${slug}#${it.id})`,
+              children: [
+                noteChild
+              ].filter((c) => c) as IBatchBlock[]
             }
           })
           await logseq.Editor.insertBatchBlock(articleBlock.uuid, highlightBatch, {
