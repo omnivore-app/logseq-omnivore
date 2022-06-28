@@ -118,7 +118,7 @@ const fetchOmnivore = async (
           content += `\nauthor:: ${article.author}`
         }
 
-        if (article.labels.length > 0) {
+        if (article.labels && article.labels.length > 0) {
           content += `\nlabels:: ${article.labels.map((l) => l.name).join()}`
         }
 
@@ -147,7 +147,7 @@ const fetchOmnivore = async (
           throw new Error('block error')
         }
 
-        if (article.highlights.length > 0) {
+        if (article.highlights && article.highlights.length > 0) {
           const highlightBlock = await logseq.Editor.insertBlock(
             articleBlock.uuid,
             highlightTitle

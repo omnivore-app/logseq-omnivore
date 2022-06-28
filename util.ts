@@ -22,8 +22,8 @@ export interface Article {
   author: string
   description: string
   slug: string
-  labels: Label[]
-  highlights: Highlight[]
+  labels?: Label[]
+  highlights?: Highlight[]
   updatedAt: string
   savedAt: string
 }
