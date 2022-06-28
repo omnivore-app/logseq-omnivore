@@ -5,7 +5,7 @@ import {
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
 import icon from './icon.png'
-import { loadArticles } from './util'
+import { Article, loadArticles } from './util'
 
 const settings: SettingSchemaDesc[] = [
   {
@@ -97,10 +97,12 @@ const fetchOmnivore = async (
     }
 
     const size = 100
-    let after = 0
-    /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-    while (true) {
-      const [articles, hasNextPage] = await loadArticles(
+    for (
+      let hasNextPage = true, articles: Article[] = [], after = 0;
+      hasNextPage;
+      after += size
+    ) {
+      ;[articles, hasNextPage] = await loadArticles(
         apiKey,
         after,
         size,
@@ -165,11 +167,6 @@ const fetchOmnivore = async (
         // sleep for a second to avoid rate limit
         await delay(1000)
       }
-
-      if (!hasNextPage) {
-        break
-      }
-      after += size
     }
 
     !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
