@@ -5,8 +5,7 @@ import {
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
 import icon from './icon.png'
-import { loadArticle, loadArticles } from './util'
-import type { Label } from './util'
+import { Article, loadArticles } from './util'
 
 const settings: SettingSchemaDesc[] = [
   {
@@ -98,10 +97,12 @@ const fetchOmnivore = async (
     }
 
     const size = 100
-    let after = 0
-    /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-    while (true) {
-      const [articles, hasNextPage] = await loadArticles(
+    for (
+      let hasNextPage = true, articles: Article[] = [], after = 0;
+      hasNextPage;
+      after += size
+    ) {
+      ;[articles, hasNextPage] = await loadArticles(
         apiKey,
         after,
         size,
@@ -109,30 +110,28 @@ const fetchOmnivore = async (
         filter
       )
 
-      for (const { title, author, slug, description } of articles) {
-        const { labels, highlights, savedAt } = await loadArticle(slug, apiKey)
-
+      for (const article of articles) {
         // Build content string
-        let content = `[${title}](https://omnivore.app/me/${slug})`
+        let content = `[${article.title}](https://omnivore.app/me/${article.slug})`
         content += '\ncollapsed:: true'
-        if (author) {
-          content += `\nauthor:: ${author}`
+        if (article.author) {
+          content += `\nauthor:: ${article.author}`
         }
 
-        const joinedLabels = (labels ?? []).map((l: Label) => l.name).join()
-
-        if (joinedLabels.length > 0) {
-          content += `\nlabels:: ${joinedLabels}`
+        if (article.labels && article.labels.length > 0) {
+          content += `\nlabels:: ${article.labels.map((l) => l.name).join()}`
         }
 
-        content += `\ndate_saved:: ${new Date(savedAt).toDateString()}`
+        content += `\ndate_saved:: ${new Date(article.savedAt).toDateString()}`
 
-        if (description) {
-          content += `\n> ${description}`
+        if (article.description) {
+          content += `\n> ${article.description}`
         }
 
         // remove existing block for the same article
-        const existingBlocks = await logseq.DB.q<BlockEntity>(`"${slug}"`)
+        const existingBlocks = await logseq.DB.q<BlockEntity>(
+          `"${article.slug}"`
+        )
         if (existingBlocks && existingBlocks.length > 0) {
           for (const block of existingBlocks) {
             await logseq.Editor.removeBlock(block.uuid)
@@ -148,7 +147,7 @@ const fetchOmnivore = async (
           throw new Error('block error')
         }
 
-        if (highlights?.length) {
+        if (article.highlights && article.highlights.length > 0) {
           const highlightBlock = await logseq.Editor.insertBlock(
             articleBlock.uuid,
             highlightTitle
@@ -157,7 +156,7 @@ const fetchOmnivore = async (
             throw new Error('block error')
           }
 
-          for (const highlight of highlights) {
+          for (const highlight of article.highlights) {
             await logseq.Editor.insertBlock(
               highlightBlock.uuid,
               highlight.quote
@@ -168,11 +167,6 @@ const fetchOmnivore = async (
         // sleep for a second to avoid rate limit
         await delay(1000)
       }
-
-      if (!hasNextPage) {
-        break
-      }
-      after += size
     }
 
     !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
