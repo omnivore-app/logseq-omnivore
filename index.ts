@@ -153,7 +153,7 @@ const fetchOmnivore = async (
           const highlightBatch = article.highlights.map(it => {
             const noteChild = it.annotation ? { content: it.annotation } : undefined
             return {
-              content: `>> ${it.quote} -- [Read in Omnivore](https://omnivore.app/me/${slug}#${it.id})`,
+              content: `>> ${it.quote} — [Read in Omnivore](https://omnivore.app/me/${slug}#${it.id})`,
               children: [
                 noteChild
               ].filter((c) => c) as IBatchBlock[]
