@@ -118,7 +118,9 @@ const fetchOmnivore = async (
         }
 
         if (article.labels && article.labels.length > 0) {
-          content += `\nlabels:: ${article.labels.map((l) => l.name).join()}`
+          content += `\nlabels:: ${article.labels
+            .map((l) => `[[${l.name}]]`)
+            .join()}`
         }
 
         content += `\ndate_saved:: ${new Date(article.savedAt).toDateString()}`
@@ -143,16 +145,22 @@ const fetchOmnivore = async (
         }
 
         if (article.highlights && article.highlights.length > 0) {
-          const highlightBatch = article.highlights.map(it => {
-            const noteChild = it.annotation ? { content: it.annotation } : undefined
+          const highlightBatch = article.highlights.map((it) => {
+            const noteChild = it.annotation
+              ? { content: it.annotation }
+              : undefined
             return {
               content: `>> ${it.quote} — [Read in Omnivore](https://omnivore.app/me/${article.slug}#${it.id})`,
-              children: noteChild ? [noteChild] : undefined
+              children: noteChild ? [noteChild] : undefined,
             }
           })
-          await logseq.Editor.insertBatchBlock(articleBlock.uuid, highlightBatch, {
-            sibling: false
-          })
+          await logseq.Editor.insertBatchBlock(
+            articleBlock.uuid,
+            highlightBatch,
+            {
+              sibling: false,
+            }
+          )
         }
       }
     }
