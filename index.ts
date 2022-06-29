@@ -50,7 +50,6 @@ const fetchOmnivore = async (
 
   const pageName = 'Omnivore'
   const blockTitle = '## 🔖 Articles'
-  const highlightTitle = '### 🔍 [[Highlights]]'
   const fetchingTitle = '🚀 Fetching articles ...'
 
   !inBackground && logseq.App.pushState('page', { name: pageName })
@@ -124,10 +123,6 @@ const fetchOmnivore = async (
 
         content += `\ndate_saved:: ${new Date(article.savedAt).toDateString()}`
 
-        if (article.description) {
-          content += `\n> ${article.description}`
-        }
-
         // remove existing block for the same article
         const existingBlocks = await logseq.DB.q<BlockEntity>(
           `"${article.slug}"`
@@ -148,24 +143,17 @@ const fetchOmnivore = async (
         }
 
         if (article.highlights && article.highlights.length > 0) {
-          const highlightBlock = await logseq.Editor.insertBlock(
-            articleBlock.uuid,
-            highlightTitle
-          )
-          if (!highlightBlock) {
-            throw new Error('block error')
-          }
-
-          for (const highlight of article.highlights) {
-            await logseq.Editor.insertBlock(
-              highlightBlock.uuid,
-              highlight.quote
-            )
-          }
+          const highlightBatch = article.highlights.map(it => {
+            const noteChild = it.annotation ? { content: it.annotation } : undefined
+            return {
+              content: `>> ${it.quote} — [Read in Omnivore](https://omnivore.app/me/${article.slug}#${it.id})`,
+              children: noteChild ? [noteChild] : undefined
+            }
+          })
+          await logseq.Editor.insertBatchBlock(articleBlock.uuid, highlightBatch, {
+            sibling: false
+          })
         }
-
-        // sleep for a second to avoid rate limit
-        await delay(1000)
       }
     }
 
