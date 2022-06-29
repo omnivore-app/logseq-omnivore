@@ -39,6 +39,7 @@ let loading = false
 const fetchOmnivore = async (
   apiKey: string,
   filter: string,
+  syncAt: string,
   inBackground = false
 ): Promise<void> => {
   if (loading) return
@@ -59,7 +60,6 @@ const fetchOmnivore = async (
 
   loading = true
   let targetBlock: BlockEntity | null = null
-  let lastFetchedAt = ''
 
   try {
     !inBackground && (await logseq.UI.showMsg('🚀 Fetching articles ...'))
@@ -74,17 +74,7 @@ const fetchOmnivore = async (
 
     const pageBlocksTree = await logseq.Editor.getPageBlocksTree(pageName)
     targetBlock = pageBlocksTree.length > 0 ? pageBlocksTree[0] : null
-    let lastUpdateAt = ''
     if (targetBlock) {
-      const matches = targetBlock.content.match(
-        /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}).(\d{3})Z/g
-      )
-      if (matches) {
-        lastUpdateAt = matches[0]
-      } else {
-        lastUpdateAt = logseq.settings?.['synced at'] as string
-      }
-      lastFetchedAt = lastUpdateAt
       await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
     } else {
       targetBlock = await logseq.Editor.appendBlockInPage(
@@ -106,7 +96,7 @@ const fetchOmnivore = async (
         apiKey,
         after,
         size,
-        lastUpdateAt,
+        syncAt,
         filter
       )
 
@@ -153,10 +143,11 @@ const fetchOmnivore = async (
         })
       }
 
-      await logseq.Editor.insertBatchBlock(targetBlock.uuid, articleBatch, {
-        before: true,
-        sibling: false,
-      })
+      articleBatch.length > 0 &&
+        (await logseq.Editor.insertBatchBlock(targetBlock.uuid, articleBatch, {
+          before: true,
+          sibling: false,
+        }))
     }
 
     !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
@@ -167,14 +158,9 @@ const fetchOmnivore = async (
   } finally {
     loading = false
     if (targetBlock) {
-      lastFetchedAt = new Date().toISOString()
+      await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle)
 
-      await logseq.Editor.updateBlock(
-        targetBlock.uuid,
-        `${blockTitle} [:small.opacity-20 "fetched at ${lastFetchedAt}"]`
-      )
-
-      logseq.updateSettings({ 'synced at': lastFetchedAt })
+      logseq.updateSettings({ 'synced at': new Date().toISOString() })
     }
   }
 }
@@ -182,13 +168,14 @@ const fetchOmnivore = async (
 const syncOmnivore = (
   apiKey: string,
   frequency: number,
-  filter: string
+  filter: string,
+  syncAt: string
 ): number => {
   let intervalID = 0
   // sync every frequency minutes
   if (frequency > 0) {
     intervalID = setInterval(async () => {
-      await fetchOmnivore(apiKey, filter, true)
+      await fetchOmnivore(apiKey, filter, syncAt, true)
     }, frequency * 1000 * 60)
   }
 
@@ -207,24 +194,26 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   let apiKey = logseq.settings?.['api key'] as string
   let frequency = logseq.settings?.frequency as number
   let filter = logseq.settings?.filter as string
+  let syncAt = logseq.settings?.['synced at'] as string
   let intervalID: number
 
   logseq.onSettingsChanged(() => {
     apiKey = logseq.settings?.['api key'] as string
     filter = logseq.settings?.filter as string
+    syncAt = logseq.settings?.['synced at'] as string
     const newFrequency = logseq.settings?.frequency as number
     if (newFrequency !== frequency) {
       if (intervalID) {
         clearInterval(intervalID)
       }
       frequency = newFrequency
-      intervalID = syncOmnivore(apiKey, frequency, filter)
+      intervalID = syncOmnivore(apiKey, frequency, filter, syncAt)
     }
   })
 
   logseq.provideModel({
     async loadOmnivore() {
-      await fetchOmnivore(apiKey, filter)
+      await fetchOmnivore(apiKey, filter, syncAt)
     },
   })
 
@@ -245,10 +234,10 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   `)
 
   // fetch articles on startup
-  await fetchOmnivore(apiKey, filter, true)
+  await fetchOmnivore(apiKey, filter, syncAt, true)
 
   // sync every frequency minutes
-  intervalID = syncOmnivore(apiKey, frequency, filter)
+  intervalID = syncOmnivore(apiKey, frequency, filter, syncAt)
 }
 
 // bootstrap
