@@ -86,7 +86,7 @@ const fetchOmnivore = async (
       throw new Error('block error')
     }
 
-    const size = 100
+    const size = 50
     for (
       let hasNextPage = true, articles: Article[] = [], after = 0;
       hasNextPage;
