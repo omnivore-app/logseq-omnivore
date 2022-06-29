@@ -1,6 +1,7 @@
 import '@logseq/libs'
 import {
   BlockEntity,
+  IBatchBlock,
   LSPluginBaseInfo,
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
@@ -109,6 +110,7 @@ const fetchOmnivore = async (
         filter
       )
 
+      const articleBatch: IBatchBlock[] = []
       for (const article of articles) {
         // Build content string
         let content = `[${article.title}](https://omnivore.app/me/${article.slug})`
@@ -135,34 +137,26 @@ const fetchOmnivore = async (
           }
         }
 
-        const articleBlock = await logseq.Editor.insertBlock(
-          targetBlock.uuid,
-          content,
-          { before: true, sibling: false }
-        )
-        if (!articleBlock) {
-          throw new Error('block error')
-        }
+        const highlightBatch = article.highlights?.map((it) => {
+          const noteChild = it.annotation
+            ? { content: it.annotation }
+            : undefined
+          return {
+            content: `>> ${it.quote} — [Read in Omnivore](https://omnivore.app/me/${article.slug}#${it.id})`,
+            children: noteChild ? [noteChild] : undefined,
+          }
+        })
 
-        if (article.highlights && article.highlights.length > 0) {
-          const highlightBatch = article.highlights.map((it) => {
-            const noteChild = it.annotation
-              ? { content: it.annotation }
-              : undefined
-            return {
-              content: `>> ${it.quote} — [Read in Omnivore](https://omnivore.app/me/${article.slug}#${it.id})`,
-              children: noteChild ? [noteChild] : undefined,
-            }
-          })
-          await logseq.Editor.insertBatchBlock(
-            articleBlock.uuid,
-            highlightBatch,
-            {
-              sibling: false,
-            }
-          )
-        }
+        articleBatch.unshift({
+          content,
+          children: highlightBatch,
+        })
       }
+
+      await logseq.Editor.insertBatchBlock(targetBlock.uuid, articleBatch, {
+        before: true,
+        sibling: false,
+      })
     }
 
     !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
