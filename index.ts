@@ -5,6 +5,7 @@ import {
   LSPluginBaseInfo,
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
+import { getDateForPage } from 'logseq-dateutils';
 import icon from './icon.png'
 import { Article, loadArticles } from './util'
 
@@ -68,6 +69,8 @@ const fetchOmnivore = async (
 
   loading = true
   let targetBlock: BlockEntity | null = null
+  const userConfigs = await logseq.App.getUserConfigs();
+  const preferredDateFormat: string = userConfigs.preferredDateFormat;
 
   try {
     !inBackground && (await logseq.UI.showMsg('🚀 Fetching articles ...'))
@@ -130,7 +133,7 @@ const fetchOmnivore = async (
             .join()}`
         }
 
-        content += `\ndate_saved:: ${new Date(article.savedAt).toDateString()}`
+        content += `\ndate_saved:: ${getDateForPage(new Date(article.savedAt), preferredDateFormat)}`
 
         // remove existing block for the same article
         const existingBlocks = await logseq.DB.q<BlockEntity>(
