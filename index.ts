@@ -13,16 +13,16 @@ const settings: SettingSchemaDesc[] = [
   {
     key: 'api key',
     type: 'string',
-    title: 'Enter Omnivore Api Key',
-    description: 'Enter Omnivore Api Key here',
+    title: 'Enter your Omnivore Api Key',
+    description: 'You can create an API key at https://omnivore.app/settings/api',
     default: '',
   },
   {
     key: 'filter',
     type: 'string',
-    title: 'Enter a filter for Omnivore articles',
+    title: 'Enter an Omnivore search filter',
     description:
-      'Enter a filter for Omnivore articles here. e.g. "has:highlights"',
+      'See https://omnivore.app/help/search for more info on search filter syntax',
     default: 'has:highlights',
   },
   {
@@ -32,6 +32,14 @@ const settings: SettingSchemaDesc[] = [
     description:
       'Enter sync with Omnivore frequency in minutes here or 0 to disable',
     default: 60,
+  },
+  {
+    key: 'synced at',
+    type: 'string',
+    title: 'Last Sync',
+    description:
+      'The last time Omnivore was synced. Clear this value to completely refresh the sync.',
+    default: '',
   },
 ]
 
