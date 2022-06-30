@@ -23,7 +23,8 @@
     "icon": "./icon.png"
   },
   "dependencies": {
-    "@logseq/libs": "^0.0.6"
+    "@logseq/libs": "^0.0.6",
+    "logseq-dateutils": "^0.0.22"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.1",

@@ -5,6 +5,7 @@ import {
   LSPluginBaseInfo,
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
+import { getDateForPage } from 'logseq-dateutils';
 import icon from './icon.png'
 import { Article, loadArticles } from './util'
 
@@ -17,14 +18,6 @@ const settings: SettingSchemaDesc[] = [
     default: '',
   },
   {
-    key: 'frequency',
-    type: 'number',
-    title: 'Enter sync with Omnivore frequency',
-    description:
-      'Enter sync with Omnivore frequency in minutes here or 0 to disable',
-    default: 60,
-  },
-  {
     key: 'filter',
     type: 'string',
     title: 'Enter a filter for Omnivore articles',
@@ -32,7 +25,23 @@ const settings: SettingSchemaDesc[] = [
       'Enter a filter for Omnivore articles here. e.g. "has:highlights"',
     default: 'has:highlights',
   },
+  {
+    key: 'frequency',
+    type: 'number',
+    title: 'Enter sync with Omnivore frequency',
+    description:
+      'Enter sync with Omnivore frequency in minutes here or 0 to disable',
+    default: 60,
+  },
 ]
+
+const siteNameFromUrl = (originalArticleUrl: string): string => {
+  try {
+    return new URL(originalArticleUrl).hostname.replace(/^www\./, '')
+  } catch {}
+  return ''
+}
+
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
 let loading = false
 
@@ -60,6 +69,8 @@ const fetchOmnivore = async (
 
   loading = true
   let targetBlock: BlockEntity | null = null
+  const userConfigs = await logseq.App.getUserConfigs();
+  const preferredDateFormat: string = userConfigs.preferredDateFormat;
 
   try {
     !inBackground && (await logseq.UI.showMsg('🚀 Fetching articles ...'))
@@ -105,6 +116,13 @@ const fetchOmnivore = async (
         // Build content string
         let content = `[${article.title}](https://omnivore.app/me/${article.slug})`
         content += '\ncollapsed:: true'
+
+        const displaySiteName = article.siteName || siteNameFromUrl(article.originalArticleUrl)
+        console.log("display site name", displaySiteName)
+        if (displaySiteName) {
+          content += `\nsite:: [${displaySiteName}](${article.originalArticleUrl})`
+        }
+
         if (article.author) {
           content += `\nauthor:: ${article.author}`
         }
@@ -115,7 +133,7 @@ const fetchOmnivore = async (
             .join()}`
         }
 
-        content += `\ndate_saved:: ${new Date(article.savedAt).toDateString()}`
+        content += `\ndate_saved:: ${getDateForPage(new Date(article.savedAt), preferredDateFormat)}`
 
         // remove existing block for the same article
         const existingBlocks = await logseq.DB.q<BlockEntity>(
@@ -132,7 +150,7 @@ const fetchOmnivore = async (
             ? { content: it.annotation }
             : undefined
           return {
-            content: `>> ${it.quote} — [Read in Omnivore](https://omnivore.app/me/${article.slug}#${it.id})`,
+            content: `>> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
             children: noteChild ? [noteChild] : undefined,
           }
         })
