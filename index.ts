@@ -5,7 +5,7 @@ import {
   LSPluginBaseInfo,
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
-import { getDateForPage } from 'logseq-dateutils';
+import { getDateForPage } from 'logseq-dateutils'
 import icon from './icon.png'
 import { Article, loadArticles } from './util'
 
@@ -38,8 +38,9 @@ const settings: SettingSchemaDesc[] = [
 const siteNameFromUrl = (originalArticleUrl: string): string => {
   try {
     return new URL(originalArticleUrl).hostname.replace(/^www\./, '')
-  } catch {}
-  return ''
+  } catch {
+    return ''
+  }
 }
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
@@ -69,8 +70,8 @@ const fetchOmnivore = async (
 
   loading = true
   let targetBlock: BlockEntity | null = null
-  const userConfigs = await logseq.App.getUserConfigs();
-  const preferredDateFormat: string = userConfigs.preferredDateFormat;
+  const userConfigs = await logseq.App.getUserConfigs()
+  const preferredDateFormat: string = userConfigs.preferredDateFormat
 
   try {
     !inBackground && (await logseq.UI.showMsg('🚀 Fetching articles ...'))
@@ -117,8 +118,9 @@ const fetchOmnivore = async (
         let content = `[${article.title}](https://omnivore.app/me/${article.slug})`
         content += '\ncollapsed:: true'
 
-        const displaySiteName = article.siteName || siteNameFromUrl(article.originalArticleUrl)
-        console.log("display site name", displaySiteName)
+        const displaySiteName =
+          article.siteName || siteNameFromUrl(article.originalArticleUrl)
+        console.log('display site name', displaySiteName)
         if (displaySiteName) {
           content += `\nsite:: [${displaySiteName}](${article.originalArticleUrl})`
         }
@@ -133,7 +135,10 @@ const fetchOmnivore = async (
             .join()}`
         }
 
-        content += `\ndate_saved:: ${getDateForPage(new Date(article.savedAt), preferredDateFormat)}`
+        content += `\ndate_saved:: ${getDateForPage(
+          new Date(article.savedAt),
+          preferredDateFormat
+        )}`
 
         // remove existing block for the same article
         const existingBlocks = await logseq.DB.q<BlockEntity>(
