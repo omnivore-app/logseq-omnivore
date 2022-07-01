@@ -51,13 +51,13 @@ const fetchOmnivore = async (
   filter: string,
   syncAt: string,
   inBackground = false
-): Promise<void> => {
-  if (loading) return
+): Promise<string> => {
+  if (loading) return syncAt
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
 
-    return
+    return syncAt
   }
 
   const pageName = 'Omnivore'
@@ -173,18 +173,21 @@ const fetchOmnivore = async (
         }))
     }
 
+    syncAt = new Date().toISOString()
     !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
+
+    return syncAt
   } catch (e) {
     !inBackground &&
       (await logseq.UI.showMsg('Failed to fetch articles', 'warning'))
     console.error(e)
+
+    return syncAt
   } finally {
     loading = false
-    if (targetBlock) {
-      await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle)
-
-      logseq.updateSettings({ 'synced at': new Date().toISOString() })
-    }
+    targetBlock &&
+      (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
+    logseq.updateSettings({ 'synced at': syncAt })
   }
 }
 
@@ -197,9 +200,13 @@ const syncOmnivore = (
   let intervalID = 0
   // sync every frequency minutes
   if (frequency > 0) {
-    intervalID = setInterval(async () => {
-      await fetchOmnivore(apiKey, filter, syncAt, true)
-    }, frequency * 1000 * 60)
+    intervalID = setInterval(
+      async () => {
+        syncAt = await fetchOmnivore(apiKey, filter, syncAt, true)
+      },
+      frequency * 1000 * 60,
+      syncAt
+    )
   }
 
   return intervalID
@@ -224,6 +231,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
     apiKey = logseq.settings?.['api key'] as string
     filter = logseq.settings?.filter as string
     syncAt = logseq.settings?.['synced at'] as string
+    // remove existing scheduled task and create new one
     const newFrequency = logseq.settings?.frequency as number
     if (newFrequency !== frequency) {
       if (intervalID) {
