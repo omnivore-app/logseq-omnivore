@@ -120,7 +120,6 @@ const fetchOmnivore = async (
 
         const displaySiteName =
           article.siteName || siteNameFromUrl(article.originalArticleUrl)
-        console.log('display site name', displaySiteName)
         if (displaySiteName) {
           content += `\nsite:: [${displaySiteName}](${article.originalArticleUrl})`
         }
@@ -144,9 +143,9 @@ const fetchOmnivore = async (
         const existingBlocks = await logseq.DB.q<BlockEntity>(
           `"${article.slug}"`
         )
-        if (existingBlocks && existingBlocks.length > 0) {
+        if (existingBlocks) {
           for (const block of existingBlocks) {
-            await logseq.Editor.removeBlock(block.uuid)
+            block.uuid && (await logseq.Editor.removeBlock(block.uuid))
           }
         }
 
