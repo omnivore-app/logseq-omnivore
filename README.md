@@ -24,7 +24,7 @@ This plugin imports your saved [Omnivore](https://omnivore.app/) articles and hi
 in the article block
 5. Clicking on the article will open the Omnivore article in a new tab
 6. We also create an internal link to each label in the article so you can group articles by label
-7. Kudos to [Brian](https://twitter.com/Bsunter) for the great [guide](https://briansunter.com/graph/#/page/omnivore-logseq-guide?anchor=ls-block-62b28de3-0e9e-456e-bf29-7e2541213aa5) on how to use Omnivore and the plugin 
+7. Kudos to [@Brian](https://twitter.com/Bsunter) for the great [guide](https://briansunter.com/graph/#/page/omnivore-logseq-guide?anchor=ls-block-62b28de3-0e9e-456e-bf29-7e2541213aa5) on how to use Omnivore and the plugin. [Chinese translation](https://sywhb.github.io/#/page/omnivore-logseq%20指南) by [@吴洪博](https://twitter.com/Sy98715020)
 
 ## Demo
 
