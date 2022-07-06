@@ -73,7 +73,7 @@ export const loadArticles = async (
     },
     body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            highlights {\\n            id\\n        quote\\n        annotation\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       updatedAt ? 'updated:' + updatedAt : ''
-    } sort:updated-asc ${filter}"}}`,
+    } sort:saved-asc ${filter}"}}`,
     method: 'POST',
   })
 
