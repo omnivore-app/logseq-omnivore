@@ -6,7 +6,7 @@ import {
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
 import { getDateForPage } from 'logseq-dateutils'
-import icon from './icon.png'
+import icon from '../public/icon.png'
 import { Article, loadArticles } from './util'
 
 const settings: SettingSchemaDesc[] = [

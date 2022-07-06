@@ -19,9 +19,7 @@ module.exports = {
       '@semantic-release/exec',
       {
         prepareCmd:
-          'zip -qq -r ' +
-          pluginName +
-          '-${nextRelease.version}.zip package.json icon.png README.md dist/',
+          'zip -qq -r ' + pluginName + '-${nextRelease.version}.zip package.json public/icon.png README.md dist/',
       },
     ],
     [

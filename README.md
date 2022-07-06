@@ -30,11 +30,11 @@ in the article block
 
 ### Settings
 
-![settings](./settings.gif)
+![settings](screenshots/settings.gif)
 
 ### Fetching
 
-![fetching](./fetching.gif)
+![fetching](screenshots/fetching.gif)
 
 ## Contacts
 

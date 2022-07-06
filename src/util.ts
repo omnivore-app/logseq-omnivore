@@ -42,7 +42,6 @@ export interface Highlight {
 
 const endpoint = 'https://api-prod.omnivore.app/api/graphql'
 
-
 export const loadArticle = async (
   slug: string,
   apiKey: string
