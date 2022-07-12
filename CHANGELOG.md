@@ -1,3 +1,10 @@
+## [1.4.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.4.5...v1.4.6) (2022-07-12)
+
+
+### Bug Fixes
+
+* only sync into the graph we were initially opened in ([7586891](https://github.com/omnivore-app/logseq-omnivore/commit/758689121333a0ecaa630694a3f958b0d820afe2))
+
 ## [1.4.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.4.4...v1.4.5) (2022-07-01)
 
 
