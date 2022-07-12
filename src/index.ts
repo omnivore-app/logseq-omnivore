@@ -258,8 +258,9 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
     {
       key: 'syncAt',
       type: 'string',
-      title: 'Enter Omnivore sync timestamp',
-      description: 'Enter Omnivore timestamp',
+      title: 'Last Sync',
+      description:
+        'The last time Omnivore was synced. Clear this value to completely refresh the sync.',
       default: DateTime.fromISO(logseq.settings?.['synced at'] as string)
         .toLocal()
         .toFormat(DATE_FORMAT),
