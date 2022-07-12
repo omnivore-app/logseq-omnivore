@@ -205,11 +205,24 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
     },
     {
       key: 'filter',
-      type: 'string',
-      title: 'Enter a filter for Omnivore articles',
-      description:
-        'Enter a filter for Omnivore articles here. e.g. "has:highlights"',
+      type: 'enum',
+      title: 'Select a filter for Omnivore articles',
+      description: 'Select a filter for Omnivore articles',
       default: 'has:highlights',
+      enumPicker: 'select',
+      enumChoices: [
+        'import all my articles',
+        'import just highlights',
+        'advanced',
+      ],
+    },
+    {
+      key: 'query',
+      type: 'string',
+      title: 'Enter custom query if advanced filter is selected',
+      description:
+        'Enter a custom query for Omnivore articles here. e.g. "has:highlights"',
+      default: '',
     },
     {
       key: 'frequency',
