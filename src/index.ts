@@ -22,7 +22,7 @@ interface Settings {
   syncAt: string
   frequency: number
   graph: string
-  query: string
+  customQuery: string
   disabled: boolean
 }
 
@@ -38,8 +38,21 @@ const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
 const DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
 let loading = false
 
+const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
+  switch (filter) {
+    case Filter.ALL:
+      return ''
+    case Filter.HIGHLIGHTS:
+      return `has:highlights`
+    case Filter.ADVANCED:
+      return customQuery
+    default:
+      return ''
+  }
+}
+
 const fetchOmnivore = async (
-  { syncAt, apiKey, filter }: Settings,
+  { syncAt, apiKey, filter, customQuery }: Settings,
   inBackground = false
 ): Promise<string> => {
   if (loading) return syncAt
@@ -99,7 +112,7 @@ const fetchOmnivore = async (
         after,
         size,
         syncAt,
-        filter
+        getQueryFromFilter(filter, customQuery)
       )
 
       const articleBatch: IBatchBlock[] = []
@@ -223,7 +236,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       enumChoices: Object.values(Filter),
     },
     {
-      key: 'query',
+      key: 'customQuery',
       type: 'string',
       title: 'Enter custom query if advanced filter is selected',
       description:
