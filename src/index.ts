@@ -110,7 +110,7 @@ const fetchOmnivore = async (inBackground = false) => {
         apiKey,
         after,
         size,
-        syncAt,
+        DateTime.fromFormat(syncAt, DATE_FORMAT).toISO(),
         getQueryFromFilter(filter, customQuery)
       )
 
