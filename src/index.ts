@@ -268,7 +268,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   ]
   logseq.useSettingsSchema(settingsSchema)
 
-  const frequency = logseq.settings?.frequency as number
+  let frequency = logseq.settings?.frequency as number
   let intervalID: number
 
   logseq.onSettingsChanged(() => {
@@ -282,6 +282,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       if (newFrequency > 0) {
         intervalID = syncOmnivore()
       }
+      frequency = newFrequency
     }
   })
 
