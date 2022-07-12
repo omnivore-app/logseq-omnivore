@@ -218,7 +218,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       type: 'enum',
       title: 'Select a filter for Omnivore articles',
       description: 'Select a filter for Omnivore articles',
-      default: Filter.HIGHLIGHTS,
+      default: Filter.HIGHLIGHTS.toString(),
       enumPicker: 'select',
       enumChoices: Object.values(Filter),
     },
