@@ -51,16 +51,15 @@ const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
   }
 }
 
-const fetchOmnivore = async (
-  { syncAt, apiKey, filter, customQuery }: Settings,
-  inBackground = false
-): Promise<string> => {
-  if (loading) return syncAt
+const fetchOmnivore = async (inBackground = false) => {
+  if (loading) return
+
+  const { syncAt, apiKey, filter, customQuery } = logseq.settings as Settings
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
 
-    return syncAt
+    return
   }
 
   const pageName = 'Omnivore'
@@ -175,32 +174,29 @@ const fetchOmnivore = async (
         }))
     }
 
-    syncAt = DateTime.local().toFormat(DATE_FORMAT)
     !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
-
-    return syncAt
+    logseq.updateSettings({ syncAt: DateTime.local().toFormat(DATE_FORMAT) })
   } catch (e) {
     !inBackground &&
       (await logseq.UI.showMsg('Failed to fetch articles', 'warning'))
     console.error(e)
-
-    return syncAt
   } finally {
     loading = false
     targetBlock &&
       (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
-    logseq.updateSettings({ syncAt })
   }
 }
 
-const syncOmnivore = (settings: Settings): number => {
+const syncOmnivore = (): number => {
+  const settings = logseq.settings as Settings
+
   let intervalID = 0
   // sync every frequency minutes
   if (settings.frequency > 0) {
     intervalID = setInterval(
       async () => {
         if ((await logseq.App.getCurrentGraph())?.name === settings.graph) {
-          settings.syncAt = await fetchOmnivore(settings, true)
+          await fetchOmnivore(true)
         }
       },
       settings.frequency * 1000 * 60,
@@ -272,21 +268,26 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   ]
   logseq.useSettingsSchema(settingsSchema)
 
-  let settings = logseq.settings as Settings
+  const frequency = logseq.settings?.frequency as number
   let intervalID: number
 
   logseq.onSettingsChanged(() => {
-    settings = logseq.settings as Settings
-    // remove existing scheduled task and create new one
-    if (intervalID) {
-      clearInterval(intervalID)
+    const settings = logseq.settings as Settings
+    const newFrequency = settings.frequency
+    if (newFrequency !== frequency) {
+      // remove existing scheduled task and create new one
+      if (intervalID) {
+        clearInterval(intervalID)
+      }
+      if (newFrequency > 0) {
+        intervalID = syncOmnivore()
+      }
     }
-    intervalID = syncOmnivore(settings)
   })
 
   logseq.provideModel({
     async loadOmnivore() {
-      await fetchOmnivore(settings)
+      await fetchOmnivore()
     },
   })
 
@@ -307,10 +308,10 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   `)
 
   // fetch articles on startup
-  await fetchOmnivore(settings, true)
+  await fetchOmnivore(true)
 
   // sync every frequency minutes
-  intervalID = syncOmnivore(settings)
+  intervalID = syncOmnivore()
 }
 
 // bootstrap
