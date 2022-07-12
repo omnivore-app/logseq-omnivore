@@ -1,3 +1,15 @@
+# [1.5.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.4.6...v1.5.0) (2022-07-12)
+
+
+### Bug Fixes
+
+* failed to sync when existing block has no uuid ([0c83cd8](https://github.com/omnivore-app/logseq-omnivore/commit/0c83cd83dbf11aec981b9bdce8a552440ae8bda6))
+
+
+### Features
+
+* sort articles by savedAt ([025a04c](https://github.com/omnivore-app/logseq-omnivore/commit/025a04c8d4788ee60baa4722a5356e52a132de8c))
+
 ## [1.4.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.4.5...v1.4.6) (2022-07-12)
 
 
