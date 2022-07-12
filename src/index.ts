@@ -9,6 +9,12 @@ import { getDateForPage } from 'logseq-dateutils'
 import icon from '../public/icon.png'
 import { Article, loadArticles } from './util'
 
+enum OmnivoreFilter {
+  ALL = 'import all my articles',
+  HIGHLIGHTS = 'import just highlights',
+  ADVANCED = 'advanced',
+}
+
 const siteNameFromUrl = (originalArticleUrl: string): string => {
   try {
     return new URL(originalArticleUrl).hostname.replace(/^www\./, '')
@@ -208,13 +214,9 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       type: 'enum',
       title: 'Select a filter for Omnivore articles',
       description: 'Select a filter for Omnivore articles',
-      default: 'has:highlights',
+      default: OmnivoreFilter.HIGHLIGHTS,
       enumPicker: 'select',
-      enumChoices: [
-        'import all my articles',
-        'import just highlights',
-        'advanced',
-      ],
+      enumChoices: Object.values(OmnivoreFilter),
     },
     {
       key: 'query',
