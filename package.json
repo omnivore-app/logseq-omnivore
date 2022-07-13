@@ -24,13 +24,15 @@
   },
   "dependencies": {
     "@logseq/libs": "^0.0.6",
-    "logseq-dateutils": "^0.0.22"
+    "logseq-dateutils": "^0.0.22",
+    "luxon": "^3.0.1"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@tsconfig/node16": "^1.0.1",
+    "@types/luxon": "^2.3.2",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
     "eslint": "^8.6.0",

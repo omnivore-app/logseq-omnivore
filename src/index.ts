@@ -8,6 +8,23 @@ import {
 import { getDateForPage } from 'logseq-dateutils'
 import icon from '../public/icon.png'
 import { Article, loadArticles } from './util'
+import { DateTime } from 'luxon'
+
+enum Filter {
+  ALL = 'import all my articles',
+  HIGHLIGHTS = 'import just highlights',
+  ADVANCED = 'advanced',
+}
+
+interface Settings {
+  apiKey: string
+  filter: Filter
+  syncAt: string
+  frequency: number
+  graph: string
+  customQuery: string
+  disabled: boolean
+}
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
   try {
@@ -18,20 +35,31 @@ const siteNameFromUrl = (originalArticleUrl: string): string => {
 }
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
+const DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
 let loading = false
 
-const fetchOmnivore = async (
-  apiKey: string,
-  filter: string,
-  syncAt: string,
-  inBackground = false
-): Promise<string> => {
-  if (loading) return syncAt
+const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
+  switch (filter) {
+    case Filter.ALL:
+      return ''
+    case Filter.HIGHLIGHTS:
+      return `has:highlights`
+    case Filter.ADVANCED:
+      return customQuery
+    default:
+      return ''
+  }
+}
+
+const fetchOmnivore = async (inBackground = false) => {
+  if (loading) return
+
+  const { syncAt, apiKey, filter, customQuery } = logseq.settings as Settings
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
 
-    return syncAt
+    return
   }
 
   const pageName = 'Omnivore'
@@ -82,8 +110,8 @@ const fetchOmnivore = async (
         apiKey,
         after,
         size,
-        syncAt,
-        filter
+        DateTime.fromFormat(syncAt, DATE_FORMAT).toISO(),
+        getQueryFromFilter(filter, customQuery)
       )
 
       const articleBatch: IBatchBlock[] = []
@@ -146,42 +174,33 @@ const fetchOmnivore = async (
         }))
     }
 
-    syncAt = new Date().toISOString()
     !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
-
-    return syncAt
+    logseq.updateSettings({ syncAt: DateTime.local().toFormat(DATE_FORMAT) })
   } catch (e) {
     !inBackground &&
       (await logseq.UI.showMsg('Failed to fetch articles', 'warning'))
     console.error(e)
-
-    return syncAt
   } finally {
     loading = false
     targetBlock &&
       (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
-    logseq.updateSettings({ 'synced at': syncAt })
   }
 }
 
-const syncOmnivore = (
-  apiKey: string,
-  frequency: number,
-  filter: string,
-  syncAt: string,
-  graph: string
-): number => {
+const syncOmnivore = (): number => {
+  const settings = logseq.settings as Settings
+
   let intervalID = 0
   // sync every frequency minutes
-  if (frequency > 0) {
+  if (settings.frequency > 0) {
     intervalID = setInterval(
       async () => {
-        if ((await logseq.App.getCurrentGraph())?.name === graph) {
-          syncAt = await fetchOmnivore(apiKey, filter, syncAt, true)
+        if ((await logseq.App.getCurrentGraph())?.name === settings.graph) {
+          await fetchOmnivore(true)
         }
       },
-      frequency * 1000 * 60,
-      syncAt
+      settings.frequency * 1000 * 60,
+      settings.syncAt
     )
   }
 
@@ -195,21 +214,30 @@ const syncOmnivore = (
 const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
 
-  const settings: SettingSchemaDesc[] = [
+  const settingsSchema: SettingSchemaDesc[] = [
     {
-      key: 'api key',
+      key: 'apiKey',
       type: 'string',
       title: 'Enter Omnivore Api Key',
       description: 'Enter Omnivore Api Key here',
-      default: '',
+      default: logseq.settings?.['api key'] as string,
     },
     {
       key: 'filter',
+      type: 'enum',
+      title: 'Select a filter for Omnivore articles',
+      description: 'Select a filter for Omnivore articles',
+      default: Filter.HIGHLIGHTS.toString(),
+      enumPicker: 'select',
+      enumChoices: Object.values(Filter),
+    },
+    {
+      key: 'customQuery',
       type: 'string',
-      title: 'Enter a filter for Omnivore articles',
+      title: 'Enter custom query if advanced filter is selected',
       description:
-        'Enter a filter for Omnivore articles here. e.g. "has:highlights"',
-      default: 'has:highlights',
+        'Enter a custom query for Omnivore articles here. e.g. "has:highlights"',
+      default: '',
     },
     {
       key: 'frequency',
@@ -227,35 +255,41 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       // default is the current graph
       default: (await logseq.App.getCurrentGraph())?.name as string,
     },
+    {
+      key: 'syncAt',
+      type: 'string',
+      title: 'Last Sync',
+      description:
+        'The last time Omnivore was synced. Clear this value to completely refresh the sync.',
+      default: DateTime.fromISO(logseq.settings?.['synced at'] as string)
+        .toLocal()
+        .toFormat(DATE_FORMAT),
+      inputAs: 'datetime-local',
+    },
   ]
-  logseq.useSettingsSchema(settings)
+  logseq.useSettingsSchema(settingsSchema)
 
-  let apiKey = logseq.settings?.['api key'] as string
   let frequency = logseq.settings?.frequency as number
-  let filter = logseq.settings?.filter as string
-  let syncAt = logseq.settings?.['synced at'] as string
   let intervalID: number
-  let graph = logseq.settings?.graph as string
 
   logseq.onSettingsChanged(() => {
-    apiKey = logseq.settings?.['api key'] as string
-    filter = logseq.settings?.filter as string
-    syncAt = logseq.settings?.['synced at'] as string
-    graph = logseq.settings?.graph as string
-    // remove existing scheduled task and create new one
-    const newFrequency = logseq.settings?.frequency as number
+    const settings = logseq.settings as Settings
+    const newFrequency = settings.frequency
     if (newFrequency !== frequency) {
+      // remove existing scheduled task and create new one
       if (intervalID) {
         clearInterval(intervalID)
       }
+      if (newFrequency > 0) {
+        intervalID = syncOmnivore()
+      }
       frequency = newFrequency
-      intervalID = syncOmnivore(apiKey, frequency, filter, syncAt, graph)
     }
   })
 
   logseq.provideModel({
     async loadOmnivore() {
-      await fetchOmnivore(apiKey, filter, syncAt)
+      await fetchOmnivore()
     },
   })
 
@@ -276,10 +310,10 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   `)
 
   // fetch articles on startup
-  await fetchOmnivore(apiKey, filter, syncAt, true)
+  await fetchOmnivore(true)
 
   // sync every frequency minutes
-  intervalID = syncOmnivore(apiKey, frequency, filter, syncAt, graph)
+  intervalID = syncOmnivore()
 }
 
 // bootstrap
