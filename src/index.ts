@@ -218,15 +218,16 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
     {
       key: 'apiKey',
       type: 'string',
-      title: 'Enter Omnivore Api Key',
-      description: 'Enter Omnivore Api Key here',
+      title: 'Enter your Omnivore Api Key',
+      description:
+        'You can create an API key at https://omnivore.app/settings/api',
       default: logseq.settings?.['api key'] as string,
     },
     {
       key: 'filter',
       type: 'enum',
-      title: 'Select a filter for Omnivore articles',
-      description: 'Select a filter for Omnivore articles',
+      title: 'Select an Omnivore search filter type',
+      description: 'Select an Omnivore search filter type',
       default: Filter.HIGHLIGHTS.toString(),
       enumPicker: 'select',
       enumChoices: Object.values(Filter),
@@ -234,9 +235,10 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
     {
       key: 'customQuery',
       type: 'string',
-      title: 'Enter custom query if advanced filter is selected',
+      title:
+        'Enter an Omnivore custom search query if advanced filter is selected',
       description:
-        'Enter a custom query for Omnivore articles here. e.g. "has:highlights"',
+        'See https://omnivore.app/help/search for more info on search query syntax',
       default: '',
     },
     {
