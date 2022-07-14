@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.5.0...v1.6.0) (2022-07-14)
+
+
+### Features
+
+* add syncAt to settings so its easier to reset ([98d0254](https://github.com/omnivore-app/logseq-omnivore/commit/98d02544ccf52941a2e05e70d317d21df212a940))
+
 # [1.5.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.4.6...v1.5.0) (2022-07-12)
 
 
