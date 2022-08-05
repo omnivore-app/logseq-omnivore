@@ -1,3 +1,5 @@
+import { diff_match_patch } from 'diff-match-patch'
+
 export interface GetArticleResponse {
   data: {
     article: {
@@ -38,6 +40,7 @@ export interface Highlight {
   id: string
   quote: string
   annotation: string
+  patch: string
 }
 
 const endpoint = 'https://api-prod.omnivore.app/api/graphql'
@@ -71,7 +74,7 @@ export const loadArticles = async (
       'content-type': 'application/json',
       authorization: apiKey,
     },
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            highlights {\\n            id\\n        quote\\n        annotation\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
+    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            highlights {\\n            id\\n        quote\\n        annotation\\n        patch\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       updatedAt ? 'updated:' + updatedAt : ''
     } sort:saved-asc ${query}"}}`,
     method: 'POST',
@@ -81,4 +84,10 @@ export const loadArticles = async (
   const articles = jsonRes.data.search.edges.map((e) => e.node)
 
   return [articles, jsonRes.data.search.pageInfo.hasNextPage]
+}
+
+export const getHighlightLocation = (patch: string): number => {
+  const dmp = new diff_match_patch()
+  const patches = dmp.patch_fromText(patch)
+  return patches[0].start1 || 0
 }

@@ -7,13 +7,18 @@ import {
 } from '@logseq/libs/dist/LSPlugin'
 import { getDateForPage } from 'logseq-dateutils'
 import icon from '../public/icon.png'
-import { Article, loadArticles } from './util'
+import { Article, getHighlightLocation, loadArticles } from './util'
 import { DateTime } from 'luxon'
 
 enum Filter {
   ALL = 'import all my articles',
   HIGHLIGHTS = 'import just highlights',
   ADVANCED = 'advanced',
+}
+
+enum HighlightOrder {
+  LOCATION = 'the location of highlights in the article',
+  TIME = 'the time that highlights are updated',
 }
 
 interface Settings {
@@ -24,6 +29,7 @@ interface Settings {
   graph: string
   customQuery: string
   disabled: boolean
+  highlightOrder: HighlightOrder
 }
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
@@ -54,7 +60,8 @@ const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
 const fetchOmnivore = async (inBackground = false) => {
   if (loading) return
 
-  const { syncAt, apiKey, filter, customQuery } = logseq.settings as Settings
+  const { syncAt, apiKey, filter, customQuery, highlightOrder } =
+    logseq.settings as Settings
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
@@ -150,6 +157,12 @@ const fetchOmnivore = async (inBackground = false) => {
             block.uuid && (await logseq.Editor.removeBlock(block.uuid))
           }
         }
+
+        // sort highlights by location if selected in options
+        highlightOrder === HighlightOrder.LOCATION &&
+          article.highlights?.sort((a, b) => {
+            return getHighlightLocation(a.patch) - getHighlightLocation(b.patch)
+          })
 
         const highlightBatch = article.highlights?.map((it) => {
           const noteChild = it.annotation
@@ -267,6 +280,15 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
         .toLocal()
         .toFormat(DATE_FORMAT),
       inputAs: 'datetime-local',
+    },
+    {
+      key: 'highlightOrder',
+      type: 'enum',
+      title: 'Order of Highlights',
+      description: 'Select a way to sort new highlights in your articles',
+      default: HighlightOrder.TIME.toString(),
+      enumPicker: 'select',
+      enumChoices: Object.values(HighlightOrder),
     },
   ]
   logseq.useSettingsSchema(settingsSchema)
