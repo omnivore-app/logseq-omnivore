@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.6.0...v1.7.0) (2022-08-05)
+
+
+### Features
+
+* add highlightOrder option to let user select a way to sort new highlights in the article ([a796750](https://github.com/omnivore-app/logseq-omnivore/commit/a7967506ddf5397cda3ab3219d0a5fe5d436bf43))
+
 # [1.6.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.5.0...v1.6.0) (2022-07-14)
 
 
