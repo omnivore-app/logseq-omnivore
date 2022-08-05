@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@logseq/libs": "^0.0.6",
+    "diff-match-patch": "^1.0.5",
     "logseq-dateutils": "^0.0.22",
     "luxon": "^3.0.1"
   },
@@ -32,6 +33,7 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@tsconfig/node16": "^1.0.1",
+    "@types/diff-match-patch": "^1.0.32",
     "@types/luxon": "^2.3.2",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
