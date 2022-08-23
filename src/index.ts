@@ -6,7 +6,6 @@ import {
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
 import { getDateForPage } from 'logseq-dateutils'
-import icon from '../public/icon.png'
 import { Article, getHighlightLocation, loadArticles } from './util'
 import { DateTime } from 'luxon'
 
@@ -320,8 +319,17 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   logseq.App.registerUIItem('toolbar', {
     key: 'logseq-omnivore',
     template: `
-      <a data-on-click="loadOmnivore" class="button" style="width:3rem;height:3rem;">
-        <img src="${icon}">
+      <a data-on-click="loadOmnivore" class="button">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_3843_101374)">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M14.9932 0.0384085C24.2849 -0.580762 32.0905 6.35808 32.2144 15.6498C32.2144 16.6404 31.9667 17.8788 31.719 18.9933C31.0999 21.7176 28.6232 23.5752 25.8947 23.5752H25.7709C22.4273 23.5752 20.1942 20.727 20.1942 17.627V14.1596L18.2129 17.1316L18.089 17.2555C16.9745 18.2462 15.3647 18.2462 14.2502 17.2555L14.0025 17.1316L11.8973 14.0358V22.0891H9.04913V12.426C9.04913 10.4446 11.402 9.20626 13.0118 10.6923L13.1357 10.8161L15.9838 15.0265L18.9559 10.9399L19.0797 10.8161C20.5657 9.57777 23.0424 10.5684 23.0424 12.6736V17.6311C23.0424 19.4886 24.1569 20.727 25.7667 20.727H25.8906C27.3766 20.727 28.6149 19.7363 28.9864 18.3741C29.2341 17.2596 29.3579 16.3928 29.3579 15.6498C29.3579 8.09176 22.9144 2.39538 15.2367 2.89072C8.66938 3.26222 3.34451 8.59122 2.84917 15.0306C2.35383 22.7124 8.42584 29.1518 15.9797 29.1518V32C6.68803 32 -0.622312 24.1943 -0.00314176 14.9026C0.620157 6.97725 6.93983 0.533745 14.9932 0.0384085Z" fill="rgb(67, 63, 56)"/>
+          </g>
+          <defs>
+            <clipPath id="clip0_3843_101374">
+              <rect width="32" height="32" fill="white"/>
+            </clipPath>
+          </defs>
+        </svg>
       </a>
     `,
   })
