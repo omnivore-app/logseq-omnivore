@@ -1,6 +1,6 @@
 {
   "name": "logseq-omnivore",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Import Omnivore highlights and articles into Logseq.",
   "main": "dist/index.html",
   "targets": {

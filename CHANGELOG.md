@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.7.0...v1.8.0) (2022-08-23)
+
+
+### Features
+
+* replace new icon on the toolbar ([5779100](https://github.com/omnivore-app/logseq-omnivore/commit/577910024c98a99e06db19ebdd06481373eb8853))
+
 # [1.7.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.6.0...v1.7.0) (2022-08-05)
 
 
