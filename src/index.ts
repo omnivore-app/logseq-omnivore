@@ -6,7 +6,13 @@ import {
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
 import { getDateForPage } from 'logseq-dateutils'
-import { Article, getHighlightLocation, loadArticles } from './util'
+import {
+  Article,
+  getHighlightLocation,
+  getHighlightPoint,
+  loadArticles,
+  PageType,
+} from './util'
 import { DateTime } from 'luxon'
 
 enum Filter {
@@ -160,6 +166,18 @@ const fetchOmnivore = async (inBackground = false) => {
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
           article.highlights?.sort((a, b) => {
+            if (article.pageType === PageType.File) {
+              // get the position of the highlight in the file
+              const highlightPointA = getHighlightPoint(a.patch)
+              const highlightPointB = getHighlightPoint(b.patch)
+              if (highlightPointA.top === highlightPointB.top) {
+                // if top is same, sort by left
+                return highlightPointA.left - highlightPointB.left
+              }
+              // sort by top
+              return highlightPointA.top - highlightPointB.top
+            }
+            // for web page, sort by location in the page
             return getHighlightLocation(a.patch) - getHighlightLocation(b.patch)
           })
 
