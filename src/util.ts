@@ -115,3 +115,15 @@ export const getHighlightPoint = (patch: string): HighlightPoint => {
   }
   return { left: bbox[0], top: bbox[1] }
 }
+
+export const compareHighlightsInFile = (a: Highlight, b: Highlight): number => {
+  // get the position of the highlight in the file
+  const highlightPointA = getHighlightPoint(a.patch)
+  const highlightPointB = getHighlightPoint(b.patch)
+  if (highlightPointA.top === highlightPointB.top) {
+    // if top is same, sort by left
+    return highlightPointA.left - highlightPointB.left
+  }
+  // sort by top
+  return highlightPointA.top - highlightPointB.top
+}

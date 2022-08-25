@@ -8,6 +8,7 @@ import {
 import { getDateForPage } from 'logseq-dateutils'
 import {
   Article,
+  compareHighlightsInFile,
   getHighlightLocation,
   getHighlightPoint,
   loadArticles,
@@ -166,19 +167,19 @@ const fetchOmnivore = async (inBackground = false) => {
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
           article.highlights?.sort((a, b) => {
-            if (article.pageType === PageType.File) {
-              // get the position of the highlight in the file
-              const highlightPointA = getHighlightPoint(a.patch)
-              const highlightPointB = getHighlightPoint(b.patch)
-              if (highlightPointA.top === highlightPointB.top) {
-                // if top is same, sort by left
-                return highlightPointA.left - highlightPointB.left
+            try {
+              if (article.pageType === PageType.File) {
+                // sort by location in file
+                return compareHighlightsInFile(a, b)
               }
-              // sort by top
-              return highlightPointA.top - highlightPointB.top
+              // for web page, sort by location in the page
+              return (
+                getHighlightLocation(a.patch) - getHighlightLocation(b.patch)
+              )
+            } catch (e) {
+              console.error(e)
+              return compareHighlightsInFile(a, b)
             }
-            // for web page, sort by location in the page
-            return getHighlightLocation(a.patch) - getHighlightLocation(b.patch)
           })
 
         const highlightBatch = article.highlights?.map((it) => {
