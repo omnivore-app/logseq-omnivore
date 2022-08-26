@@ -1,3 +1,11 @@
+## [1.8.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.8.0...v1.8.1) (2022-08-26)
+
+
+### Bug Fixes
+
+* failed to sort highlights in the file ([d5e412c](https://github.com/omnivore-app/logseq-omnivore/commit/d5e412c6cb27e1dd53d8b7254db5c42aa4e99588))
+* sort highlights by location in the file if an error is catched ([578ff3b](https://github.com/omnivore-app/logseq-omnivore/commit/578ff3bee1f23e0d615ecfb1e543ef2ee66ee551))
+
 # [1.8.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.7.0...v1.8.0) (2022-08-23)
 
 
