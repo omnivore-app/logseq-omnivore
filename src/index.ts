@@ -10,7 +10,6 @@ import {
   Article,
   compareHighlightsInFile,
   getHighlightLocation,
-  getHighlightPoint,
   loadArticles,
   PageType,
 } from './util'
@@ -154,16 +153,6 @@ const fetchOmnivore = async (inBackground = false) => {
           preferredDateFormat
         )}`
 
-        // remove existing block for the same article
-        const existingBlocks = await logseq.DB.q<BlockEntity>(
-          `"${article.slug}"`
-        )
-        if (existingBlocks) {
-          for (const block of existingBlocks) {
-            block.uuid && (await logseq.Editor.removeBlock(block.uuid))
-          }
-        }
-
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
           article.highlights?.sort((a, b) => {
@@ -181,21 +170,45 @@ const fetchOmnivore = async (inBackground = false) => {
               return compareHighlightsInFile(a, b)
             }
           })
+        const highlightBatch: IBatchBlock[] =
+          article.highlights?.map((it) => {
+            const noteChild = it.annotation
+              ? { content: it.annotation }
+              : undefined
+            return {
+              content: `>> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
+              children: noteChild ? [noteChild] : undefined,
+            }
+          }) || []
 
-        const highlightBatch = article.highlights?.map((it) => {
-          const noteChild = it.annotation
-            ? { content: it.annotation }
-            : undefined
-          return {
-            content: `>> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
-            children: noteChild ? [noteChild] : undefined,
-          }
-        })
+        let isNewArticle = true
+        // update existing block if article is already in the page
+        const existingBlock = await logseq.DB.datascriptQuery<BlockEntity>(
+          `{:query
+                   [:find (pull ?b [*])
+                    :in $ ?pattern
+                    :where
+                    [?b :block/content ?c]
+                    [(re-pattern ?pattern) ?q]
+                    [(re-find ?q ?c)]]
+                   :inputs ["${article.slug}"]}`
+        )
+        if (existingBlock) {
+          isNewArticle = false
+          // update existing block
+          await logseq.Editor.updateBlock(existingBlock.uuid, content)
+          highlightBatch.length > 0 &&
+            (await logseq.Editor.insertBatchBlock(
+              existingBlock.uuid,
+              highlightBatch
+            ))
+        }
 
-        articleBatch.unshift({
-          content,
-          children: highlightBatch,
-        })
+        isNewArticle &&
+          articleBatch.unshift({
+            content,
+            children: highlightBatch,
+          })
       }
 
       articleBatch.length > 0 &&
