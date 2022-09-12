@@ -193,7 +193,8 @@ const fetchOmnivore = async (inBackground = false) => {
           highlightBatch.length > 0 &&
             (await logseq.Editor.insertBatchBlock(
               existingBlocks[0].uuid,
-              highlightBatch
+              highlightBatch,
+              { sibling: false }
             ))
         }
 
