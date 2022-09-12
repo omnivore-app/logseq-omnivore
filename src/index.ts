@@ -183,23 +183,16 @@ const fetchOmnivore = async (inBackground = false) => {
 
         let isNewArticle = true
         // update existing block if article is already in the page
-        const existingBlock = await logseq.DB.datascriptQuery<BlockEntity>(
-          `{:query
-                   [:find (pull ?b [*])
-                    :in $ ?pattern
-                    :where
-                    [?b :block/content ?c]
-                    [(re-pattern ?pattern) ?q]
-                    [(re-find ?q ?c)]]
-                   :inputs ["${article.slug}"]}`
+        const existingBlocks = await logseq.DB.q<BlockEntity>(
+          `"${article.slug}"`
         )
-        if (existingBlock) {
+        if (existingBlocks && existingBlocks.length > 0) {
           isNewArticle = false
           // update existing block
-          await logseq.Editor.updateBlock(existingBlock.uuid, content)
+          await logseq.Editor.updateBlock(existingBlocks[0].uuid, content)
           highlightBatch.length > 0 &&
             (await logseq.Editor.insertBatchBlock(
-              existingBlock.uuid,
+              existingBlocks[0].uuid,
               highlightBatch
             ))
         }
