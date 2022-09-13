@@ -1220,11 +1220,6 @@
   resolved "https://registry.yarnpkg.com/@types/luxon/-/luxon-2.3.2.tgz#8a3f2cdd4858ce698b56cd8597d9243b8e9d3c65"
   integrity sha512-WOehptuhKIXukSUUkRgGbj2c997Uv/iUgYgII8U7XLJqq9W2oF0kQ6frEznRQbdurioz+L/cdaIm4GutTQfgmA==
 
-"@types/markdown-escape@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@types/markdown-escape/-/markdown-escape-1.1.0.tgz#8bd940d6701880eb7229467542c029bc05a7b22f"
-  integrity sha512-bJZh73L6fSt8MmTON/btR8hiKRipoIoPfLO41lxr6l65QXdG1rwUjR8Hu5xU7XYHBwKHiJZ+sTQ8L2TKkQrBpw==
-
 "@types/minimist@^1.2.0":
   version "1.2.2"
   resolved "https://registry.npmjs.org/@types/minimist/-/minimist-1.2.2.tgz"
@@ -3258,11 +3253,6 @@ map-obj@^4.0.0:
   version "4.3.0"
   resolved "https://registry.npmjs.org/map-obj/-/map-obj-4.3.0.tgz"
   integrity sha512-hdN1wVrZbb29eBGiGjJbeP8JbKjq1urkHJ/LIP/NY48MZ1QVXUsQBV1G1zvYFHn1XE06cwjBsOI2K3Ulnj1YXQ==
-
-markdown-escape@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/markdown-escape/-/markdown-escape-1.1.0.tgz#228c932a47af251bb0a2d18d6001a235403777f2"
-  integrity sha512-f1+ARFbzLrBdC0Lj30uREn+zthrK/h1PO5UhN5IMDQvI2lSFn+8U06a5LHaxxYMhHD0mJoJ2BROJ/Sju5aw6+g==
 
 marked-terminal@^5.0.0:
   version "5.1.1"

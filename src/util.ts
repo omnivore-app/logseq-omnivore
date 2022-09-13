@@ -1,5 +1,4 @@
 import { diff_match_patch } from 'diff-match-patch'
-import escape from 'markdown-escape'
 
 export interface GetArticleResponse {
   data: {
@@ -127,13 +126,4 @@ export const compareHighlightsInFile = (a: Highlight, b: Highlight): number => {
   }
   // sort by top
   return highlightPointA.top - highlightPointB.top
-}
-
-export const markdownEscape = (text: string): string => {
-  try {
-    return escape(text)
-  } catch (e) {
-    console.error('markdownEscape error', e)
-    return text
-  }
 }
