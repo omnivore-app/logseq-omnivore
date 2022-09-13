@@ -207,8 +207,10 @@ const fetchOmnivore = async (inBackground = false) => {
                 await logseq.DB.datascriptQuery<BlockEntity[]>(
                   `[:find (pull ?b [*])
                           :where
-                            [?b :block/page ?p]
-                            [?p :block/original-name "${pageName}"]
+                            [?b :block/parent ?p]
+                            [?p :block/uuid ?u]
+                            [(str ?u) ?s]
+                            [(= ?s "${existingBlock.uuid}")]
                             [?b :block/content ?c]
                             [(= ?c "${highlight.content}")]]`
                 )
@@ -222,8 +224,10 @@ const fetchOmnivore = async (inBackground = false) => {
                     await logseq.DB.datascriptQuery<BlockEntity[]>(
                       `[:find (pull ?b [*])
                               :where
-                                [?b :block/page ?p]
-                                [?p :block/original-name "${pageName}"]
+                                [?b :block/parent ?p]
+                                [?p :block/uuid ?u]
+                                [(str ?u) ?s]
+                                [(= ?s "${existingHighlight.uuid}")]
                                 [?b :block/content ?c]
                                 [(= ?c "${noteChild.content}")]]`
                     )
