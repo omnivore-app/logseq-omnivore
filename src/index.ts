@@ -178,46 +178,60 @@ const fetchOmnivore = async (inBackground = false) => {
             return {
               content: `>> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
               children: noteChild ? [noteChild] : undefined,
-              properties: { id: it.id },
             }
           }) || []
 
         let isNewArticle = true
         // update existing block if article is already in the page
-        const existingBlocks = await logseq.DB.q<BlockEntity>(
-          `"${article.slug}"`
-        )
-        if (existingBlocks && existingBlocks.length > 0) {
+        const existingBlocks = (
+          await logseq.DB.datascriptQuery<BlockEntity[]>(
+            `[:find (pull ?b [*])
+                    :where
+                      [?b :block/page ?p]
+                      [?p :block/original-name "${pageName}"]
+                      [?b :block/content ?c]
+                      [(clojure.string/includes? ?c "${article.slug}")]]`
+          )
+        ).flat()
+        if (existingBlocks.length > 0) {
           isNewArticle = false
+          const existingBlock = existingBlocks[0]
           // update existing block
-          await logseq.Editor.updateBlock(existingBlocks[0].uuid, content)
+          if (existingBlock.content !== content) {
+            await logseq.Editor.updateBlock(existingBlock.uuid, content)
+          }
           if (highlightBatch.length > 0) {
             // append highlights to existing block
             for (const highlight of highlightBatch) {
-              const existingHighlights = await logseq.DB.q<BlockEntity>(
-                `"${highlight.properties?.id as string}"`
-              )
-              if (existingHighlights && existingHighlights.length > 0) {
-                // update existing highlight
-                await logseq.Editor.updateBlock(
-                  existingHighlights[0].uuid,
-                  highlight.content
+              const existingHighlights = (
+                await logseq.DB.datascriptQuery<BlockEntity[]>(
+                  `[:find (pull ?b [*])
+                          :where
+                            [?b :block/page ?p]
+                            [?p :block/original-name "${pageName}"]
+                            [?b :block/content ?c]
+                            [(= ?c "${highlight.content}")]]`
                 )
+              ).flat()
+              if (existingHighlights.length > 0) {
+                const existingHighlight = existingHighlights[0]
+                // update existing highlight
                 const noteChild = highlight.children?.[0]
                 if (noteChild) {
-                  const existingNotes = await logseq.DB.q<BlockEntity>(
-                    `"${noteChild.content}"`
-                  )
-                  if (existingNotes && existingNotes.length > 0) {
-                    // update existing note
-                    await logseq.Editor.updateBlock(
-                      existingNotes[0].uuid,
-                      noteChild.content
+                  const existingNotes = (
+                    await logseq.DB.datascriptQuery<BlockEntity[]>(
+                      `[:find (pull ?b [*])
+                              :where
+                                [?b :block/page ?p]
+                                [?p :block/original-name "${pageName}"]
+                                [?b :block/content ?c]
+                                [(= ?c "${noteChild.content}")]]`
                     )
-                  } else {
+                  ).flat()
+                  if (existingNotes.length == 0) {
                     // append new note
                     await logseq.Editor.insertBlock(
-                      existingHighlights[0].uuid,
+                      existingHighlight.uuid,
                       noteChild.content,
                       { sibling: false }
                     )
@@ -226,7 +240,7 @@ const fetchOmnivore = async (inBackground = false) => {
               } else {
                 // append new highlight
                 await logseq.Editor.insertBatchBlock(
-                  existingBlocks[0].uuid,
+                  existingBlock.uuid,
                   highlight,
                   { sibling: false }
                 )
