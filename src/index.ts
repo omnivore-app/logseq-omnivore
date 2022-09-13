@@ -11,6 +11,7 @@ import {
   compareHighlightsInFile,
   getHighlightLocation,
   loadArticles,
+  markdownEscape,
   PageType,
 } from './util'
 import { DateTime } from 'luxon'
