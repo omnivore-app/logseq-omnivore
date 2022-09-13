@@ -9,6 +9,7 @@ import { getDateForPage } from 'logseq-dateutils'
 import {
   Article,
   compareHighlightsInFile,
+  escape,
   getHighlightLocation,
   loadArticles,
   markdownEscape,
@@ -130,9 +131,9 @@ const fetchOmnivore = async (inBackground = false) => {
       const articleBatch: IBatchBlock[] = []
       for (const article of articles) {
         // Build content string
-        let content = `[${markdownEscape(
-          article.title
-        )}](https://omnivore.app/me/${article.slug})`
+        let content = `[${escape(article.title)}](https://omnivore.app/me/${
+          article.slug
+        })`
         content += '\ncollapsed:: true'
 
         const displaySiteName =
@@ -179,9 +180,9 @@ const fetchOmnivore = async (inBackground = false) => {
               ? { content: it.annotation }
               : undefined
             return {
-              content: `>> ${markdownEscape(
-                it.quote
-              )} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
+              content: `>> ${escape(it.quote)} [⤴️](https://omnivore.app/me/${
+                article.slug
+              }#${it.id})`,
               children: noteChild ? [noteChild] : undefined,
             }
           }) || []
