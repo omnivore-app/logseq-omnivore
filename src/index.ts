@@ -177,10 +177,9 @@ const fetchOmnivore = async (inBackground = false) => {
               ? { content: it.annotation }
               : undefined
             return {
-              content: `>> ${markdownEscape(
-                it.quote
-              )} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
+              content: `>> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
               children: noteChild ? [noteChild] : undefined,
+              properties: { id: it.id },
             }
           }) || []
 
@@ -193,12 +192,48 @@ const fetchOmnivore = async (inBackground = false) => {
           isNewArticle = false
           // update existing block
           await logseq.Editor.updateBlock(existingBlocks[0].uuid, content)
-          highlightBatch.length > 0 &&
-            (await logseq.Editor.insertBatchBlock(
-              existingBlocks[0].uuid,
-              highlightBatch,
-              { sibling: false }
-            ))
+          if (highlightBatch.length > 0) {
+            // append highlights to existing block
+            for (const highlight of highlightBatch) {
+              const existingHighlights = await logseq.DB.q<BlockEntity>(
+                `"${highlight.properties?.id as string}"`
+              )
+              if (existingHighlights && existingHighlights.length > 0) {
+                // update existing highlight
+                await logseq.Editor.updateBlock(
+                  existingHighlights[0].uuid,
+                  highlight.content
+                )
+                const noteChild = highlight.children?.[0]
+                if (noteChild) {
+                  const existingNotes = await logseq.DB.q<BlockEntity>(
+                    `"${noteChild.content}"`
+                  )
+                  if (existingNotes && existingNotes.length > 0) {
+                    // update existing note
+                    await logseq.Editor.updateBlock(
+                      existingNotes[0].uuid,
+                      noteChild.content
+                    )
+                  } else {
+                    // append new note
+                    await logseq.Editor.insertBlock(
+                      existingHighlights[0].uuid,
+                      noteChild.content,
+                      { sibling: false }
+                    )
+                  }
+                }
+              } else {
+                // append new highlight
+                await logseq.Editor.insertBatchBlock(
+                  existingBlocks[0].uuid,
+                  highlight,
+                  { sibling: false }
+                )
+              }
+            }
+          }
         }
 
         isNewArticle &&
