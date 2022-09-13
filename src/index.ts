@@ -130,7 +130,9 @@ const fetchOmnivore = async (inBackground = false) => {
       const articleBatch: IBatchBlock[] = []
       for (const article of articles) {
         // Build content string
-        let content = `[${article.title}](https://omnivore.app/me/${article.slug})`
+        let content = `[${markdownEscape(
+          article.title
+        )}](https://omnivore.app/me/${article.slug})`
         content += '\ncollapsed:: true'
 
         const displaySiteName =
@@ -177,7 +179,9 @@ const fetchOmnivore = async (inBackground = false) => {
               ? { content: it.annotation }
               : undefined
             return {
-              content: `>> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
+              content: `>> ${markdownEscape(
+                it.quote
+              )} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
               children: noteChild ? [noteChild] : undefined,
             }
           }) || []
