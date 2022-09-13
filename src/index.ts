@@ -11,6 +11,7 @@ import {
   compareHighlightsInFile,
   getHighlightLocation,
   loadArticles,
+  markdownEscape,
   PageType,
 } from './util'
 import { DateTime } from 'luxon'
@@ -176,7 +177,9 @@ const fetchOmnivore = async (inBackground = false) => {
               ? { content: it.annotation }
               : undefined
             return {
-              content: `>> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
+              content: `>> ${markdownEscape(
+                it.quote
+              )} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
               children: noteChild ? [noteChild] : undefined,
             }
           }) || []
