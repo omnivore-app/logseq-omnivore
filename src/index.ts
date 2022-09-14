@@ -10,8 +10,8 @@ import {
   Article,
   compareHighlightsInFile,
   getHighlightLocation,
-  getHighlightPoint,
   loadArticles,
+  markdownEscape,
   PageType,
 } from './util'
 import { DateTime } from 'luxon'
@@ -130,7 +130,9 @@ const fetchOmnivore = async (inBackground = false) => {
       const articleBatch: IBatchBlock[] = []
       for (const article of articles) {
         // Build content string
-        let content = `[${article.title}](https://omnivore.app/me/${article.slug})`
+        let content = `[**${markdownEscape(
+          article.title
+        )}**](https://omnivore.app/me/${article.slug})`
         content += '\ncollapsed:: true'
 
         const displaySiteName =
@@ -154,16 +156,6 @@ const fetchOmnivore = async (inBackground = false) => {
           preferredDateFormat
         )}`
 
-        // remove existing block for the same article
-        const existingBlocks = await logseq.DB.q<BlockEntity>(
-          `"${article.slug}"`
-        )
-        if (existingBlocks) {
-          for (const block of existingBlocks) {
-            block.uuid && (await logseq.Editor.removeBlock(block.uuid))
-          }
-        }
-
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
           article.highlights?.sort((a, b) => {
@@ -181,21 +173,96 @@ const fetchOmnivore = async (inBackground = false) => {
               return compareHighlightsInFile(a, b)
             }
           })
+        const highlightBatch: IBatchBlock[] =
+          article.highlights?.map((it) => {
+            const noteChild = it.annotation
+              ? { content: it.annotation }
+              : undefined
+            return {
+              content: `>> ${markdownEscape(
+                it.quote
+              )} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
+              children: noteChild ? [noteChild] : undefined,
+            }
+          }) || []
 
-        const highlightBatch = article.highlights?.map((it) => {
-          const noteChild = it.annotation
-            ? { content: it.annotation }
-            : undefined
-          return {
-            content: `>> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
-            children: noteChild ? [noteChild] : undefined,
+        let isNewArticle = true
+        // update existing block if article is already in the page
+        const existingBlocks = (
+          await logseq.DB.datascriptQuery<BlockEntity[]>(
+            `[:find (pull ?b [*])
+                    :where
+                      [?b :block/page ?p]
+                      [?p :block/original-name "${pageName}"]
+                      [?b :block/content ?c]
+                      [(clojure.string/includes? ?c "${article.slug}")]]`
+          )
+        ).flat()
+        if (existingBlocks.length > 0) {
+          isNewArticle = false
+          const existingBlock = existingBlocks[0]
+          // update existing block
+          if (existingBlock.content !== content) {
+            await logseq.Editor.updateBlock(existingBlock.uuid, content)
           }
-        })
+          if (highlightBatch.length > 0) {
+            // append highlights to existing block
+            for (const highlight of highlightBatch) {
+              const existingHighlights = (
+                await logseq.DB.datascriptQuery<BlockEntity[]>(
+                  `[:find (pull ?b [*])
+                          :where
+                            [?b :block/parent ?p]
+                            [?p :block/uuid ?u]
+                            [(str ?u) ?s]
+                            [(= ?s "${existingBlock.uuid}")]
+                            [?b :block/content ?c]
+                            [(= ?c "${highlight.content}")]]`
+                )
+              ).flat()
+              if (existingHighlights.length > 0) {
+                const existingHighlight = existingHighlights[0]
+                // update existing highlight
+                const noteChild = highlight.children?.[0]
+                if (noteChild) {
+                  const existingNotes = (
+                    await logseq.DB.datascriptQuery<BlockEntity[]>(
+                      `[:find (pull ?b [*])
+                              :where
+                                [?b :block/parent ?p]
+                                [?p :block/uuid ?u]
+                                [(str ?u) ?s]
+                                [(= ?s "${existingHighlight.uuid}")]
+                                [?b :block/content ?c]
+                                [(= ?c "${noteChild.content}")]]`
+                    )
+                  ).flat()
+                  if (existingNotes.length == 0) {
+                    // append new note
+                    await logseq.Editor.insertBlock(
+                      existingHighlight.uuid,
+                      noteChild.content,
+                      { sibling: false }
+                    )
+                  }
+                }
+              } else {
+                // append new highlight
+                await logseq.Editor.insertBatchBlock(
+                  existingBlock.uuid,
+                  highlight,
+                  { sibling: false }
+                )
+              }
+            }
+          }
+        }
 
-        articleBatch.unshift({
-          content,
-          children: highlightBatch,
-        })
+        isNewArticle &&
+          articleBatch.unshift({
+            content,
+            children: highlightBatch,
+          })
       }
 
       articleBatch.length > 0 &&
