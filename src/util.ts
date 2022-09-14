@@ -1,6 +1,5 @@
 import { diff_match_patch } from 'diff-match-patch'
-import mescape from 'markdown-escape'
-import lescape from 'escape-latex'
+import escape from 'markdown-escape'
 
 export interface GetArticleResponse {
   data: {
@@ -130,9 +129,9 @@ export const compareHighlightsInFile = (a: Highlight, b: Highlight): number => {
   return highlightPointA.top - highlightPointB.top
 }
 
-export const escape = (text: string): string => {
+export const markdownEscape = (text: string): string => {
   try {
-    return lescape(mescape(text))
+    return escape(text)
   } catch (e) {
     console.error('markdownEscape error', e)
     return text
