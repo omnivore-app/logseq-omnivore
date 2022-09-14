@@ -1,3 +1,23 @@
+# [1.9.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.8.1...v1.9.0) (2022-09-14)
+
+
+### Bug Fixes
+
+* bold title ([8d8af29](https://github.com/omnivore-app/logseq-omnivore/commit/8d8af29f0ad16313f2c05306698fb8a828d64e9c))
+* escape Latex ([5b97b57](https://github.com/omnivore-app/logseq-omnivore/commit/5b97b57425ca0b81e546b1b8a9b4d2f05f2b2b16))
+* escape Markdown characters in quote ([cadf2e9](https://github.com/omnivore-app/logseq-omnivore/commit/cadf2e92c9d923a6113d6fc6974d386852031184))
+* escape Markdown characters in quote and title ([f6f36a3](https://github.com/omnivore-app/logseq-omnivore/commit/f6f36a3bfbe179329311ffeb01292ef16107fe73))
+* insert highlight to existing block as child ([93e1edf](https://github.com/omnivore-app/logseq-omnivore/commit/93e1edfb8dd53cb90f73ac7b84d3fc47846788bf))
+* query to find existing blocks ([82dc459](https://github.com/omnivore-app/logseq-omnivore/commit/82dc4591161d0bcfefdf909bd05ff6fc3423a5f3))
+* update existing block to retain references ([e476ece](https://github.com/omnivore-app/logseq-omnivore/commit/e476ecebe06f32cc09632af923539ba17858c047))
+* update existing highlight block ([a21606a](https://github.com/omnivore-app/logseq-omnivore/commit/a21606a23ff63039891cd1db25cd65b6d023e612))
+* use parent block uuid in the query ([d235199](https://github.com/omnivore-app/logseq-omnivore/commit/d235199f73d61013172b0f8fce4a77ea7fa8c21b))
+
+
+### Features
+
+* use datascript query to fetch existing blocks ([3c5e596](https://github.com/omnivore-app/logseq-omnivore/commit/3c5e5962eaedb9724e5959a9fb257c9faae27af1))
+
 ## [1.8.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.8.0...v1.8.1) (2022-08-26)
 
 
