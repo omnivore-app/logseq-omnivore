@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.0...v1.9.1) (2022-09-16)
+
+
+### Bug Fixes
+
+* unescape markdown special charaters to avoid double escaping in logseq ([9ec3fec](https://github.com/omnivore-app/logseq-omnivore/commit/9ec3fecd94bdc61b7190ebea42d9ecfda8ac8696))
+
 # [1.9.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.8.1...v1.9.0) (2022-09-14)
 
 
