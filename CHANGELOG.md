@@ -1,3 +1,11 @@
+## [1.9.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.1...v1.9.2) (2022-09-19)
+
+
+### Bug Fixes
+
+* escape quotation marks in the content of highlight and note when running datascript query ([c9d01df](https://github.com/omnivore-app/logseq-omnivore/commit/c9d01dfc1222ae6f61724112c61827243c4bb2dd))
+* remove duplicate highlights by adding parent block id in the datascript query ([ac6d534](https://github.com/omnivore-app/logseq-omnivore/commit/ac6d534a9c8a5938135b588a19660cf30a33eb00))
+
 ## [1.9.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.0...v1.9.1) (2022-09-16)
 
 
