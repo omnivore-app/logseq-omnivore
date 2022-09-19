@@ -9,6 +9,7 @@ import { getDateForPage } from 'logseq-dateutils'
 import {
   Article,
   compareHighlightsInFile,
+  escapeQuotationMarks,
   getHighlightLocation,
   loadArticles,
   markdownEscape,
@@ -213,7 +214,9 @@ const fetchOmnivore = async (inBackground = false) => {
                             [(str ?u) ?s]
                             [(= ?s "${existingBlock.uuid}")]
                             [?b :block/content ?c]
-                            [(= ?c "${highlight.content}")]]`
+                            [(= ?c "${escapeQuotationMarks(
+                              highlight.content
+                            )}")]]`
                 )
               ).flat()
               if (existingHighlights.length > 0) {
@@ -230,7 +233,9 @@ const fetchOmnivore = async (inBackground = false) => {
                                 [(str ?u) ?s]
                                 [(= ?s "${existingHighlight.uuid}")]
                                 [?b :block/content ?c]
-                                [(= ?c "${noteChild.content}")]]`
+                                [(= ?c "${escapeQuotationMarks(
+                                  noteChild.content
+                                )}")]]`
                     )
                   ).flat()
                   if (existingNotes.length == 0) {
