@@ -137,3 +137,7 @@ export const markdownEscape = (text: string): string => {
     return text
   }
 }
+
+export const escapeQuotationMarks = (text: string): string => {
+  return text.replace(/"/g, '\\"')
+}
