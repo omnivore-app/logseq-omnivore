@@ -191,6 +191,10 @@ const fetchOmnivore = async (inBackground = false) => {
                     :where
                       [?b :block/page ?p]
                       [?p :block/original-name "${pageName}"]
+                      [?b :block/parent ?parent]
+                      [?parent :block/uuid ?u]
+                      [(str ?u) ?s]
+                      [(= ?s "${targetBlock.uuid}")]
                       [?b :block/content ?c]
                       [(clojure.string/includes? ?c "${article.slug}")]]`
           )
