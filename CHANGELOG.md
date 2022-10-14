@@ -1,3 +1,12 @@
+## [1.9.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.2...v1.9.3) (2022-10-14)
+
+
+### Bug Fixes
+
+* delete article blocks if the articles are deleted in Omnivore ([0b87e0e](https://github.com/omnivore-app/logseq-omnivore/commit/0b87e0efd9f2413c923eb732185cdadab9913b69))
+* get correct updated reason from updates since api response ([d888ca0](https://github.com/omnivore-app/logseq-omnivore/commit/d888ca0fc1d679f95ca4e69206ec1d3562c8c7d7))
+* use prod api endpoint ([f11c98c](https://github.com/omnivore-app/logseq-omnivore/commit/f11c98c58507aa4597b19f1881a4cd66bbf655b7))
+
 ## [1.9.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.1...v1.9.2) (2022-09-19)
 
 
