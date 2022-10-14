@@ -289,6 +289,7 @@ const fetchOmnivore = async (inBackground = false) => {
         size,
         DateTime.fromFormat(syncAt, DATE_FORMAT).toISO()
       )
+
       for (const slug of deletedArticleSlugs) {
         const existingBlocks = (
           await logseq.DB.datascriptQuery<BlockEntity[]>(
@@ -304,6 +305,7 @@ const fetchOmnivore = async (inBackground = false) => {
                       [(clojure.string/includes? ?c "${slug}")]]`
           )
         ).flat()
+
         if (existingBlocks.length > 0) {
           await logseq.Editor.removeBlock(existingBlocks[0].uuid)
         }

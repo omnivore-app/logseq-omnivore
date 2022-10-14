@@ -21,15 +21,15 @@ export interface SearchResponse {
 }
 
 export enum UpdateReason {
-  CREATED,
-  UPDATED,
-  DELETED,
+  CREATED = 'CREATED',
+  UPDATED = 'UPDATED',
+  DELETED = 'DELETED',
 }
 
 export interface UpdatesSinceResponse {
   data: {
     updatesSince: {
-      edges: { updateReason: UpdateReason; node: Article }[]
+      edges: { updateReason: UpdateReason; node: { slug: string } }[]
       pageInfo: {
         hasNextPage: boolean
       }
@@ -77,7 +77,7 @@ export interface HighlightPoint {
   top: number
 }
 
-const ENDPOINT = 'https://api-prod.omnivore.app/api/graphql'
+const ENDPOINT = 'http://localhost:4000/api/graphql'
 const requestHeaders = (apiKey: string) => ({
   'Content-Type': 'application/json',
   authorization: apiKey,
