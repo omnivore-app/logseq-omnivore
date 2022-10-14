@@ -20,6 +20,23 @@ export interface SearchResponse {
   }
 }
 
+export enum UpdateReason {
+  CREATED,
+  UPDATED,
+  DELETED,
+}
+
+export interface UpdatesSinceResponse {
+  data: {
+    updatesSince: {
+      edges: { updateReason: UpdateReason; node: Article }[]
+      pageInfo: {
+        hasNextPage: boolean
+      }
+    }
+  }
+}
+
 export enum PageType {
   Article = 'ARTICLE',
   Book = 'BOOK',
@@ -60,17 +77,19 @@ export interface HighlightPoint {
   top: number
 }
 
-const endpoint = 'https://api-prod.omnivore.app/api/graphql'
+const ENDPOINT = 'https://api-prod.omnivore.app/api/graphql'
+const requestHeaders = (apiKey: string) => ({
+  'Content-Type': 'application/json',
+  authorization: apiKey,
+  'X-OmnivoreClient': 'logseq-plugin',
+})
 
 export const loadArticle = async (
   slug: string,
   apiKey: string
 ): Promise<Article> => {
-  const res = await fetch(endpoint, {
-    headers: {
-      'content-type': 'application/json',
-      authorization: apiKey,
-    },
+  const res = await fetch(ENDPOINT, {
+    headers: requestHeaders(apiKey),
     body: `{"query":"\\n  query GetArticle(\\n    $username: String!\\n    $slug: String!\\n  ) {\\n    article(username: $username, slug: $slug) {\\n      ... on ArticleSuccess {\\n        article {\\n          ...ArticleFields\\n          highlights {\\n            ...HighlightFields\\n          }\\n          labels {\\n            ...LabelFields\\n          }\\n        }\\n      }\\n      ... on ArticleError {\\n        errorCodes\\n      }\\n    }\\n  }\\n  \\n  fragment ArticleFields on Article {\\n    savedAt\\n  }\\n\\n  \\n  fragment HighlightFields on Highlight {\\n  id\\n  quote\\n  annotation\\n  }\\n\\n  \\n  fragment LabelFields on Label {\\n    name\\n  }\\n\\n","variables":{"username":"me","slug":"${slug}"}}`,
     method: 'POST',
   })
@@ -86,11 +105,8 @@ export const loadArticles = async (
   updatedAt = '',
   query = ''
 ): Promise<[Article[], boolean]> => {
-  const res = await fetch(endpoint, {
-    headers: {
-      'content-type': 'application/json',
-      authorization: apiKey,
-    },
+  const res = await fetch(ENDPOINT, {
+    headers: requestHeaders(apiKey),
     body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            pageType\\n            highlights {\\n            id\\n        quote\\n        annotation\\n        patch\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       updatedAt ? 'updated:' + updatedAt : ''
     } sort:saved-asc ${query}"}}`,
@@ -101,6 +117,28 @@ export const loadArticles = async (
   const articles = jsonRes.data.search.edges.map((e) => e.node)
 
   return [articles, jsonRes.data.search.pageInfo.hasNextPage]
+}
+
+export const loadDeletedArticleSlugs = async (
+  apiKey: string,
+  after = 0,
+  first = 10,
+  updatedAt = ''
+): Promise<[string[], boolean]> => {
+  const res = await fetch(ENDPOINT, {
+    headers: requestHeaders(apiKey),
+    body: `{"query":"\\n    query UpdatesSince($after: String, $first: Int, $since: Date!) {\\n      updatesSince(first: $first, after: $after, since: $since) {\\n        ... on UpdatesSinceSuccess {\\n          edges {\\n       updateReason\\n        node {\\n              slug\\n        }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on UpdatesSinceError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "since":"${
+      updatedAt || '2021-01-01'
+    }"}}`,
+    method: 'POST',
+  })
+
+  const jsonRes = (await res.json()) as UpdatesSinceResponse
+  const deletedArticleSlugs = jsonRes.data.updatesSince.edges
+    .filter((edge) => edge.updateReason === UpdateReason.DELETED)
+    .map((edge) => edge.node.slug)
+
+  return [deletedArticleSlugs, jsonRes.data.updatesSince.pageInfo.hasNextPage]
 }
 
 export const getHighlightLocation = (patch: string): number => {

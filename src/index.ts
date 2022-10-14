@@ -12,7 +12,7 @@ import {
   escapeQuotationMarks,
   getHighlightLocation,
   loadArticles,
-  markdownEscape,
+  loadDeletedArticleSlugs,
   PageType,
 } from './util'
 import { DateTime } from 'luxon'
@@ -275,6 +275,39 @@ const fetchOmnivore = async (inBackground = false) => {
           before: true,
           sibling: false,
         }))
+    }
+
+    // delete blocks where article has been deleted
+    for (
+      let hasNextPage = true, deletedArticleSlugs: string[] = [], after = 0;
+      hasNextPage;
+      after += size
+    ) {
+      ;[deletedArticleSlugs, hasNextPage] = await loadDeletedArticleSlugs(
+        apiKey,
+        after,
+        size,
+        DateTime.fromFormat(syncAt, DATE_FORMAT).toISO()
+      )
+      for (const slug of deletedArticleSlugs) {
+        const existingBlocks = (
+          await logseq.DB.datascriptQuery<BlockEntity[]>(
+            `[:find (pull ?b [*])
+                    :where
+                      [?b :block/page ?p]
+                      [?p :block/original-name "${pageName}"]
+                      [?b :block/parent ?parent]
+                      [?parent :block/uuid ?u]
+                      [(str ?u) ?s]
+                      [(= ?s "${targetBlock.uuid}")]
+                      [?b :block/content ?c]
+                      [(clojure.string/includes? ?c "${slug}")]]`
+          )
+        ).flat()
+        if (existingBlocks.length > 0) {
+          await logseq.Editor.removeBlock(existingBlocks[0].uuid)
+        }
+      }
     }
 
     !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
