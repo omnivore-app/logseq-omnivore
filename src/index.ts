@@ -16,6 +16,7 @@ import {
   PageType,
 } from './util'
 import { DateTime } from 'luxon'
+import format from 'string-template'
 
 enum Filter {
   ALL = 'import all my articles',
@@ -37,6 +38,8 @@ interface Settings {
   customQuery: string
   disabled: boolean
   highlightOrder: HighlightOrder
+  pageName: string
+  template: string
 }
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
@@ -67,8 +70,15 @@ const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
 const fetchOmnivore = async (inBackground = false) => {
   if (loading) return
 
-  const { syncAt, apiKey, filter, customQuery, highlightOrder } =
-    logseq.settings as Settings
+  const {
+    syncAt,
+    apiKey,
+    filter,
+    customQuery,
+    highlightOrder,
+    pageName,
+    template,
+  } = logseq.settings as Settings
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
@@ -76,7 +86,6 @@ const fetchOmnivore = async (inBackground = false) => {
     return
   }
 
-  const pageName = 'Omnivore'
   const blockTitle = '## 🔖 Articles'
   const fetchingTitle = '🚀 Fetching articles ...'
 
@@ -130,30 +139,23 @@ const fetchOmnivore = async (inBackground = false) => {
 
       const articleBatch: IBatchBlock[] = []
       for (const article of articles) {
-        // Build content string
-        let content = `[${article.title}](https://omnivore.app/me/${article.slug})`
-        content += '\ncollapsed:: true'
-
         const displaySiteName =
           article.siteName || siteNameFromUrl(article.originalArticleUrl)
-        if (displaySiteName) {
-          content += `\nsite:: [${displaySiteName}](${article.originalArticleUrl})`
-        }
-
-        if (article.author) {
-          content += `\nauthor:: ${article.author}`
-        }
-
-        if (article.labels && article.labels.length > 0) {
-          content += `\nlabels:: ${article.labels
-            .map((l) => `[[${l.name}]]`)
-            .join()}`
-        }
-
-        content += `\ndate_saved:: ${getDateForPage(
+        const labels = article.labels?.map((l) => `[[${l.name}]]`).join()
+        const dateSaved = getDateForPage(
           new Date(article.savedAt),
           preferredDateFormat
-        )}`
+        )
+        // Build content string based on template
+        const content = format(template, {
+          title: article.title,
+          slug: article.slug,
+          displaySiteName,
+          originalArticleUrl: article.originalArticleUrl,
+          author: article.author,
+          labels,
+          dateSaved,
+        })
 
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
@@ -414,6 +416,25 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       default: HighlightOrder.TIME.toString(),
       enumPicker: 'select',
       enumChoices: Object.values(HighlightOrder),
+    },
+    {
+      key: 'pageName',
+      type: 'string',
+      title: 'Enter the page name to sync with Omnivore',
+      description: 'Enter the page name to sync Omnivore articles to',
+      default: 'Omnivore',
+    },
+    {
+      key: 'template',
+      type: 'string',
+      title: 'Enter the template to use for new articles',
+      description: 'Enter the template to use for new articles',
+      default: `[{title}](https://omnivore.app/me/{slug})
+      collapsed:: true
+      site:: [{displaySiteName}]({originalArticleUrl})
+      author:: {author}
+      labels:: {labels}
+      date_saved:: {dateSaved}`,
     },
   ]
   logseq.useSettingsSchema(settingsSchema)
