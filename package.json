@@ -28,7 +28,7 @@
     "logseq-dateutils": "^0.0.22",
     "luxon": "^3.0.1",
     "markdown-escape": "^1.1.0",
-    "string-template": "^1.0.0"
+    "mustache": "^4.2.0"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.1",
@@ -38,7 +38,7 @@
     "@types/diff-match-patch": "^1.0.32",
     "@types/luxon": "^2.3.2",
     "@types/markdown-escape": "^1.1.0",
-    "@types/string-template": "^1.0.2",
+    "@types/mustache": "^4.2.1",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
     "eslint": "^8.6.0",

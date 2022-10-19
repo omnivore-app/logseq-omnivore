@@ -16,7 +16,7 @@ import {
   PageType,
 } from './util'
 import { DateTime } from 'luxon'
-import format from 'string-template'
+import Mustache from 'mustache'
 
 enum Filter {
   ALL = 'import all my articles',
@@ -143,19 +143,18 @@ const fetchOmnivore = async (inBackground = false) => {
       for (const article of articles) {
         const siteName =
           article.siteName || siteNameFromUrl(article.originalArticleUrl)
-        const labels = article.labels?.map((l) => `[[${l.name}]]`).join()
         const dateSaved = getDateForPage(
           new Date(article.savedAt),
           preferredDateFormat
         )
         // Build content string based on template
-        const content = format(articleTemplate, {
+        const content = Mustache.render(articleTemplate, {
           title: article.title,
           omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
           siteName,
           originalUrl: article.originalArticleUrl,
           author: article.author,
-          labels,
+          labels: article.labels,
           dateSaved,
         })
 
@@ -179,7 +178,7 @@ const fetchOmnivore = async (inBackground = false) => {
         const highlightBatch: IBatchBlock[] =
           article.highlights?.map((it) => {
             // Build content string based on template
-            const content = format(highlightTemplate, {
+            const content = Mustache.render(highlightTemplate, {
               text: it.quote,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
               dateHighlighted: getDateForPage(
@@ -440,21 +439,23 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       type: 'string',
       title: 'Enter the template to use for new articles',
       description:
-        'Enter the template to use for new articles. Required variables are: {title}, {omnivoreUrl}. Optional variables are: {siteName}, {originalUrl}, {author}, {labels}, {dateSaved}',
-      default: `[{title}]({omnivoreUrl})
+        'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{{dateSaved}}}',
+      default: `[{{{title}}}]({{{omnivoreUrl}}})
       collapsed:: true
-      site:: [{siteName}]({originalUrl})
-      author:: {author}
-      labels:: {labels}
-      date_saved:: {dateSaved}`,
+      site:: [{{{siteName}}}]({{{originalUrl}}})
+      author:: {{{author}}}
+      {{#labels.length}}
+      labels:: {{#labels}}[[{{{name}}}]]{{/labels}}
+      {{/labels.length}}
+      date_saved:: {{{dateSaved}}}`,
     },
     {
       key: 'highlightTemplate',
       type: 'string',
       title: 'Enter the template to use for new highlights',
       description:
-        'Enter the template to use for new highlights. Required variables are: {text}, {highlightUrl}. Optional variables are {dateHighlighted}',
-      default: `> {text} [⤴️]({highlightUrl})`,
+        'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}',
+      default: `> {{{text}}} [⤴️]({{{highlightUrl}}})`,
     },
   ]
   logseq.useSettingsSchema(settingsSchema)
