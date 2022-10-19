@@ -16,7 +16,7 @@ import {
   PageType,
 } from './util'
 import { DateTime } from 'luxon'
-import Mustache from 'mustache'
+import { render } from 'mustache'
 
 enum Filter {
   ALL = 'import all my articles',
@@ -148,7 +148,8 @@ const fetchOmnivore = async (inBackground = false) => {
           preferredDateFormat
         )
         // Build content string based on template
-        const content = Mustache.render(articleTemplate, {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const content = render(articleTemplate, {
           title: article.title,
           omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
           siteName,
@@ -156,7 +157,7 @@ const fetchOmnivore = async (inBackground = false) => {
           author: article.author,
           labels: article.labels,
           dateSaved,
-        })
+        }) as string
 
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
@@ -178,14 +179,15 @@ const fetchOmnivore = async (inBackground = false) => {
         const highlightBatch: IBatchBlock[] =
           article.highlights?.map((it) => {
             // Build content string based on template
-            const content = Mustache.render(highlightTemplate, {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            const content = render(highlightTemplate, {
               text: it.quote,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
               dateHighlighted: getDateForPage(
                 new Date(it.updatedAt),
                 preferredDateFormat
               ),
-            })
+            }) as string
             const noteChild = it.annotation
               ? { content: it.annotation }
               : undefined
