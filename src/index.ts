@@ -139,7 +139,7 @@ const fetchOmnivore = async (inBackground = false) => {
 
       const articleBatch: IBatchBlock[] = []
       for (const article of articles) {
-        const displaySiteName =
+        const siteName =
           article.siteName || siteNameFromUrl(article.originalArticleUrl)
         const labels = article.labels?.map((l) => `[[${l.name}]]`).join()
         const dateSaved = getDateForPage(
@@ -149,9 +149,9 @@ const fetchOmnivore = async (inBackground = false) => {
         // Build content string based on template
         const content = format(template, {
           title: article.title,
-          slug: article.slug,
-          displaySiteName,
-          originalArticleUrl: article.originalArticleUrl,
+          omnivoreUrl: `https://omnivore.app/me/${article.slug})`,
+          siteName,
+          originalUrl: article.originalArticleUrl,
           author: article.author,
           labels,
           dateSaved,
@@ -428,10 +428,11 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       key: 'template',
       type: 'string',
       title: 'Enter the template to use for new articles',
-      description: 'Enter the template to use for new articles',
-      default: `[{title}](https://omnivore.app/me/{slug})
+      description:
+        'Enter the template to use for new articles. Available variables are: {{title}}, {{omnivoreUrl}}, {{siteName}}, {{originalUrl}}, {{author}}, {{labels}}, {{dateSaved}}',
+      default: `[{title}]({omnivoreUrl})
       collapsed:: true
-      site:: [{displaySiteName}]({originalArticleUrl})
+      site:: [{siteName}]({originalUrl})
       author:: {author}
       labels:: {labels}
       date_saved:: {dateSaved}`,
