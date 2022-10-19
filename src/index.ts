@@ -151,7 +151,7 @@ const fetchOmnivore = async (inBackground = false) => {
         // Build content string based on template
         const content = format(articleTemplate, {
           title: article.title,
-          omnivoreUrl: `https://omnivore.app/me/${article.slug})`,
+          omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
           siteName,
           originalUrl: article.originalArticleUrl,
           author: article.author,
