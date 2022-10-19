@@ -39,7 +39,8 @@ interface Settings {
   disabled: boolean
   highlightOrder: HighlightOrder
   pageName: string
-  template: string
+  articleTemplate: string
+  highlightTemplate: string
 }
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
@@ -77,7 +78,8 @@ const fetchOmnivore = async (inBackground = false) => {
     customQuery,
     highlightOrder,
     pageName,
-    template,
+    articleTemplate,
+    highlightTemplate,
   } = logseq.settings as Settings
 
   if (!apiKey) {
@@ -147,7 +149,7 @@ const fetchOmnivore = async (inBackground = false) => {
           preferredDateFormat
         )
         // Build content string based on template
-        const content = format(template, {
+        const content = format(articleTemplate, {
           title: article.title,
           omnivoreUrl: `https://omnivore.app/me/${article.slug})`,
           siteName,
@@ -176,11 +178,20 @@ const fetchOmnivore = async (inBackground = false) => {
           })
         const highlightBatch: IBatchBlock[] =
           article.highlights?.map((it) => {
+            // Build content string based on template
+            const content = format(highlightTemplate, {
+              text: it.quote,
+              highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
+              dateHighlighted: getDateForPage(
+                new Date(it.updatedAt),
+                preferredDateFormat
+              ),
+            })
             const noteChild = it.annotation
               ? { content: it.annotation }
               : undefined
             return {
-              content: `> ${it.quote} [⤴️](https://omnivore.app/me/${article.slug}#${it.id})`,
+              content,
               children: noteChild ? [noteChild] : undefined,
             }
           }) || []
@@ -425,17 +436,25 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       default: 'Omnivore',
     },
     {
-      key: 'template',
+      key: 'articleTemplate',
       type: 'string',
       title: 'Enter the template to use for new articles',
       description:
-        'Enter the template to use for new articles. Available variables are: {{title}}, {{omnivoreUrl}}, {{siteName}}, {{originalUrl}}, {{author}}, {{labels}}, {{dateSaved}}',
+        'Enter the template to use for new articles. Available variables are: {title}, {omnivoreUrl}, {siteName}, {originalUrl}, {author}, {labels}, {dateSaved}',
       default: `[{title}]({omnivoreUrl})
       collapsed:: true
       site:: [{siteName}]({originalUrl})
       author:: {author}
       labels:: {labels}
       date_saved:: {dateSaved}`,
+    },
+    {
+      key: 'highlightTemplate',
+      type: 'string',
+      title: 'Enter the template to use for new highlights',
+      description:
+        'Enter the template to use for new highlights. Available variables are: {text}, {highlightUrl}, {dateHighlighted}',
+      default: `> {text} [⤴️]({highlightUrl})`,
     },
   ]
   logseq.useSettingsSchema(settingsSchema)
