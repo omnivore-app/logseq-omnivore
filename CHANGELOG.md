@@ -1,3 +1,16 @@
+## [1.9.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.3...v1.9.4) (2022-11-02)
+
+
+### Bug Fixes
+
+* add available keys in the template settings description ([2b95f9d](https://github.com/omnivore-app/logseq-omnivore/commit/2b95f9daf63cab6cb55da0604bf5666f99ea6f94))
+* add highlight template in settings ([2bd38c4](https://github.com/omnivore-app/logseq-omnivore/commit/2bd38c49060335f93b5a47c13ea39da6579f4a8e))
+* add required and optional variables in template descriptions ([adc5e48](https://github.com/omnivore-app/logseq-omnivore/commit/adc5e48ec1af3343743ff9e23a4ffc1101ce7394))
+* allow labels in the template to be empty ([18b3911](https://github.com/omnivore-app/logseq-omnivore/commit/18b39118c4eac118b5eb2030815e71ea552c9144))
+* allow users to specify custom template for the article ([6d88fea](https://github.com/omnivore-app/logseq-omnivore/commit/6d88fea8f6b6e1822bd4c8ae5406ddf3110450c1))
+* make icon use the theme color ([b77e64f](https://github.com/omnivore-app/logseq-omnivore/commit/b77e64fb70461f08bbabfcf7613b60dc28de36e7))
+* remove redundant ) in the article url ([8f33965](https://github.com/omnivore-app/logseq-omnivore/commit/8f3396581bc7dabd08e4b62426e7a909e2e8494c))
+
 ## [1.9.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.2...v1.9.3) (2022-10-14)
 
 
