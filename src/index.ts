@@ -157,7 +157,7 @@ const fetchOmnivore = async (inBackground = false) => {
           author: article.author,
           labels: article.labels,
           dateSaved,
-        }) as string
+        })
 
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
@@ -187,7 +187,7 @@ const fetchOmnivore = async (inBackground = false) => {
                 new Date(it.updatedAt),
                 preferredDateFormat
               ),
-            }) as string
+            })
             const noteChild = it.annotation
               ? { content: it.annotation }
               : undefined
@@ -444,8 +444,10 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
         'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{{dateSaved}}}',
       default: `[{{{title}}}]({{{omnivoreUrl}}})
       collapsed:: true
-      site:: [{{{siteName}}}]({{{originalUrl}}})
+      site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
+      {{#author}}
       author:: {{{author}}}
+      {{/author}}
       {{#labels.length}}
       labels:: {{#labels}}[[{{{name}}}]]{{/labels}}
       {{/labels.length}}
