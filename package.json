@@ -23,7 +23,7 @@
     "icon": "./public/icon.png"
   },
   "dependencies": {
-    "@logseq/libs": "^0.0.6",
+    "@logseq/libs": "^0.0.10",
     "diff-match-patch": "^1.0.5",
     "logseq-dateutils": "^0.0.22",
     "luxon": "^3.0.1",
