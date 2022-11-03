@@ -1,3 +1,10 @@
+## [1.9.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.4...v1.9.5) (2022-11-03)
+
+
+### Bug Fixes
+
+* put template settings in a textarea ([ad20dc1](https://github.com/omnivore-app/logseq-omnivore/commit/ad20dc11683bd2e2bd455cad84a00c01a34008e7))
+
 ## [1.9.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.3...v1.9.4) (2022-11-02)
 
 
