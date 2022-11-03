@@ -452,6 +452,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       labels:: {{#labels}}[[{{{name}}}]]{{/labels}}
       {{/labels.length}}
       date_saved:: {{{dateSaved}}}`,
+      inputAs: 'textarea',
     },
     {
       key: 'highlightTemplate',
@@ -460,6 +461,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       description:
         'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}',
       default: `> {{{text}}} [⤴️]({{{highlightUrl}}})`,
+      inputAs: 'textarea',
     },
   ]
   logseq.useSettingsSchema(settingsSchema)
