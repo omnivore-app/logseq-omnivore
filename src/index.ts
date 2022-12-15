@@ -446,9 +446,9 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       title: 'Enter the template to use for new articles',
       description:
         'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{{dateSaved}}}',
-      default: `[{{{title}}}]({omnivoreUrl})
+      default: `[{{{title}}}]({{omnivoreUrl}})
       collapsed:: true
-      site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({originalUrl})
+      site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{originalUrl}})
       {{#author}}
       author:: {{{author}}}
       {{/author}}
@@ -464,7 +464,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       title: 'Enter the template to use for new highlights',
       description:
         'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}',
-      default: `> {{{text}}} [⤴️]({highlightUrl}) {{#labels}}#[[{{{name}}}]]{{/labels}}`,
+      default: `> {{{text}}} [⤴️]({{highlightUrl}}) {{#labels}}#[[{{{name}}}]]{{/labels}}`,
       inputAs: 'textarea',
     },
   ]
