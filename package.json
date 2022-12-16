@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "@logseq/libs": "^0.0.10",
-    "@types/chai": "^4.3.4",
     "diff-match-patch": "^1.0.5",
     "logseq-dateutils": "^0.0.22",
     "luxon": "^3.0.1",
@@ -37,6 +36,7 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@tsconfig/node16": "^1.0.1",
+    "@types/chai": "^4.3.4",
     "@types/chai-string": "^1.4.2",
     "@types/diff-match-patch": "^1.0.32",
     "@types/luxon": "^2.3.2",
