@@ -179,7 +179,7 @@ const fetchOmnivore = async (inBackground = false) => {
               return compareHighlightsInFile(a, b)
             }
           })
-        const highlightBatch: IBatchBlock[] =
+        const highlightBatch: (IBatchBlock & { id: string })[] =
           article.highlights?.map((it) => {
             // Build content string based on template
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -198,6 +198,7 @@ const fetchOmnivore = async (inBackground = false) => {
             return {
               content,
               children: noteChild ? [noteChild] : undefined,
+              id: it.id,
             }
           }) || []
 
@@ -236,14 +237,19 @@ const fetchOmnivore = async (inBackground = false) => {
                             [(str ?u) ?s]
                             [(= ?s "${existingBlock.uuid}")]
                             [?b :block/content ?c]
-                            [(= ?c "${escapeQuotationMarks(
-                              highlight.content
-                            )}")]]`
+                            [(clojure.string/includes? ?c "${highlight.id}")]]`
                 )
               ).flat()
               if (existingHighlights.length > 0) {
                 const existingHighlight = existingHighlights[0]
-                // update existing highlight
+                // update existing highlight if content is different
+                existingHighlight.content !== highlight.content &&
+                  (await logseq.Editor.updateBlock(
+                    existingHighlight.uuid,
+                    highlight.content
+                  ))
+
+                // checking notes
                 const noteChild = highlight.children?.[0]
                 if (noteChild) {
                   const existingNotes = (
