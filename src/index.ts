@@ -14,6 +14,8 @@ import {
   loadArticles,
   loadDeletedArticleSlugs,
   PageType,
+  parseDateTime,
+  DATE_FORMAT,
 } from './util'
 import { DateTime } from 'luxon'
 import { render } from 'mustache'
@@ -52,7 +54,6 @@ const siteNameFromUrl = (originalArticleUrl: string): string => {
 }
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
-const DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
 let loading = false
 
 const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
@@ -101,6 +102,8 @@ const fetchOmnivore = async (inBackground = false) => {
   const preferredDateFormat: string = userConfigs.preferredDateFormat
 
   try {
+    console.log(`logseq-omnivore starting sync since: '${syncAt}`)
+
     !inBackground && (await logseq.UI.showMsg('🚀 Fetching articles ...'))
 
     let omnivorePage = await logseq.Editor.getPage(pageName)
@@ -135,7 +138,7 @@ const fetchOmnivore = async (inBackground = false) => {
         apiKey,
         after,
         size,
-        DateTime.fromFormat(syncAt, DATE_FORMAT).toISO(),
+        parseDateTime(syncAt).toISO(),
         getQueryFromFilter(filter, customQuery)
       )
 
@@ -301,7 +304,7 @@ const fetchOmnivore = async (inBackground = false) => {
         apiKey,
         after,
         size,
-        DateTime.fromFormat(syncAt, DATE_FORMAT).toISO()
+        parseDateTime(syncAt).toISO()
       )
 
       for (const slug of deletedArticleSlugs) {

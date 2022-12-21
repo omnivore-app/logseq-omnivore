@@ -1,5 +1,9 @@
 import { diff_match_patch } from 'diff-match-patch'
+import { DateTime } from 'luxon'
 import escape from 'markdown-escape'
+
+export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
+export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`
 
 export interface GetArticleResponse {
   data: {
@@ -179,4 +183,12 @@ export const markdownEscape = (text: string): string => {
 
 export const escapeQuotationMarks = (text: string): string => {
   return text.replace(/"/g, '\\"')
+}
+
+export const parseDateTime = (str: string): DateTime => {
+  const res = DateTime.fromFormat(str, DATE_FORMAT)
+  if (res.isValid) {
+    return res
+  }
+  return DateTime.fromFormat(str, DATE_FORMAT_W_OUT_SECONDS)
 }

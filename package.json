@@ -14,7 +14,8 @@
   },
   "scripts": {
     "dev": "parcel public/index.html --public-url ./",
-    "build": "parcel build --public-url . --no-source-maps public/index.html"
+    "build": "parcel build --public-url . --no-source-maps public/index.html",
+    "test": "yarn mocha -r ts-node/register tests/*.ts"
   },
   "license": "MIT",
   "logseq": {
@@ -35,15 +36,21 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@tsconfig/node16": "^1.0.1",
+    "@types/chai": "^4.3.4",
+    "@types/chai-string": "^1.4.2",
     "@types/diff-match-patch": "^1.0.32",
     "@types/luxon": "^2.3.2",
     "@types/markdown-escape": "^1.1.0",
+    "@types/mocha": "^10.0.1",
     "@types/mustache": "^4.2.1",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
+    "chai": "^4.3.7",
+    "chai-string": "^1.5.0",
     "eslint": "^8.6.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "mocha": "^10.2.0",
     "parcel": "^2.0.0",
     "prettier": "^2.5.1",
     "semantic-release": "^19.0.3",
