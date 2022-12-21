@@ -1,3 +1,10 @@
+## [1.9.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.5...v1.9.6) (2022-12-21)
+
+
+### Bug Fixes
+
+* date/time parsing + URLs in default template ([55c2fbd](https://github.com/omnivore-app/logseq-omnivore/commit/55c2fbd4e034e192fdfdcdff92382e9c524c1c28))
+
 ## [1.9.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.4...v1.9.5) (2022-11-03)
 
 
