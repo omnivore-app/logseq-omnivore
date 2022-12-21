@@ -7,13 +7,14 @@ This plugin imports your saved [Omnivore](https://omnivore.app/) articles and hi
 * Import your highlights and saved article
 * Create graphs based on Omnivore data
 * Filter imported data using Omnivores [advanced search syntax](https://omnivore.app/help/search)
+* Custom templates for imported data
 
 ## Installation
 
 1. Install the plugin from the marketplace or build it from source and load unpacked plugin
 2. Sign up for an [Omnivore account](https://omnivore.app)
-2. Go to [Omnivore](https://omnivore.app/settings/api) and Create an API key
-3. Open settings and add your api key
+3. Go to [Omnivore](https://omnivore.app/settings/api) and Create an API key
+4. Open settings and add your api key
 
 ## Usage
 
