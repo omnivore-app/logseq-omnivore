@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.6...v1.10.0) (2022-12-30)
+
+
+### Features
+
+* Add support for labels on highlights ([af6a4f3](https://github.com/omnivore-app/logseq-omnivore/commit/af6a4f359e83a8659dfa71b44c9a878a571d7918))
+
 ## [1.9.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.5...v1.9.6) (2022-12-21)
 
 
