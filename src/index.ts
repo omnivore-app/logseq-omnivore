@@ -179,12 +179,13 @@ const fetchOmnivore = async (inBackground = false) => {
               return compareHighlightsInFile(a, b)
             }
           })
-        const highlightBatch: IBatchBlock[] =
+        const highlightBatch: (IBatchBlock & { id: string })[] =
           article.highlights?.map((it) => {
             // Build content string based on template
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             const content = render(highlightTemplate, {
               text: it.quote,
+              labels: it.labels,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
               dateHighlighted: getDateForPage(
                 new Date(it.updatedAt),
@@ -197,6 +198,7 @@ const fetchOmnivore = async (inBackground = false) => {
             return {
               content,
               children: noteChild ? [noteChild] : undefined,
+              id: it.id,
             }
           }) || []
 
@@ -235,14 +237,19 @@ const fetchOmnivore = async (inBackground = false) => {
                             [(str ?u) ?s]
                             [(= ?s "${existingBlock.uuid}")]
                             [?b :block/content ?c]
-                            [(= ?c "${escapeQuotationMarks(
-                              highlight.content
-                            )}")]]`
+                            [(clojure.string/includes? ?c "${highlight.id}")]]`
                 )
               ).flat()
               if (existingHighlights.length > 0) {
                 const existingHighlight = existingHighlights[0]
-                // update existing highlight
+                // update existing highlight if content is different
+                existingHighlight.content !== highlight.content &&
+                  (await logseq.Editor.updateBlock(
+                    existingHighlight.uuid,
+                    highlight.content
+                  ))
+
+                // checking notes
                 const noteChild = highlight.children?.[0]
                 if (noteChild) {
                   const existingNotes = (
@@ -463,7 +470,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       title: 'Enter the template to use for new highlights',
       description:
         'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}',
-      default: `> {{{text}}} [⤴️]({{{highlightUrl}}})`,
+      default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}}#[[{{{name}}}]] {{/labels}}`,
       inputAs: 'textarea',
     },
   ]
