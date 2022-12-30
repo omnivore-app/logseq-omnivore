@@ -470,7 +470,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       title: 'Enter the template to use for new highlights',
       description:
         'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}',
-      default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}}#[[{{{name}}}]]{{/labels}}`,
+      default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}}#[[{{{name}}}]] {{/labels}}`,
       inputAs: 'textarea',
     },
   ]
