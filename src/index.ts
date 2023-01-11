@@ -518,6 +518,21 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
     `,
   })
 
+  logseq.App.registerCommandPalette(
+    {
+      key: 'logseq-omnivore',
+      label: 'Sync Omnivore',
+      keybinding: {
+        binding: 'mod+shift+o',
+      },
+    },
+    () => {
+      void (async () => {
+        await fetchOmnivore()
+      })()
+    }
+  )
+
   logseq.provideStyle(`
     [data-injected-ui=logseq-omnivore-${baseInfo.id}] {
       display: flex;
