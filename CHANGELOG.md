@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.10.0...v1.10.1) (2023-01-16)
+
+
+### Bug Fixes
+
+* Update the plugin name in the logseq marketplace ([da86a8e](https://github.com/omnivore-app/logseq-omnivore/commit/da86a8e5490c3ea63614013b78751e48a4f93ad2))
+
 # [1.10.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.9.6...v1.10.0) (2022-12-30)
 
 
