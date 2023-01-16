@@ -20,7 +20,7 @@
   "license": "MIT",
   "logseq": {
     "id": "_logseq-omnivore",
-    "title": "logseq-omnivore",
+    "title": "Omnivore",
     "icon": "./public/icon.png"
   },
   "dependencies": {
