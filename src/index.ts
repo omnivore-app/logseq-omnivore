@@ -139,7 +139,9 @@ const fetchOmnivore = async (inBackground = false) => {
         after,
         size,
         parseDateTime(syncAt).toISO(),
-        getQueryFromFilter(filter, customQuery)
+        getQueryFromFilter(filter, customQuery),
+        'true',
+        'markdown'
       )
 
       const articleBatch: IBatchBlock[] = []
