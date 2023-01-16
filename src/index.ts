@@ -69,6 +69,13 @@ const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
   }
 }
 
+const isValidCurrentGraph = async (): Promise<boolean> => {
+  const settings = logseq.settings as Settings
+  const currentGraph = await logseq.App.getCurrentGraph()
+
+  return currentGraph?.name === settings.graph
+}
+
 const fetchOmnivore = async (inBackground = false) => {
   if (loading) return
 
@@ -81,10 +88,20 @@ const fetchOmnivore = async (inBackground = false) => {
     pageName,
     articleTemplate,
     highlightTemplate,
+    graph,
   } = logseq.settings as Settings
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
+
+    return
+  }
+
+  if (!(await isValidCurrentGraph())) {
+    await logseq.UI.showMsg(
+      `Omnivore is configured to sync into your "${graph}" graph which is not currently active.\nPlease switch to graph "${graph}" to sync Omnivore articles.`,
+      'error'
+    )
 
     return
   }
@@ -139,7 +156,9 @@ const fetchOmnivore = async (inBackground = false) => {
         after,
         size,
         parseDateTime(syncAt).toISO(),
-        getQueryFromFilter(filter, customQuery)
+        getQueryFromFilter(filter, customQuery),
+        'true',
+        'markdown'
       )
 
       const articleBatch: IBatchBlock[] = []
@@ -357,7 +376,7 @@ const syncOmnivore = (): number => {
   if (settings.frequency > 0) {
     intervalID = setInterval(
       async () => {
-        if ((await logseq.App.getCurrentGraph())?.name === settings.graph) {
+        if (await isValidCurrentGraph()) {
           await fetchOmnivore(true)
         }
       },
@@ -520,14 +539,27 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
 
   logseq.App.registerCommandPalette(
     {
-      key: 'logseq-omnivore',
+      key: 'omnivore-sync',
       label: 'Sync Omnivore',
-      keybinding: {
-        binding: 'mod+shift+o',
-      },
     },
     () => {
       void (async () => {
+        await fetchOmnivore()
+      })()
+    }
+  )
+
+  logseq.App.registerCommandPalette(
+    {
+      key: 'omnivore-resync',
+      label: 'Resync all Omnivore articles',
+    },
+    () => {
+      void (async () => {
+        // reset the last sync time
+        logseq.updateSettings({ syncAt: '' })
+        await logseq.UI.showMsg('Omnivore Last Sync reset')
+
         await fetchOmnivore()
       })()
     }
