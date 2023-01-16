@@ -69,6 +69,13 @@ const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
   }
 }
 
+const isValidCurrentGraph = async (): Promise<boolean> => {
+  const settings = logseq.settings as Settings
+  const currentGraph = await logseq.App.getCurrentGraph()
+
+  return currentGraph?.name === settings.graph
+}
+
 const fetchOmnivore = async (inBackground = false) => {
   if (loading) return
 
@@ -81,10 +88,20 @@ const fetchOmnivore = async (inBackground = false) => {
     pageName,
     articleTemplate,
     highlightTemplate,
+    graph,
   } = logseq.settings as Settings
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
+
+    return
+  }
+
+  if (!(await isValidCurrentGraph())) {
+    await logseq.UI.showMsg(
+      `Omnivore is configured to sync into your "${graph}" graph which is not currently active.\nPlease switch to graph "${graph}" to sync Omnivore articles.`,
+      'error'
+    )
 
     return
   }
@@ -359,7 +376,7 @@ const syncOmnivore = (): number => {
   if (settings.frequency > 0) {
     intervalID = setInterval(
       async () => {
-        if ((await logseq.App.getCurrentGraph())?.name === settings.graph) {
+        if (await isValidCurrentGraph()) {
           await fetchOmnivore(true)
         }
       },
