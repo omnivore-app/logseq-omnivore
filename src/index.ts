@@ -179,6 +179,7 @@ const fetchOmnivore = async (inBackground = false) => {
           author: article.author,
           labels: article.labels,
           dateSaved,
+          content: article.content,
         })
 
         // sort highlights by location if selected in options
