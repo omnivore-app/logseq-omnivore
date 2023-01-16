@@ -1,3 +1,16 @@
+# [1.11.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.10.1...v1.11.0) (2023-01-16)
+
+
+### Bug Fixes
+
+* sync articles to the right graph only and show an alert if the active graph is not matched ([ddc2744](https://github.com/omnivore-app/logseq-omnivore/commit/ddc27446338035d192cdd459cda061a45a97875d))
+
+
+### Features
+
+* add command palette for sync and resync Omnivore articles ([17fdc0d](https://github.com/omnivore-app/logseq-omnivore/commit/17fdc0dd891e00bbe53cca444b9acf07b315db39))
+* fetch content in markdown format ([619f80b](https://github.com/omnivore-app/logseq-omnivore/commit/619f80b9d28a0563cd2fe9a5f02147ec9363e44d))
+
 ## [1.10.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.10.0...v1.10.1) (2023-01-16)
 
 
