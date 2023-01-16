@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.0...v1.11.1) (2023-01-16)
+
+
+### Bug Fixes
+
+* add markdown content in article template ([8f96d10](https://github.com/omnivore-app/logseq-omnivore/commit/8f96d10c54eec835a7ee216ce32f94b445ad88e0))
+
 # [1.11.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.10.1...v1.11.0) (2023-01-16)
 
 
