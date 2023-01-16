@@ -520,14 +520,27 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
 
   logseq.App.registerCommandPalette(
     {
-      key: 'logseq-omnivore',
+      key: 'omnivore-sync',
       label: 'Sync Omnivore',
-      keybinding: {
-        binding: 'mod+shift+o',
-      },
     },
     () => {
       void (async () => {
+        await fetchOmnivore()
+      })()
+    }
+  )
+
+  logseq.App.registerCommandPalette(
+    {
+      key: 'omnivore-resync',
+      label: 'Resync all Omnivore articles',
+    },
+    () => {
+      void (async () => {
+        // reset the last sync time
+        logseq.updateSettings({ syncAt: '' })
+        await logseq.UI.showMsg('Omnivore Last Sync reset')
+
         await fetchOmnivore()
       })()
     }
