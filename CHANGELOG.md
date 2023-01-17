@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.1...v1.11.2) (2023-01-17)
+
+
+### Bug Fixes
+
+* sync with omnivore in the background if we are in the right graph when we open Logseq or reload ([152677b](https://github.com/omnivore-app/logseq-omnivore/commit/152677bdd84f6623b7a8ac3cf883c94565504b60))
+
 ## [1.11.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.0...v1.11.1) (2023-01-16)
 
 
