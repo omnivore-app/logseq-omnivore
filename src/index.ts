@@ -574,7 +574,9 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   `)
 
   // fetch articles on startup
-  await fetchOmnivore(true)
+  if (await isValidCurrentGraph()) {
+    await fetchOmnivore(true)
+  }
 
   // sync every frequency minutes
   intervalID = syncOmnivore()
