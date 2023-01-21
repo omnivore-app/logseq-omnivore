@@ -92,8 +92,12 @@ const fetchOmnivore = async (inBackground = false) => {
   } = logseq.settings as Settings
 
   if (!apiKey) {
-    await logseq.UI.showMsg('Missing Omnivore api key', 'warning')
-
+    await logseq.UI.showMsg('Missing Omnivore api key', 'warning', { timeout: 3000 }).then(() => {
+      logseq.showSettingsUI()
+      setTimeout(function () {
+        logseq.App.openExternalLink('https://omnivore.app/settings/api')
+      }, 3000)
+    })
     return
   }
 
