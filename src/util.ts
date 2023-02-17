@@ -1,6 +1,7 @@
 import { diff_match_patch } from 'diff-match-patch'
 import { DateTime } from 'luxon'
 import escape from 'markdown-escape'
+import { format } from 'date-fns'
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`
@@ -195,4 +196,8 @@ export const parseDateTime = (str: string): DateTime => {
     return res
   }
   return DateTime.fromFormat(str, DATE_FORMAT_W_OUT_SECONDS)
+}
+
+export const formatDate = (date: Date, preferredDateFormat: string): string => {
+  return `[[${format(date, preferredDateFormat)}]]`
 }

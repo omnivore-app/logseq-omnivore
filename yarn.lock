@@ -1970,6 +1970,11 @@ csstype@3.1.0:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.1.0.tgz#4ddcac3718d787cf9df0d1b7d15033925c8f29f2"
   integrity sha512-uX1KG+x9h5hIJsaKR9xHUeUraxf8IODOwq9JLNPq6BwB04a/xgpq3rcx47l5BZu5zBPlgD342tdke3Hom/nJRA==
 
+date-fns@^2.29.3:
+  version "2.29.3"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.29.3.tgz#27402d2fc67eb442b511b70bbdf98e6411cd68a8"
+  integrity sha512-dDCnyH2WnnKusqvZZ6+jA1O51Ibt8ZMRNkDZdyAyK4YfbDwa/cEmuztzG5pk6hqlp9aSBPYcjOlktquahGwGeA==
+
 dateformat@^3.0.0:
   version "3.0.3"
   resolved "https://registry.npmjs.org/dateformat/-/dateformat-3.0.3.tgz"
@@ -3374,11 +3379,6 @@ log-symbols@4.1.0:
   dependencies:
     chalk "^4.1.0"
     is-unicode-supported "^0.1.0"
-
-logseq-dateutils@^0.0.22:
-  version "0.0.22"
-  resolved "https://registry.npmjs.org/logseq-dateutils/-/logseq-dateutils-0.0.22.tgz"
-  integrity sha512-6cJq2eVQONG2dloNDg+US4j+QYwo0XXzcq5x9m9/pQAmobAwnaN6PD/4iY4sOAkuPzapZBs3FffFFEy+R1f5fA==
 
 loupe@^2.3.1:
   version "2.3.6"

@@ -5,7 +5,6 @@ import {
   LSPluginBaseInfo,
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
-import { getDateForPage } from 'logseq-dateutils'
 import {
   Article,
   compareHighlightsInFile,
@@ -16,6 +15,7 @@ import {
   PageType,
   parseDateTime,
   DATE_FORMAT,
+  formatDate,
 } from './util'
 import { DateTime } from 'luxon'
 import { render } from 'mustache'
@@ -165,7 +165,7 @@ const fetchOmnivore = async (inBackground = false) => {
       for (const article of articles) {
         const siteName =
           article.siteName || siteNameFromUrl(article.originalArticleUrl)
-        const dateSaved = getDateForPage(
+        const dateSaved = formatDate(
           new Date(article.savedAt),
           preferredDateFormat
         )
@@ -207,7 +207,7 @@ const fetchOmnivore = async (inBackground = false) => {
               text: it.quote,
               labels: it.labels,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
-              dateHighlighted: getDateForPage(
+              dateHighlighted: formatDate(
                 new Date(it.updatedAt),
                 preferredDateFormat
               ),
