@@ -27,7 +27,7 @@
     "@logseq/libs": "^0.0.10",
     "date-fns": "^2.29.3",
     "diff-match-patch": "^1.0.5",
-    "luxon": "^3.0.1",
+    "luxon": "^3.2.1",
     "markdown-escape": "^1.1.0",
     "mustache": "^4.2.0"
   },
