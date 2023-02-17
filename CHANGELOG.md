@@ -1,3 +1,10 @@
+## [1.11.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.3...v1.11.4) (2023-02-17)
+
+
+### Bug Fixes
+
+* make links open automatically if missing api key ([e999c08](https://github.com/omnivore-app/logseq-omnivore/commit/e999c0828b1abfba67499aa1cee892405a63ed6d))
+
 ## [1.11.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.2...v1.11.3) (2023-02-17)
 
 
