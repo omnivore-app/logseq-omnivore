@@ -1,3 +1,10 @@
+## [1.11.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.2...v1.11.3) (2023-02-17)
+
+
+### Bug Fixes
+
+* date format issue ([918665d](https://github.com/omnivore-app/logseq-omnivore/commit/918665d7ee6f2092767324c04c21925da1f277d4))
+
 ## [1.11.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.1...v1.11.2) (2023-01-17)
 
 
