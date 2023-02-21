@@ -1,3 +1,10 @@
+## [1.11.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.4...v1.11.5) (2023-02-21)
+
+
+### Bug Fixes
+
+* labels in highlights are not retrieved ([fa26e85](https://github.com/omnivore-app/logseq-omnivore/commit/fa26e85e5b8fbd67ebfe8b72e3a989ab7ac9cfda))
+
 ## [1.11.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.3...v1.11.4) (2023-02-17)
 
 
