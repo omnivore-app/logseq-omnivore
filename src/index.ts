@@ -8,14 +8,14 @@ import {
 import {
   Article,
   compareHighlightsInFile,
+  DATE_FORMAT,
   escapeQuotationMarks,
+  formatDate,
   getHighlightLocation,
   loadArticles,
   loadDeletedArticleSlugs,
   PageType,
   parseDateTime,
-  DATE_FORMAT,
-  formatDate,
 } from './util'
 import { DateTime } from 'luxon'
 import { render } from 'mustache'
@@ -92,10 +92,12 @@ const fetchOmnivore = async (inBackground = false) => {
   } = logseq.settings as Settings
 
   if (!apiKey) {
-    await logseq.UI.showMsg('Missing Omnivore api key', 'warning', { timeout: 3000 }).then(() => {
+    await logseq.UI.showMsg('Missing Omnivore api key', 'warning', {
+      timeout: 3000,
+    }).then(() => {
       logseq.showSettingsUI()
-      setTimeout(function () {
-        logseq.App.openExternalLink('https://omnivore.app/settings/api')
+      setTimeout(async function () {
+        await logseq.App.openExternalLink('https://omnivore.app/settings/api')
       }, 3000)
     })
     return
@@ -161,7 +163,7 @@ const fetchOmnivore = async (inBackground = false) => {
         size,
         parseDateTime(syncAt).toISO(),
         getQueryFromFilter(filter, customQuery),
-        'true',
+        true,
         'markdown'
       )
 
