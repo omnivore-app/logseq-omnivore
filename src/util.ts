@@ -112,14 +112,63 @@ export const loadArticles = async (
   first = 10,
   updatedAt = '',
   query = '',
-  includeContent: 'true' | 'false' = 'false',
+  includeContent = false,
   format = 'html'
 ): Promise<[Article[], boolean]> => {
   const res = await fetch(ENDPOINT, {
     headers: requestHeaders(apiKey),
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {\\n      search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            pageType\\n            content\\n            highlights {\\n            id\\n        quote\\n        annotation\\n        patch\\n        updatedAt\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
-      updatedAt ? 'updated:' + updatedAt : ''
-    } sort:saved-asc ${query}", "includeContent": ${includeContent}, "format": "${format}"}}`,
+    body: JSON.stringify({
+      query: `
+        query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {
+          search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {
+            ... on SearchSuccess {
+              edges {
+                node {
+                  title
+                  slug
+                  siteName
+                  originalArticleUrl
+                  url
+                  author
+                  updatedAt
+                  description
+                  savedAt
+                  pageType
+                  content
+                  highlights {
+                    id
+                    quote
+                    annotation
+                    patch
+                    updatedAt
+                    labels {
+                      name
+                    }
+                  }
+                  labels {
+                    name
+                  }
+                }
+              }
+              pageInfo {
+                hasNextPage
+              }
+            }
+            ... on SearchError {
+              errorCodes
+            }
+          }
+        }`,
+      variables: {
+        after: `${after}`,
+        first,
+        query: `${
+          updatedAt ? 'updated:' + updatedAt : ''
+        } sort:saved-asc ${query}`,
+        includeContent,
+        format,
+      },
+    }),
     method: 'POST',
   })
 
