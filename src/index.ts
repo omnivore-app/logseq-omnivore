@@ -43,6 +43,7 @@ interface Settings {
   pageName: string
   articleTemplate: string
   highlightTemplate: string
+  loading: boolean
 }
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
@@ -54,7 +55,6 @@ const siteNameFromUrl = (originalArticleUrl: string): string => {
 }
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
-let loading = false
 
 const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
   switch (filter) {
@@ -83,8 +83,6 @@ const deleteBlocks = async (blocks: BlockEntity[]) => {
 }
 
 const fetchOmnivore = async (inBackground = false) => {
-  if (loading) return
-
   const {
     syncAt,
     apiKey,
@@ -95,7 +93,16 @@ const fetchOmnivore = async (inBackground = false) => {
     articleTemplate,
     highlightTemplate,
     graph,
+    loading,
   } = logseq.settings as Settings
+  // prevent multiple fetches
+  if (loading) {
+    await logseq.UI.showMsg('Omnivore is already syncing', 'warning', {
+      timeout: 3000,
+    })
+    return
+  }
+  logseq.updateSettings({ loading: true })
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning', {
@@ -125,7 +132,6 @@ const fetchOmnivore = async (inBackground = false) => {
 
   await delay(300)
 
-  loading = true
   let targetBlock: BlockEntity | null = null
   const userConfigs = await logseq.App.getUserConfigs()
   const preferredDateFormat: string = userConfigs.preferredDateFormat
@@ -377,9 +383,9 @@ const fetchOmnivore = async (inBackground = false) => {
       (await logseq.UI.showMsg('Failed to fetch articles', 'warning'))
     console.error(e)
   } finally {
-    loading = false
     targetBlock &&
       (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
+    logseq.updateSettings({ loading: false })
   }
 }
 
