@@ -24,7 +24,7 @@
     "icon": "./public/icon.png"
   },
   "dependencies": {
-    "@logseq/libs": "^0.0.10",
+    "@logseq/libs": "^0.0.14",
     "date-fns": "^2.29.3",
     "diff-match-patch": "^1.0.5",
     "luxon": "^3.2.1",

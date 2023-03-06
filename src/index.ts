@@ -76,6 +76,12 @@ const isValidCurrentGraph = async (): Promise<boolean> => {
   return currentGraph?.name === settings.graph
 }
 
+const deleteBlocks = async (blocks: BlockEntity[]) => {
+  for await (const block of blocks) {
+    await logseq.Editor.removeBlock(block.uuid)
+  }
+}
+
 const fetchOmnivore = async (inBackground = false) => {
   if (loading) return
 
@@ -127,7 +133,7 @@ const fetchOmnivore = async (inBackground = false) => {
   try {
     console.log(`logseq-omnivore starting sync since: '${syncAt}`)
 
-    !inBackground && (await logseq.UI.showMsg('🚀 Fetching articles ...'))
+    !inBackground && (await logseq.UI.showMsg(fetchingTitle))
 
     let omnivorePage = await logseq.Editor.getPage(pageName)
     if (!omnivorePage) {
@@ -247,10 +253,12 @@ const fetchOmnivore = async (inBackground = false) => {
         if (existingBlocks.length > 0) {
           isNewArticle = false
           const existingBlock = existingBlocks[0]
-          // update existing block
+          // update the first existing block
           if (existingBlock.content !== content) {
             await logseq.Editor.updateBlock(existingBlock.uuid, content)
           }
+          // delete the rest of the existing blocks
+          await deleteBlocks(existingBlocks.slice(1))
           if (highlightBatch.length > 0) {
             // append highlights to existing block
             for (const highlight of highlightBatch) {
@@ -357,7 +365,7 @@ const fetchOmnivore = async (inBackground = false) => {
         ).flat()
 
         if (existingBlocks.length > 0) {
-          await logseq.Editor.removeBlock(existingBlocks[0].uuid)
+          await deleteBlocks(existingBlocks)
         }
       }
     }

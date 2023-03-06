@@ -119,10 +119,10 @@
   dependencies:
     "@lezer/common" "^0.15.0"
 
-"@logseq/libs@^0.0.10":
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/@logseq/libs/-/libs-0.0.10.tgz#305d65b733ed16d157f57a1a0759e0233d1b1a81"
-  integrity sha512-Ah5wAhLcgrlOtk/9nEe11UsqOzvpcEaEWDV+oFD3TIGTeP4mfv2HjDiPYPBGXuMZRgvsW6klQLzzaxMieksXXg==
+"@logseq/libs@^0.0.14":
+  version "0.0.14"
+  resolved "https://registry.yarnpkg.com/@logseq/libs/-/libs-0.0.14.tgz#2fbce790d61c28e124063a20153f748f90ffa352"
+  integrity sha512-QcNeVxb4LIvV4Tid0ABZXV7fxYdZHynzLlukSk6Ydkuus+hBzLcjfK15nzybIRbiV7ANqSgTooDZkV/E4WP57Q==
   dependencies:
     csstype "3.1.0"
     debug "4.3.4"
@@ -1654,9 +1654,9 @@ camelcase@^6.0.0:
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
 caniuse-lite@^1.0.30001349:
-  version "1.0.30001352"
-  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001352.tgz"
-  integrity sha512-GUgH8w6YergqPQDGWhJGt8GDRnY0L/iJVQcU3eJ46GYf52R8tk0Wxp0PymuFVZboJYXGiCqwozAYZNRjVj6IcA==
+  version "1.0.30001460"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001460.tgz"
+  integrity sha512-Bud7abqjvEjipUkpLs4D7gR0l8hBYBHoa+tGtKJHvT2AYzLp1z7EmVkUT4ERpVUfca8S2HGIVs883D8pUH1ZzQ==
 
 cardinal@^2.1.1:
   version "2.1.1"
