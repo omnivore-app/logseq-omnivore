@@ -248,5 +248,8 @@ export const parseDateTime = (str: string): DateTime => {
 }
 
 export const formatDate = (date: Date, preferredDateFormat: string): string => {
-  return `[[${format(date, preferredDateFormat)}]]`
+  return `[[${format(date, preferredDateFormat, {
+    useAdditionalDayOfYearTokens: true,
+    useAdditionalWeekYearTokens: true,
+  })}]]`
 }
