@@ -135,11 +135,14 @@ const fetchOmnivore = async (inBackground = false) => {
   let targetBlock: BlockEntity | null = null
   const userConfigs = await logseq.App.getUserConfigs()
   const preferredDateFormat: string = userConfigs.preferredDateFormat
+  const fetchingMsgKey = 'omnivore-fetching'
 
   try {
     console.log(`logseq-omnivore starting sync since: '${syncAt}`)
-
-    !inBackground && (await logseq.UI.showMsg(fetchingTitle))
+    !inBackground &&
+      (await logseq.UI.showMsg(fetchingTitle, 'success', {
+        key: fetchingMsgKey,
+      }))
 
     let omnivorePage = await logseq.Editor.getPage(pageName)
     if (!omnivorePage) {
@@ -376,11 +379,16 @@ const fetchOmnivore = async (inBackground = false) => {
       }
     }
 
-    !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
+    if (!inBackground) {
+      logseq.UI.closeMsg(fetchingMsgKey)
+      await logseq.UI.showMsg('🔖 Articles fetched', 'success', {
+        timeout: 2000,
+      })
+    }
     logseq.updateSettings({ syncAt: DateTime.local().toFormat(DATE_FORMAT) })
   } catch (e) {
     !inBackground &&
-      (await logseq.UI.showMsg('Failed to fetch articles', 'warning'))
+      (await logseq.UI.showMsg('Failed to fetch articles', 'error'))
     console.error(e)
   } finally {
     targetBlock &&
@@ -579,7 +587,9 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       void (async () => {
         // reset the last sync time
         logseq.updateSettings({ syncAt: '' })
-        await logseq.UI.showMsg('Omnivore Last Sync reset')
+        await logseq.UI.showMsg('Omnivore Last Sync reset', 'warning', {
+          timeout: 3000,
+        })
 
         await fetchOmnivore()
       })()
