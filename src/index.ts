@@ -191,8 +191,7 @@ const fetchOmnivore = async (inBackground = false) => {
           preferredDateFormat
         )
         // Build content string based on template
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const content = render(articleTemplate, {
+        const articleView = {
           title: article.title,
           omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
           siteName,
@@ -201,8 +200,9 @@ const fetchOmnivore = async (inBackground = false) => {
           labels: article.labels,
           dateSaved,
           content: article.content,
-        })
-
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const content = render(articleTemplate, articleView)
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
           article.highlights?.sort((a, b) => {
@@ -225,6 +225,7 @@ const fetchOmnivore = async (inBackground = false) => {
             // Build content string based on template
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             const content = render(highlightTemplate, {
+              ...articleView,
               text: it.quote,
               labels: it.labels,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
