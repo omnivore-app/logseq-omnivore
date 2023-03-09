@@ -190,6 +190,9 @@ const fetchOmnivore = async (inBackground = false) => {
           new Date(article.savedAt),
           preferredDateFormat
         )
+        const datePublished = article.publishedAt
+          ? formatDate(new Date(article.publishedAt), preferredDateFormat)
+          : undefined
         // Build content string based on template
         const articleView = {
           title: article.title,
@@ -200,6 +203,7 @@ const fetchOmnivore = async (inBackground = false) => {
           labels: article.labels,
           dateSaved,
           content: article.content,
+          datePublished,
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const content = render(articleTemplate, articleView)
@@ -500,7 +504,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       type: 'string',
       title: 'Enter the template to use for new articles',
       description:
-        'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{{dateSaved}}}',
+        'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{dateSaved}}, {{datePublished}}',
       default: `[{{{title}}}]({{{omnivoreUrl}}})
 collapsed:: true
 site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
@@ -510,7 +514,10 @@ author:: {{{author}}}
 {{#labels.length}}
 labels:: {{#labels}}[[{{{name}}}]]{{/labels}}
 {{/labels.length}}
-date_saved:: {{{dateSaved}}}`,
+date-saved:: {{dateSaved}}
+{{#datePublished}}
+date-published:: {{datePublished}}
+{{/datePublished}}`,
       inputAs: 'textarea',
     },
     {
@@ -518,8 +525,8 @@ date_saved:: {{{dateSaved}}}`,
       type: 'string',
       title: 'Enter the template to use for new highlights',
       description:
-        'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}',
-      default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}}#[[{{{name}}}]] {{/labels}}`,
+        'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{dateHighlighted}}. You can also use the variables in the article template.',
+      default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}`,
       inputAs: 'textarea',
     },
   ]
@@ -599,7 +606,7 @@ date_saved:: {{{dateSaved}}}`,
 
   logseq.provideStyle(`
     div[data-id="${baseInfo.id}"] div[data-key="articleTemplate"] textarea {
-      height: 13rem;
+      height: 14rem;
     }
   `)
 
