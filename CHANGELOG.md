@@ -1,3 +1,15 @@
+## [1.11.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.5...v1.11.6) (2023-03-17)
+
+
+### Bug Fixes
+
+* accept YY and DD in preferred date format ([6de27bc](https://github.com/omnivore-app/logseq-omnivore/commit/6de27bc8bcdd8c7208b6d16ddd68331a8eeaa941))
+* add article variables to the highlight template rendering ([fd08d34](https://github.com/omnivore-app/logseq-omnivore/commit/fd08d340c02088e2f9a507bb28cdcdb7fc2512ea))
+* add datePublished variable to the template ([38ea45c](https://github.com/omnivore-app/logseq-omnivore/commit/38ea45c5bd71eaab73115161a189931aef9fd76d))
+* delete the other duplicates if detected during sync ([a9c7256](https://github.com/omnivore-app/logseq-omnivore/commit/a9c72562c076e190ef357392c3862d9c0e0e5a79))
+* format datePublished ([0e60788](https://github.com/omnivore-app/logseq-omnivore/commit/0e60788f34dae20865dd97f22b69ab68b0dee422))
+* prevent from multiple concurrent fetches ([cb9147e](https://github.com/omnivore-app/logseq-omnivore/commit/cb9147e193734a5a95a477ce7372112c8509d51b))
+
 ## [1.11.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.4...v1.11.5) (2023-02-21)
 
 
