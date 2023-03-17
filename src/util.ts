@@ -65,6 +65,7 @@ export interface Article {
   savedAt: string
   pageType: PageType
   content?: string
+  publishedAt?: string
 }
 
 export interface Label {
@@ -135,6 +136,7 @@ export const loadArticles = async (
                   savedAt
                   pageType
                   content
+                  publishedAt
                   highlights {
                     id
                     quote
@@ -248,5 +250,11 @@ export const parseDateTime = (str: string): DateTime => {
 }
 
 export const formatDate = (date: Date, preferredDateFormat: string): string => {
-  return `[[${format(date, preferredDateFormat)}]]`
+  return `[[${format(date, preferredDateFormat, {
+    // YY and YYYY represent the local week-numbering year (44, 01, 00, 17)
+    // are often confused with yy and yyyy that represent the calendar year
+    // Here, we accept tokens YY and DD
+    useAdditionalDayOfYearTokens: true,
+    useAdditionalWeekYearTokens: true,
+  })}]]`
 }

@@ -43,6 +43,7 @@ interface Settings {
   pageName: string
   articleTemplate: string
   highlightTemplate: string
+  loading: boolean
 }
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
@@ -54,7 +55,6 @@ const siteNameFromUrl = (originalArticleUrl: string): string => {
 }
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
-let loading = false
 
 const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
   switch (filter) {
@@ -76,9 +76,13 @@ const isValidCurrentGraph = async (): Promise<boolean> => {
   return currentGraph?.name === settings.graph
 }
 
-const fetchOmnivore = async (inBackground = false) => {
-  if (loading) return
+const deleteBlocks = async (blocks: BlockEntity[]) => {
+  for await (const block of blocks) {
+    await logseq.Editor.removeBlock(block.uuid)
+  }
+}
 
+const fetchOmnivore = async (inBackground = false) => {
   const {
     syncAt,
     apiKey,
@@ -89,7 +93,16 @@ const fetchOmnivore = async (inBackground = false) => {
     articleTemplate,
     highlightTemplate,
     graph,
+    loading,
   } = logseq.settings as Settings
+  // prevent multiple fetches
+  if (loading) {
+    await logseq.UI.showMsg('Omnivore is already syncing', 'warning', {
+      timeout: 3000,
+    })
+    return
+  }
+  logseq.updateSettings({ loading: true })
 
   if (!apiKey) {
     await logseq.UI.showMsg('Missing Omnivore api key', 'warning', {
@@ -119,15 +132,17 @@ const fetchOmnivore = async (inBackground = false) => {
 
   await delay(300)
 
-  loading = true
   let targetBlock: BlockEntity | null = null
   const userConfigs = await logseq.App.getUserConfigs()
   const preferredDateFormat: string = userConfigs.preferredDateFormat
+  const fetchingMsgKey = 'omnivore-fetching'
 
   try {
     console.log(`logseq-omnivore starting sync since: '${syncAt}`)
-
-    !inBackground && (await logseq.UI.showMsg('🚀 Fetching articles ...'))
+    !inBackground &&
+      (await logseq.UI.showMsg(fetchingTitle, 'success', {
+        key: fetchingMsgKey,
+      }))
 
     let omnivorePage = await logseq.Editor.getPage(pageName)
     if (!omnivorePage) {
@@ -175,9 +190,11 @@ const fetchOmnivore = async (inBackground = false) => {
           new Date(article.savedAt),
           preferredDateFormat
         )
+        const datePublished = article.publishedAt
+          ? formatDate(new Date(article.publishedAt), preferredDateFormat)
+          : undefined
         // Build content string based on template
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const content = render(articleTemplate, {
+        const articleView = {
           title: article.title,
           omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
           siteName,
@@ -186,8 +203,10 @@ const fetchOmnivore = async (inBackground = false) => {
           labels: article.labels,
           dateSaved,
           content: article.content,
-        })
-
+          datePublished,
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const content = render(articleTemplate, articleView)
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
           article.highlights?.sort((a, b) => {
@@ -210,6 +229,7 @@ const fetchOmnivore = async (inBackground = false) => {
             // Build content string based on template
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             const content = render(highlightTemplate, {
+              ...articleView,
               text: it.quote,
               labels: it.labels,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
@@ -247,10 +267,12 @@ const fetchOmnivore = async (inBackground = false) => {
         if (existingBlocks.length > 0) {
           isNewArticle = false
           const existingBlock = existingBlocks[0]
-          // update existing block
+          // update the first existing block
           if (existingBlock.content !== content) {
             await logseq.Editor.updateBlock(existingBlock.uuid, content)
           }
+          // delete the rest of the existing blocks
+          await deleteBlocks(existingBlocks.slice(1))
           if (highlightBatch.length > 0) {
             // append highlights to existing block
             for (const highlight of highlightBatch) {
@@ -357,21 +379,26 @@ const fetchOmnivore = async (inBackground = false) => {
         ).flat()
 
         if (existingBlocks.length > 0) {
-          await logseq.Editor.removeBlock(existingBlocks[0].uuid)
+          await deleteBlocks(existingBlocks)
         }
       }
     }
 
-    !inBackground && (await logseq.UI.showMsg('🔖 Articles fetched'))
+    if (!inBackground) {
+      logseq.UI.closeMsg(fetchingMsgKey)
+      await logseq.UI.showMsg('🔖 Articles fetched', 'success', {
+        timeout: 2000,
+      })
+    }
     logseq.updateSettings({ syncAt: DateTime.local().toFormat(DATE_FORMAT) })
   } catch (e) {
     !inBackground &&
-      (await logseq.UI.showMsg('Failed to fetch articles', 'warning'))
+      (await logseq.UI.showMsg('Failed to fetch articles', 'error'))
     console.error(e)
   } finally {
-    loading = false
     targetBlock &&
       (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
+    logseq.updateSettings({ loading: false })
   }
 }
 
@@ -477,17 +504,20 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       type: 'string',
       title: 'Enter the template to use for new articles',
       description:
-        'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{{dateSaved}}}',
+        'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{{dateSaved}}}, {{{datePublished}}}',
       default: `[{{{title}}}]({{{omnivoreUrl}}})
-      collapsed:: true
-      site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
-      {{#author}}
-      author:: {{{author}}}
-      {{/author}}
-      {{#labels.length}}
-      labels:: {{#labels}}[[{{{name}}}]]{{/labels}}
-      {{/labels.length}}
-      date_saved:: {{{dateSaved}}}`,
+collapsed:: true
+site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
+{{#author}}
+author:: {{{author}}}
+{{/author}}
+{{#labels.length}}
+labels:: {{#labels}}[[{{{name}}}]]{{/labels}}
+{{/labels.length}}
+date-saved:: {{{dateSaved}}}
+{{#datePublished}}
+date-published:: {{{datePublished}}}
+{{/datePublished}}`,
       inputAs: 'textarea',
     },
     {
@@ -495,8 +525,8 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       type: 'string',
       title: 'Enter the template to use for new highlights',
       description:
-        'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}',
-      default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}}#[[{{{name}}}]] {{/labels}}`,
+        'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}. You can also use the variables in the article template.',
+      default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}`,
       inputAs: 'textarea',
     },
   ]
@@ -565,7 +595,9 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       void (async () => {
         // reset the last sync time
         logseq.updateSettings({ syncAt: '' })
-        await logseq.UI.showMsg('Omnivore Last Sync reset')
+        await logseq.UI.showMsg('Omnivore Last Sync reset', 'warning', {
+          timeout: 3000,
+        })
 
         await fetchOmnivore()
       })()
@@ -573,9 +605,8 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   )
 
   logseq.provideStyle(`
-    [data-injected-ui=logseq-omnivore-${baseInfo.id}] {
-      display: flex;
-      align-items: center;
+    div[data-id="${baseInfo.id}"] div[data-key="articleTemplate"] textarea {
+      height: 14rem;
     }
   `)
 
