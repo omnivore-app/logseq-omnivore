@@ -46,6 +46,7 @@ interface Settings {
   highlightTemplate: string
   loading: boolean
   syncJobId: number
+  endpoint: string
 }
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
@@ -96,6 +97,7 @@ const fetchOmnivore = async (inBackground = false) => {
     highlightTemplate,
     graph,
     loading,
+    endpoint,
   } = logseq.settings as Settings
   // prevent multiple fetches
   if (loading) {
@@ -181,7 +183,8 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         getQueryFromFilter(filter, customQuery),
         true,
-        'markdown'
+        'markdown',
+        endpoint
       )
 
       const articleBatch: IBatchBlock[] = []
@@ -373,7 +376,8 @@ const fetchOmnivore = async (inBackground = false) => {
         apiKey,
         after,
         size,
-        parseDateTime(syncAt).toISO()
+        parseDateTime(syncAt).toISO(),
+        endpoint
       )
 
       for (const slug of deletedArticleSlugs) {
@@ -554,6 +558,13 @@ date-published:: {{{datePublished}}}
         'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}. You can also use the variables in the article template.',
       default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}`,
       inputAs: 'textarea',
+    },
+    {
+      key: 'endpoint',
+      type: 'string',
+      title: 'API Endpoint',
+      description: "Enter the Omnivore server's API endpoint",
+      default: 'https://api-prod.omnivore.app/api/graphql',
     },
   ]
   logseq.useSettingsSchema(settingsSchema)
