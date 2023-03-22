@@ -1,7 +1,7 @@
+import { format } from 'date-fns'
 import { diff_match_patch } from 'diff-match-patch'
 import { DateTime } from 'luxon'
 import escape from 'markdown-escape'
-import { format } from 'date-fns'
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`
@@ -72,6 +72,12 @@ export interface Label {
   name: string
 }
 
+export enum HighlightType {
+  Highlight = 'HIGHLIGHT',
+  Note = 'NOTE',
+  Redaction = 'REDACTION',
+}
+
 export interface Highlight {
   id: string
   quote: string
@@ -79,6 +85,7 @@ export interface Highlight {
   patch: string
   updatedAt: string
   labels?: Label[]
+  type: HighlightType
 }
 
 export interface HighlightPoint {
@@ -146,6 +153,7 @@ export const loadArticles = async (
                     labels {
                       name
                     }
+                    type
                   }
                   labels {
                     name
