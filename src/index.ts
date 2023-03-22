@@ -14,6 +14,7 @@ import {
   escapeQuotationMarks,
   formatDate,
   getHighlightLocation,
+  HighlightType,
   loadArticles,
   loadDeletedArticleSlugs,
   PageType,
@@ -205,9 +206,8 @@ const fetchOmnivore = async (inBackground = false) => {
           dateSaved,
           content: article.content,
           datePublished,
+          note: '',
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const content = render(articleTemplate, articleView)
         // sort highlights by location if selected in options
         highlightOrder === HighlightOrder.LOCATION &&
           article.highlights?.sort((a, b) => {
@@ -225,30 +225,41 @@ const fetchOmnivore = async (inBackground = false) => {
               return compareHighlightsInFile(a, b)
             }
           })
-        const highlightBatch: (IBatchBlock & { id: string })[] =
-          article.highlights?.map((it) => {
-            // Build content string based on template
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            const content = render(highlightTemplate, {
-              ...articleView,
-              text: it.quote,
-              labels: it.labels,
-              highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
-              dateHighlighted: formatDate(
-                new Date(it.updatedAt),
-                preferredDateFormat
-              ),
+        const highlightBatch: IBatchBlock[] =
+          article.highlights
+            ?.map((it) => {
+              // append note variable to article template
+              if (it.type == HighlightType.Note) {
+                articleView.note = it.annotation
+              }
+              // Build content string based on template
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+              const content = render(highlightTemplate, {
+                ...articleView,
+                text: it.quote,
+                labels: it.labels,
+                highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
+                dateHighlighted: formatDate(
+                  new Date(it.updatedAt),
+                  preferredDateFormat
+                ),
+              })
+              const noteChild = it.annotation
+                ? { content: it.annotation }
+                : undefined
+              return {
+                content,
+                children: noteChild ? [noteChild] : undefined,
+                properties: {
+                  id: it.id,
+                  type: it.type,
+                },
+              }
             })
-            const noteChild = it.annotation
-              ? { content: it.annotation }
-              : undefined
-            return {
-              content,
-              children: noteChild ? [noteChild] : undefined,
-              id: it.id,
-            }
-          }) || []
-
+            .filter((it) => it.properties.type === HighlightType.Highlight) || // filter out notes and redactions
+          []
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const content = render(articleTemplate, articleView)
         let isNewArticle = true
         // update existing block if article is already in the page
         const existingBlocks = (
@@ -286,7 +297,9 @@ const fetchOmnivore = async (inBackground = false) => {
                             [(str ?u) ?s]
                             [(= ?s "${existingBlock.uuid}")]
                             [?b :block/content ?c]
-                            [(clojure.string/includes? ?c "${highlight.id}")]]`
+                            [(clojure.string/includes? ?c "${
+                              highlight.properties?.id as string
+                            }")]]`
                 )
               ).flat()
               if (existingHighlights.length > 0) {
