@@ -102,9 +102,10 @@ const requestHeaders = (apiKey: string) => ({
 
 export const loadArticle = async (
   slug: string,
-  apiKey: string
+  apiKey: string,
+  endpoint = ENDPOINT
 ): Promise<Article> => {
-  const res = await fetch(ENDPOINT, {
+  const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
     body: `{"query":"\\n  query GetArticle(\\n    $username: String!\\n    $slug: String!\\n  ) {\\n    article(username: $username, slug: $slug) {\\n      ... on ArticleSuccess {\\n        article {\\n          ...ArticleFields\\n          highlights {\\n            ...HighlightFields\\n          }\\n          labels {\\n            ...LabelFields\\n          }\\n        }\\n      }\\n      ... on ArticleError {\\n        errorCodes\\n      }\\n    }\\n  }\\n  \\n  fragment ArticleFields on Article {\\n    savedAt\\n  }\\n\\n  \\n  fragment HighlightFields on Highlight {\\n  id\\n  quote\\n  annotation\\n  }\\n\\n  \\n  fragment LabelFields on Label {\\n    name\\n  }\\n\\n","variables":{"username":"me","slug":"${slug}"}}`,
     method: 'POST',
@@ -121,9 +122,10 @@ export const loadArticles = async (
   updatedAt = '',
   query = '',
   includeContent = false,
-  format = 'html'
+  format = 'html',
+  endpoint = ENDPOINT
 ): Promise<[Article[], boolean]> => {
-  const res = await fetch(ENDPOINT, {
+  const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
     body: JSON.stringify({
       query: `
@@ -192,9 +194,10 @@ export const loadDeletedArticleSlugs = async (
   apiKey: string,
   after = 0,
   first = 10,
-  updatedAt = ''
+  updatedAt = '',
+  endpoint = ENDPOINT
 ): Promise<[string[], boolean]> => {
-  const res = await fetch(ENDPOINT, {
+  const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
     body: `{"query":"\\n    query UpdatesSince($after: String, $first: Int, $since: Date!) {\\n      updatesSince(first: $first, after: $after, since: $since) {\\n        ... on UpdatesSinceSuccess {\\n          edges {\\n       updateReason\\n        node {\\n              slug\\n        }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on UpdatesSinceError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "since":"${
       updatedAt || '2021-01-01'
