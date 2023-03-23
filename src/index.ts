@@ -198,8 +198,11 @@ const fetchOmnivore = async (inBackground = false) => {
         const datePublished = article.publishedAt
           ? formatDate(new Date(article.publishedAt), preferredDateFormat)
           : undefined
+        const note = article.highlights?.find(
+          (h) => h.type === HighlightType.Note
+        )
         // Build content string based on template
-        const articleView = {
+        const articleVariables = {
           title: article.title,
           omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
           siteName,
@@ -209,19 +212,16 @@ const fetchOmnivore = async (inBackground = false) => {
           dateSaved,
           content: article.content,
           datePublished,
-          note: '',
+          note: note?.annotation,
         }
+        // filter out notes and redactions
+        const highlights = article.highlights?.filter(
+          (h) => h.type === HighlightType.Highlight
+        )
         // sort highlights by location if selected in options
-        highlightOrder === HighlightOrder.LOCATION &&
-          article.highlights?.sort((a, b) => {
+        if (highlightOrder === HighlightOrder.LOCATION) {
+          highlights?.sort((a, b) => {
             try {
-              // if either highlight is not a highlight, put it at the end
-              if (
-                a.type !== HighlightType.Highlight ||
-                b.type !== HighlightType.Highlight
-              ) {
-                return 1
-              }
               if (article.pageType === PageType.File) {
                 // sort by location in file
                 return compareHighlightsInFile(a, b)
@@ -235,44 +235,33 @@ const fetchOmnivore = async (inBackground = false) => {
               return compareHighlightsInFile(a, b)
             }
           })
+        }
         const highlightBatch: IBatchBlock[] =
-          (article.highlights
-            ?.map((it) => {
-              const highlightType = it.type
-              // filter out notes and redactions
-              if (highlightType !== HighlightType.Highlight) {
-                // add note variable to article template
-                if (highlightType === HighlightType.Note) {
-                  articleView.note = it.annotation
-                }
-                return undefined
-              }
-              // Build content string based on template
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-              const content = render(highlightTemplate, {
-                ...articleView,
-                text: it.quote,
-                labels: it.labels,
-                highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
-                dateHighlighted: formatDate(
-                  new Date(it.updatedAt),
-                  preferredDateFormat
-                ),
-              })
-              const noteChild = it.annotation
-                ? { content: it.annotation }
-                : undefined
-              return {
-                content,
-                children: noteChild ? [noteChild] : undefined,
-                properties: {
-                  id: it.id,
-                },
-              }
+          highlights?.map((it) => {
+            // Build content string based on template
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            const content = render(highlightTemplate, {
+              ...articleVariables,
+              text: it.quote,
+              labels: it.labels,
+              highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
+              dateHighlighted: formatDate(
+                new Date(it.updatedAt),
+                preferredDateFormat
+              ),
             })
-            .filter((it) => it !== undefined) as IBatchBlock[]) || []
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const content = render(articleTemplate, articleView)
+            const noteChild = it.annotation
+              ? { content: it.annotation }
+              : undefined
+            return {
+              content,
+              children: noteChild ? [noteChild] : undefined,
+              properties: {
+                id: it.id,
+              },
+            }
+          }) || []
+
         let isNewArticle = true
         // update existing block if article is already in the page
         const existingBlocks = (
@@ -289,21 +278,22 @@ const fetchOmnivore = async (inBackground = false) => {
                       [(clojure.string/includes? ?c "${article.slug}")]]`
           )
         ).flat()
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const articleContent = render(articleTemplate, articleVariables)
         if (existingBlocks.length > 0) {
           isNewArticle = false
           const existingBlock = existingBlocks[0]
           // update the first existing block
-          if (existingBlock.content !== content) {
-            await logseq.Editor.updateBlock(existingBlock.uuid, content)
+          if (existingBlock.content !== articleContent) {
+            await logseq.Editor.updateBlock(existingBlock.uuid, articleContent)
           }
           // delete the rest of the existing blocks
           await deleteBlocks(existingBlocks.slice(1))
-          if (highlightBatch.length > 0) {
-            // append highlights to existing block
-            for (const highlight of highlightBatch) {
-              const existingHighlights = (
-                await logseq.DB.datascriptQuery<BlockEntity[]>(
-                  `[:find (pull ?b [*])
+          // append highlights to existing block
+          for (const highlight of highlightBatch) {
+            const existingHighlights = (
+              await logseq.DB.datascriptQuery<BlockEntity[]>(
+                `[:find (pull ?b [*])
                           :where
                             [?b :block/parent ?p]
                             [?p :block/uuid ?u]
@@ -313,23 +303,23 @@ const fetchOmnivore = async (inBackground = false) => {
                             [(clojure.string/includes? ?c "${
                               highlight.properties?.id as string
                             }")]]`
-                )
-              ).flat()
-              if (existingHighlights.length > 0) {
-                const existingHighlight = existingHighlights[0]
-                // update existing highlight if content is different
-                existingHighlight.content !== highlight.content &&
-                  (await logseq.Editor.updateBlock(
-                    existingHighlight.uuid,
-                    highlight.content
-                  ))
+              )
+            ).flat()
+            if (existingHighlights.length > 0) {
+              const existingHighlight = existingHighlights[0]
+              // update existing highlight if content is different
+              existingHighlight.content !== highlight.content &&
+                (await logseq.Editor.updateBlock(
+                  existingHighlight.uuid,
+                  highlight.content
+                ))
 
-                // checking notes
-                const noteChild = highlight.children?.[0]
-                if (noteChild) {
-                  const existingNotes = (
-                    await logseq.DB.datascriptQuery<BlockEntity[]>(
-                      `[:find (pull ?b [*])
+              // checking notes
+              const noteChild = highlight.children?.[0]
+              if (noteChild) {
+                const existingNotes = (
+                  await logseq.DB.datascriptQuery<BlockEntity[]>(
+                    `[:find (pull ?b [*])
                               :where
                                 [?b :block/parent ?p]
                                 [?p :block/uuid ?u]
@@ -339,32 +329,31 @@ const fetchOmnivore = async (inBackground = false) => {
                                 [(= ?c "${escapeQuotationMarks(
                                   noteChild.content
                                 )}")]]`
-                    )
-                  ).flat()
-                  if (existingNotes.length == 0) {
-                    // append new note
-                    await logseq.Editor.insertBlock(
-                      existingHighlight.uuid,
-                      noteChild.content,
-                      { sibling: false }
-                    )
-                  }
+                  )
+                ).flat()
+                if (existingNotes.length == 0) {
+                  // append new note
+                  await logseq.Editor.insertBlock(
+                    existingHighlight.uuid,
+                    noteChild.content,
+                    { sibling: false }
+                  )
                 }
-              } else {
-                // append new highlight
-                await logseq.Editor.insertBatchBlock(
-                  existingBlock.uuid,
-                  highlight,
-                  { sibling: false }
-                )
               }
+            } else {
+              // append new highlight
+              await logseq.Editor.insertBatchBlock(
+                existingBlock.uuid,
+                highlight,
+                { sibling: false }
+              )
             }
           }
         }
 
         isNewArticle &&
           articleBatch.unshift({
-            content,
+            content: articleContent,
             children: highlightBatch,
           })
       }
