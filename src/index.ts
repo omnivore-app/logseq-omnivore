@@ -544,7 +544,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       type: 'string',
       title: 'Enter the template to use for new articles',
       description:
-        'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{{dateSaved}}}, {{{datePublished}}}',
+        'We use {{ mustache }} template: http://mustache.github.io/mustache.5.html. Required variables are: title, omnivoreUrl. Optional variables are: siteName, originalUrl, author, labels, dateSaved, datePublished, note',
       default: `[{{{title}}}]({{{omnivoreUrl}}})
 collapsed:: true
 site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
@@ -565,7 +565,7 @@ date-published:: {{{datePublished}}}
       type: 'string',
       title: 'Enter the template to use for new highlights',
       description:
-        'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}. You can also use the variables in the article template.',
+        'We use {{ mustache }} template: http://mustache.github.io/mustache.5.html. Required variables are: text, highlightUrl. Optional variables are dateHighlighted. You can also use the variables in the article template.',
       default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}`,
       inputAs: 'textarea',
     },
