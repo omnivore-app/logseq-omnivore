@@ -215,6 +215,13 @@ const fetchOmnivore = async (inBackground = false) => {
         highlightOrder === HighlightOrder.LOCATION &&
           article.highlights?.sort((a, b) => {
             try {
+              // if either highlight is not a highlight, put it at the end
+              if (
+                a.type !== HighlightType.Highlight ||
+                b.type !== HighlightType.Highlight
+              ) {
+                return 1
+              }
               if (article.pageType === PageType.File) {
                 // sort by location in file
                 return compareHighlightsInFile(a, b)
@@ -229,11 +236,16 @@ const fetchOmnivore = async (inBackground = false) => {
             }
           })
         const highlightBatch: IBatchBlock[] =
-          article.highlights
+          (article.highlights
             ?.map((it) => {
-              // append note variable to article template
-              if (it.type == HighlightType.Note) {
-                articleView.note = it.annotation
+              const highlightType = it.type
+              // filter out notes and redactions
+              if (highlightType !== HighlightType.Highlight) {
+                // add note variable to article template
+                if (highlightType === HighlightType.Note) {
+                  articleView.note = it.annotation
+                }
+                return undefined
               }
               // Build content string based on template
               // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -255,12 +267,10 @@ const fetchOmnivore = async (inBackground = false) => {
                 children: noteChild ? [noteChild] : undefined,
                 properties: {
                   id: it.id,
-                  type: it.type,
                 },
               }
             })
-            .filter((it) => it.properties.type === HighlightType.Highlight) || // filter out notes and redactions
-          []
+            .filter((it) => it !== undefined) as IBatchBlock[]) || []
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const content = render(articleTemplate, articleView)
         let isNewArticle = true
