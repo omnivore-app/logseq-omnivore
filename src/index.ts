@@ -619,6 +619,13 @@ date-published:: {{{datePublished}}}
 
   // sync every frequency minutes
   intervalID = syncOmnivore()
+
+  logseq.Experiments.pluginLocal.on('unloaded', () => {
+    void (async () => {
+      console.log('Unloading Omnivore plugin')
+      await logseq.Experiments.pluginLocal.caller.destroy()
+    })()
+  })
 }
 
 // bootstrap
