@@ -5,6 +5,8 @@ import {
   LSPluginBaseInfo,
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
+import { DateTime } from 'luxon'
+import { render } from 'mustache'
 import {
   Article,
   compareHighlightsInFile,
@@ -17,8 +19,6 @@ import {
   PageType,
   parseDateTime,
 } from './util'
-import { DateTime } from 'luxon'
-import { render } from 'mustache'
 
 enum Filter {
   ALL = 'import all my articles',
@@ -396,9 +396,9 @@ const fetchOmnivore = async (inBackground = false) => {
       (await logseq.UI.showMsg('Failed to fetch articles', 'error'))
     console.error(e)
   } finally {
+    logseq.updateSettings({ loading: false })
     targetBlock &&
       (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
-    logseq.updateSettings({ loading: false })
   }
 }
 
@@ -428,6 +428,8 @@ const syncOmnivore = (): number => {
  */
 const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
+  // reset loading when plugin restarts
+  logseq.updateSettings({ loading: false })
 
   const settingsSchema: SettingSchemaDesc[] = [
     {
