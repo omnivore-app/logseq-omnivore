@@ -428,9 +428,6 @@ const syncOmnivore = (): number => {
  */
 const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
-  // reset loading when plugin restarts
-  logseq.updateSettings({ loading: false })
-
   const settingsSchema: SettingSchemaDesc[] = [
     {
       key: 'apiKey',
@@ -619,14 +616,12 @@ date-published:: {{{datePublished}}}
 
   // sync every frequency minutes
   intervalID = syncOmnivore()
-
-  logseq.Experiments.pluginLocal.on('unloaded', () => {
-    void (async () => {
-      console.log('Unloading Omnivore plugin')
-      await logseq.Experiments.pluginLocal.caller.destroy()
-    })()
-  })
 }
+
+// reset loading state before plugin unload
+logseq.beforeunload(async () => {
+  await Promise.resolve(logseq.updateSettings({ loading: false }))
+})
 
 // bootstrap
 logseq.ready(main).catch(console.error)
