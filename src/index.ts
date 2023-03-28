@@ -44,6 +44,7 @@ interface Settings {
   articleTemplate: string
   highlightTemplate: string
   loading: boolean
+  syncJobId: number
 }
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
@@ -402,13 +403,11 @@ const fetchOmnivore = async (inBackground = false) => {
   }
 }
 
-const syncOmnivore = (): number => {
+const startSyncJob = () => {
   const settings = logseq.settings as Settings
-
-  let intervalID = 0
   // sync every frequency minutes
   if (settings.frequency > 0) {
-    intervalID = setInterval(
+    const intervalId = setInterval(
       async () => {
         if (await isValidCurrentGraph()) {
           await fetchOmnivore(true)
@@ -417,9 +416,8 @@ const syncOmnivore = (): number => {
       settings.frequency * 1000 * 60,
       settings.syncAt
     )
+    logseq.updateSettings({ syncJobId: intervalId })
   }
-
-  return intervalID
 }
 
 const resetLoadingState = () => {
@@ -428,9 +426,16 @@ const resetLoadingState = () => {
   settings.loading && logseq.updateSettings({ loading: false })
 }
 
-const resetLoadingStateAsync = async () => {
+const resetSyncJob = () => {
+  console.log('reset sync job')
+  const settings = logseq.settings as Settings
+  settings.syncJobId > 0 && clearInterval(settings.syncJobId)
+  logseq.updateSettings({ syncJobId: 0 })
+}
+
+const resetState = () => {
   resetLoadingState()
-  return Promise.resolve()
+  resetSyncJob()
 }
 
 /**
@@ -446,7 +451,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       title: 'Enter your Omnivore Api Key',
       description:
         'You can create an API key at https://omnivore.app/settings/api',
-      default: logseq.settings?.['api key'] as string,
+      default: '',
     },
     {
       key: 'filter',
@@ -488,9 +493,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       title: 'Last Sync',
       description:
         'The last time Omnivore was synced. Clear this value to completely refresh the sync.',
-      default: DateTime.fromISO(logseq.settings?.['synced at'] as string)
-        .toLocal()
-        .toFormat(DATE_FORMAT),
+      default: '',
       inputAs: 'datetime-local',
     },
     {
@@ -542,21 +545,13 @@ date-published:: {{{datePublished}}}
   ]
   logseq.useSettingsSchema(settingsSchema)
 
-  let frequency = logseq.settings?.frequency as number
-  let intervalID: number
-
-  logseq.onSettingsChanged(() => {
-    const settings = logseq.settings as Settings
-    const newFrequency = settings.frequency
-    if (newFrequency !== frequency) {
+  logseq.onSettingsChanged((newSettings: Settings, oldSettings: Settings) => {
+    const newFrequency = newSettings.frequency
+    if (newFrequency !== oldSettings.frequency) {
       // remove existing scheduled task and create new one
-      if (intervalID) {
-        clearInterval(intervalID)
-      }
-      if (newFrequency > 0) {
-        intervalID = syncOmnivore()
-      }
-      frequency = newFrequency
+      oldSettings.syncJobId > 0 && clearInterval(oldSettings.syncJobId)
+      logseq.updateSettings({ syncJobId: 0 })
+      newFrequency > 0 && startSyncJob()
     }
   })
 
@@ -620,19 +615,23 @@ date-published:: {{{datePublished}}}
     }
   `)
 
+  // reset loading state on startup
+  resetState()
+
   // fetch articles on startup
   if (await isValidCurrentGraph()) {
     await fetchOmnivore(true)
   }
 
-  // sync every frequency minutes
-  intervalID = syncOmnivore()
+  // start the sync job
+  startSyncJob()
 }
 
 // reset loading state before plugin unload
 logseq.beforeunload(async () => {
   console.log('beforeunload')
-  await resetLoadingStateAsync()
+  resetState()
+  return Promise.resolve()
 })
 
 // bootstrap
