@@ -396,7 +396,7 @@ const fetchOmnivore = async (inBackground = false) => {
       (await logseq.UI.showMsg('Failed to fetch articles', 'error'))
     console.error(e)
   } finally {
-    logseq.updateSettings({ loading: false })
+    resetLoadingState()
     targetBlock &&
       (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
   }
@@ -420,6 +420,17 @@ const syncOmnivore = (): number => {
   }
 
   return intervalID
+}
+
+const resetLoadingState = () => {
+  console.log('reset loading state')
+  const settings = logseq.settings as Settings
+  settings.loading && logseq.updateSettings({ loading: false })
+}
+
+const resetLoadingStateAsync = async () => {
+  resetLoadingState()
+  return Promise.resolve()
 }
 
 /**
@@ -620,7 +631,8 @@ date-published:: {{{datePublished}}}
 
 // reset loading state before plugin unload
 logseq.beforeunload(async () => {
-  await Promise.resolve(logseq.updateSettings({ loading: false }))
+  console.log('beforeunload')
+  await resetLoadingStateAsync()
 })
 
 // bootstrap
