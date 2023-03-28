@@ -1,3 +1,10 @@
+## [1.11.8](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.7...v1.11.8) (2023-03-28)
+
+
+### Bug Fixes
+
+* reset background sync job id after plugin reload ([b917b07](https://github.com/omnivore-app/logseq-omnivore/commit/b917b07384868b4e5524982d8d634bbae1cbe44f))
+
 ## [1.11.7](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.6...v1.11.7) (2023-03-28)
 
 
