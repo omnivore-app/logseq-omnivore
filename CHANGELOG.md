@@ -1,3 +1,11 @@
+## [1.11.7](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.6...v1.11.7) (2023-03-28)
+
+
+### Bug Fixes
+
+* reset loading state before unload ([f2dcd60](https://github.com/omnivore-app/logseq-omnivore/commit/f2dcd602ffd2ee6dd7837d17488f90120eaf0186))
+* unload the plugin before reloaded ([e1e80a1](https://github.com/omnivore-app/logseq-omnivore/commit/e1e80a1f4ebe27ba33501f9fd0c060b52be24126))
+
 ## [1.11.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.5...v1.11.6) (2023-03-17)
 
 
