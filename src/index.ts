@@ -5,6 +5,8 @@ import {
   LSPluginBaseInfo,
   SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
+import { DateTime } from 'luxon'
+import { render } from 'mustache'
 import {
   Article,
   compareHighlightsInFile,
@@ -17,8 +19,6 @@ import {
   PageType,
   parseDateTime,
 } from './util'
-import { DateTime } from 'luxon'
-import { render } from 'mustache'
 
 enum Filter {
   ALL = 'import all my articles',
@@ -396,9 +396,9 @@ const fetchOmnivore = async (inBackground = false) => {
       (await logseq.UI.showMsg('Failed to fetch articles', 'error'))
     console.error(e)
   } finally {
+    resetLoadingState()
     targetBlock &&
       (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
-    logseq.updateSettings({ loading: false })
   }
 }
 
@@ -422,13 +422,23 @@ const syncOmnivore = (): number => {
   return intervalID
 }
 
+const resetLoadingState = () => {
+  console.log('reset loading state')
+  const settings = logseq.settings as Settings
+  settings.loading && logseq.updateSettings({ loading: false })
+}
+
+const resetLoadingStateAsync = async () => {
+  resetLoadingState()
+  return Promise.resolve()
+}
+
 /**
  * main entry
  * @param baseInfo
  */
 const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
-
   const settingsSchema: SettingSchemaDesc[] = [
     {
       key: 'apiKey',
@@ -618,6 +628,12 @@ date-published:: {{{datePublished}}}
   // sync every frequency minutes
   intervalID = syncOmnivore()
 }
+
+// reset loading state before plugin unload
+logseq.beforeunload(async () => {
+  console.log('beforeunload')
+  await resetLoadingStateAsync()
+})
 
 // bootstrap
 logseq.ready(main).catch(console.error)
