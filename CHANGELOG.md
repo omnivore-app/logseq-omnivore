@@ -1,3 +1,12 @@
+# [1.12.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.8...v1.12.0) (2023-04-05)
+
+
+### Features
+
+* add note variable to the article and highlight template ([55405b4](https://github.com/omnivore-app/logseq-omnivore/commit/55405b4aad076c7d9fa7f5e860ac52bd7a82652c))
+* add server endpoint to the settings ([3bb633c](https://github.com/omnivore-app/logseq-omnivore/commit/3bb633c0296b29524f0da129f79635b7c5f30453))
+* fetch note from articles api ([e7bd281](https://github.com/omnivore-app/logseq-omnivore/commit/e7bd281eff0574ffdfbd5f6875be07f676140a97))
+
 ## [1.11.8](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.7...v1.11.8) (2023-03-28)
 
 
