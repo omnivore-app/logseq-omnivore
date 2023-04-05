@@ -14,6 +14,7 @@ import {
   escapeQuotationMarks,
   formatDate,
   getHighlightLocation,
+  HighlightType,
   loadArticles,
   loadDeletedArticleSlugs,
   PageType,
@@ -45,6 +46,7 @@ interface Settings {
   highlightTemplate: string
   loading: boolean
   syncJobId: number
+  endpoint: string
 }
 
 const siteNameFromUrl = (originalArticleUrl: string): string => {
@@ -95,6 +97,7 @@ const fetchOmnivore = async (inBackground = false) => {
     highlightTemplate,
     graph,
     loading,
+    endpoint,
   } = logseq.settings as Settings
   // prevent multiple fetches
   if (loading) {
@@ -180,7 +183,8 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         getQueryFromFilter(filter, customQuery),
         true,
-        'markdown'
+        'markdown',
+        endpoint
       )
 
       const articleBatch: IBatchBlock[] = []
@@ -194,8 +198,11 @@ const fetchOmnivore = async (inBackground = false) => {
         const datePublished = article.publishedAt
           ? formatDate(new Date(article.publishedAt), preferredDateFormat)
           : undefined
+        const note = article.highlights?.find(
+          (h) => h.type === HighlightType.Note
+        )
         // Build content string based on template
-        const articleView = {
+        const articleVariables = {
           title: article.title,
           omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
           siteName,
@@ -205,12 +212,15 @@ const fetchOmnivore = async (inBackground = false) => {
           dateSaved,
           content: article.content,
           datePublished,
+          note: note?.annotation,
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const content = render(articleTemplate, articleView)
+        // filter out notes and redactions
+        const highlights = article.highlights?.filter(
+          (h) => h.type === HighlightType.Highlight
+        )
         // sort highlights by location if selected in options
-        highlightOrder === HighlightOrder.LOCATION &&
-          article.highlights?.sort((a, b) => {
+        if (highlightOrder === HighlightOrder.LOCATION) {
+          highlights?.sort((a, b) => {
             try {
               if (article.pageType === PageType.File) {
                 // sort by location in file
@@ -225,12 +235,13 @@ const fetchOmnivore = async (inBackground = false) => {
               return compareHighlightsInFile(a, b)
             }
           })
-        const highlightBatch: (IBatchBlock & { id: string })[] =
-          article.highlights?.map((it) => {
+        }
+        const highlightBatch: IBatchBlock[] =
+          highlights?.map((it) => {
             // Build content string based on template
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             const content = render(highlightTemplate, {
-              ...articleView,
+              ...articleVariables,
               text: it.quote,
               labels: it.labels,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
@@ -245,7 +256,9 @@ const fetchOmnivore = async (inBackground = false) => {
             return {
               content,
               children: noteChild ? [noteChild] : undefined,
-              id: it.id,
+              properties: {
+                id: it.id,
+              },
             }
           }) || []
 
@@ -265,45 +278,48 @@ const fetchOmnivore = async (inBackground = false) => {
                       [(clojure.string/includes? ?c "${article.slug}")]]`
           )
         ).flat()
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const articleContent = render(articleTemplate, articleVariables)
         if (existingBlocks.length > 0) {
           isNewArticle = false
           const existingBlock = existingBlocks[0]
           // update the first existing block
-          if (existingBlock.content !== content) {
-            await logseq.Editor.updateBlock(existingBlock.uuid, content)
+          if (existingBlock.content !== articleContent) {
+            await logseq.Editor.updateBlock(existingBlock.uuid, articleContent)
           }
           // delete the rest of the existing blocks
           await deleteBlocks(existingBlocks.slice(1))
-          if (highlightBatch.length > 0) {
-            // append highlights to existing block
-            for (const highlight of highlightBatch) {
-              const existingHighlights = (
-                await logseq.DB.datascriptQuery<BlockEntity[]>(
-                  `[:find (pull ?b [*])
+          // append highlights to existing block
+          for (const highlight of highlightBatch) {
+            const existingHighlights = (
+              await logseq.DB.datascriptQuery<BlockEntity[]>(
+                `[:find (pull ?b [*])
                           :where
                             [?b :block/parent ?p]
                             [?p :block/uuid ?u]
                             [(str ?u) ?s]
                             [(= ?s "${existingBlock.uuid}")]
                             [?b :block/content ?c]
-                            [(clojure.string/includes? ?c "${highlight.id}")]]`
-                )
-              ).flat()
-              if (existingHighlights.length > 0) {
-                const existingHighlight = existingHighlights[0]
-                // update existing highlight if content is different
-                existingHighlight.content !== highlight.content &&
-                  (await logseq.Editor.updateBlock(
-                    existingHighlight.uuid,
-                    highlight.content
-                  ))
+                            [(clojure.string/includes? ?c "${
+                              highlight.properties?.id as string
+                            }")]]`
+              )
+            ).flat()
+            if (existingHighlights.length > 0) {
+              const existingHighlight = existingHighlights[0]
+              // update existing highlight if content is different
+              existingHighlight.content !== highlight.content &&
+                (await logseq.Editor.updateBlock(
+                  existingHighlight.uuid,
+                  highlight.content
+                ))
 
-                // checking notes
-                const noteChild = highlight.children?.[0]
-                if (noteChild) {
-                  const existingNotes = (
-                    await logseq.DB.datascriptQuery<BlockEntity[]>(
-                      `[:find (pull ?b [*])
+              // checking notes
+              const noteChild = highlight.children?.[0]
+              if (noteChild) {
+                const existingNotes = (
+                  await logseq.DB.datascriptQuery<BlockEntity[]>(
+                    `[:find (pull ?b [*])
                               :where
                                 [?b :block/parent ?p]
                                 [?p :block/uuid ?u]
@@ -313,32 +329,31 @@ const fetchOmnivore = async (inBackground = false) => {
                                 [(= ?c "${escapeQuotationMarks(
                                   noteChild.content
                                 )}")]]`
-                    )
-                  ).flat()
-                  if (existingNotes.length == 0) {
-                    // append new note
-                    await logseq.Editor.insertBlock(
-                      existingHighlight.uuid,
-                      noteChild.content,
-                      { sibling: false }
-                    )
-                  }
+                  )
+                ).flat()
+                if (existingNotes.length == 0) {
+                  // append new note
+                  await logseq.Editor.insertBlock(
+                    existingHighlight.uuid,
+                    noteChild.content,
+                    { sibling: false }
+                  )
                 }
-              } else {
-                // append new highlight
-                await logseq.Editor.insertBatchBlock(
-                  existingBlock.uuid,
-                  highlight,
-                  { sibling: false }
-                )
               }
+            } else {
+              // append new highlight
+              await logseq.Editor.insertBatchBlock(
+                existingBlock.uuid,
+                highlight,
+                { sibling: false }
+              )
             }
           }
         }
 
         isNewArticle &&
           articleBatch.unshift({
-            content,
+            content: articleContent,
             children: highlightBatch,
           })
       }
@@ -360,7 +375,8 @@ const fetchOmnivore = async (inBackground = false) => {
         apiKey,
         after,
         size,
-        parseDateTime(syncAt).toISO()
+        parseDateTime(syncAt).toISO(),
+        endpoint
       )
 
       for (const slug of deletedArticleSlugs) {
@@ -517,7 +533,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
       type: 'string',
       title: 'Enter the template to use for new articles',
       description:
-        'Enter the template to use for new articles. Required variables are: {{{title}}}, {{{omnivoreUrl}}}. Optional variables are: {{{siteName}}}, {{{originalUrl}}}, {{{author}}}, {{{labels}}}, {{{dateSaved}}}, {{{datePublished}}}',
+        'We use {{ mustache }} template: http://mustache.github.io/mustache.5.html. Required variables are: title, omnivoreUrl. Optional variables are: siteName, originalUrl, author, labels, dateSaved, datePublished, note',
       default: `[{{{title}}}]({{{omnivoreUrl}}})
 collapsed:: true
 site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
@@ -538,9 +554,16 @@ date-published:: {{{datePublished}}}
       type: 'string',
       title: 'Enter the template to use for new highlights',
       description:
-        'Enter the template to use for new highlights. Required variables are: {{{text}}}, {{{highlightUrl}}}. Optional variables are {{{dateHighlighted}}}. You can also use the variables in the article template.',
+        'We use {{ mustache }} template: http://mustache.github.io/mustache.5.html. Required variables are: text, highlightUrl. Optional variables are dateHighlighted. You can also use the variables in the article template.',
       default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}`,
       inputAs: 'textarea',
+    },
+    {
+      key: 'endpoint',
+      type: 'string',
+      title: 'API Endpoint',
+      description: "Enter the Omnivore server's API endpoint",
+      default: 'https://api-prod.omnivore.app/api/graphql',
     },
   ]
   logseq.useSettingsSchema(settingsSchema)
