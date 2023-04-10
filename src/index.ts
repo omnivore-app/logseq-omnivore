@@ -9,15 +9,15 @@ import { DateTime } from 'luxon'
 import { render } from 'mustache'
 import {
   Article,
-  compareHighlightsInFile,
   DATE_FORMAT,
+  HighlightType,
+  PageType,
+  compareHighlightsInFile,
   escapeQuotationMarks,
   formatDate,
   getHighlightLocation,
-  HighlightType,
   loadArticles,
   loadDeletedArticleSlugs,
-  PageType,
   parseDateTime,
 } from './util'
 
@@ -222,6 +222,13 @@ const fetchOmnivore = async (inBackground = false) => {
         if (highlightOrder === HighlightOrder.LOCATION) {
           highlights?.sort((a, b) => {
             try {
+              // sort by highlight position percent if available
+              if (
+                a.highlightPositionPercent !== undefined &&
+                b.highlightPositionPercent !== undefined
+              ) {
+                return a.highlightPositionPercent - b.highlightPositionPercent
+              }
               if (article.pageType === PageType.File) {
                 // sort by location in file
                 return compareHighlightsInFile(a, b)
