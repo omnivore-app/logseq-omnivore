@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.0...v1.12.1) (2023-04-10)
+
+
+### Bug Fixes
+
+* sort highlights by position percentage if available ([0309413](https://github.com/omnivore-app/logseq-omnivore/commit/0309413d219741b7a537c364ba26dcaf19644b14))
+
 # [1.12.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.11.8...v1.12.0) (2023-04-05)
 
 
