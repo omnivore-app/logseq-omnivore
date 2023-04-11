@@ -7,10 +7,11 @@ import {
 import { DateTime } from 'luxon'
 import {
   Article,
+  DeletedArticle,
   HighlightType,
   PageType,
-  loadArticles,
-  loadDeletedArticleSlugs,
+  getDeletedOmnivoreArticles,
+  getOmnivoreArticles,
 } from './api'
 import {
   HighlightOrder,
@@ -170,7 +171,7 @@ const fetchOmnivore = async (inBackground = false) => {
       hasNextPage;
       after += size
     ) {
-      ;[articles, hasNextPage] = await loadArticles(
+      ;[articles, hasNextPage] = await getOmnivoreArticles(
         apiKey,
         after,
         size,
@@ -340,11 +341,11 @@ const fetchOmnivore = async (inBackground = false) => {
 
     // delete blocks where article has been deleted
     for (
-      let hasNextPage = true, deletedArticleSlugs: string[] = [], after = 0;
+      let hasNextPage = true, deletedArticles: DeletedArticle[] = [], after = 0;
       hasNextPage;
       after += size
     ) {
-      ;[deletedArticleSlugs, hasNextPage] = await loadDeletedArticleSlugs(
+      ;[deletedArticles, hasNextPage] = await getDeletedOmnivoreArticles(
         apiKey,
         after,
         size,
@@ -352,7 +353,8 @@ const fetchOmnivore = async (inBackground = false) => {
         endpoint
       )
 
-      for (const slug of deletedArticleSlugs) {
+      for (const deletedArticle of deletedArticles) {
+        const slug = deletedArticle.node.slug
         const existingBlocks = (
           await logseq.DB.datascriptQuery<BlockEntity[]>(
             `[:find (pull ?b [*])
@@ -467,7 +469,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
 
   logseq.provideStyle(`
     div[data-id="${baseInfo.id}"] div[data-key="articleTemplate"] textarea {
-      height: 14rem;
+      height: 30rem;
     }
   `)
 

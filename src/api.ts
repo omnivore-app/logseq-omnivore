@@ -1,11 +1,3 @@
-export interface GetArticleResponse {
-  data: {
-    article: {
-      article: Article
-    }
-  }
-}
-
 export interface SearchResponse {
   data: {
     search: {
@@ -82,6 +74,13 @@ export interface Highlight {
   highlightPositionPercent?: number
 }
 
+export interface DeletedArticle {
+  updateReason: UpdateReason
+  node: {
+    slug: string
+  }
+}
+
 const ENDPOINT = 'https://api-prod.omnivore.app/api/graphql'
 const requestHeaders = (apiKey: string) => ({
   'Content-Type': 'application/json',
@@ -89,7 +88,7 @@ const requestHeaders = (apiKey: string) => ({
   'X-OmnivoreClient': 'logseq-plugin',
 })
 
-export const loadArticles = async (
+export const getOmnivoreArticles = async (
   apiKey: string,
   after = 0,
   first = 10,
@@ -166,13 +165,13 @@ export const loadArticles = async (
   return [articles, jsonRes.data.search.pageInfo.hasNextPage]
 }
 
-export const loadDeletedArticleSlugs = async (
+export const getDeletedOmnivoreArticles = async (
   apiKey: string,
   after = 0,
   first = 10,
   updatedAt = '',
   endpoint = ENDPOINT
-): Promise<[string[], boolean]> => {
+): Promise<[DeletedArticle[], boolean]> => {
   const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
     body: JSON.stringify({
@@ -205,9 +204,9 @@ export const loadDeletedArticleSlugs = async (
   })
 
   const jsonRes = (await res.json()) as UpdatesSinceResponse
-  const deletedArticleSlugs = jsonRes.data.updatesSince.edges
-    .filter((edge) => edge.updateReason === UpdateReason.DELETED)
-    .map((edge) => edge.node.slug)
+  const deletedArticles = jsonRes.data.updatesSince.edges.filter(
+    (edge) => edge.updateReason === UpdateReason.DELETED
+  )
 
-  return [deletedArticleSlugs, jsonRes.data.updatesSince.pageInfo.hasNextPage]
+  return [deletedArticles, jsonRes.data.updatesSince.pageInfo.hasNextPage]
 }

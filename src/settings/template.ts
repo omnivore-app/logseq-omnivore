@@ -12,7 +12,7 @@ export interface ArticleVariables {
   note?: string
   type: PageType
   labels?: Label[]
-  highlights?: Highlight[]
+  highlights?: HighlightVariables[]
   dateSaved: string
   datePublished?: string
   dateRead?: string
@@ -25,6 +25,7 @@ export interface HighlightVariables {
   labels?: Label[]
   highlightUrl: string
   dateHighlighted: string
+  rawDateHighlighted: string
 }
 
 export type TemplateVariables = ArticleVariables & HighlightVariables
@@ -97,16 +98,17 @@ export const renderHighlightContent = (
   article: Article,
   preferredDateFormat: string
 ): string => {
+  const updatedAt = new Date(highlight.updatedAt)
+  const dateHighlighted = dateReference(updatedAt, preferredDateFormat)
+  const rawDateHighlighted = formatDate(updatedAt, preferredDateFormat)
   const articleVariables = buildArticleVariables(article, preferredDateFormat)
   const highlightVariables: TemplateVariables = {
     ...articleVariables,
     text: highlight.quote,
     labels: highlight.labels,
     highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-    dateHighlighted: formatDate(
-      new Date(highlight.updatedAt),
-      preferredDateFormat
-    ),
+    dateHighlighted,
+    rawDateHighlighted,
   }
   return Mustache.render(template, highlightVariables)
 }
