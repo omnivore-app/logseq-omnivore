@@ -213,6 +213,7 @@ const fetchOmnivore = async (inBackground = false) => {
           content: article.content,
           datePublished,
           note: note?.annotation,
+          type: article.pageType,
         }
         // filter out notes and redactions
         const highlights = article.highlights?.filter(
