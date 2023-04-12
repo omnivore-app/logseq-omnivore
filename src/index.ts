@@ -3,74 +3,34 @@ import {
   BlockEntity,
   IBatchBlock,
   LSPluginBaseInfo,
-  SettingSchemaDesc,
 } from '@logseq/libs/dist/LSPlugin'
 import { DateTime } from 'luxon'
-import { render } from 'mustache'
 import {
   Article,
-  DATE_FORMAT,
+  DeletedArticle,
   HighlightType,
   PageType,
+  getDeletedOmnivoreArticles,
+  getOmnivoreArticles,
+} from './api'
+import {
+  HighlightOrder,
+  Settings,
+  getQueryFromFilter,
+  settingsSchema,
+} from './settings'
+import {
+  renderArticleContent,
+  renderHighlightContent,
+} from './settings/template'
+import {
+  DATE_FORMAT,
   compareHighlightsInFile,
+  delay,
   escapeQuotationMarks,
-  formatDate,
   getHighlightLocation,
-  loadArticles,
-  loadDeletedArticleSlugs,
   parseDateTime,
 } from './util'
-
-enum Filter {
-  ALL = 'import all my articles',
-  HIGHLIGHTS = 'import just highlights',
-  ADVANCED = 'advanced',
-}
-
-enum HighlightOrder {
-  LOCATION = 'the location of highlights in the article',
-  TIME = 'the time that highlights are updated',
-}
-
-interface Settings {
-  apiKey: string
-  filter: Filter
-  syncAt: string
-  frequency: number
-  graph: string
-  customQuery: string
-  disabled: boolean
-  highlightOrder: HighlightOrder
-  pageName: string
-  articleTemplate: string
-  highlightTemplate: string
-  loading: boolean
-  syncJobId: number
-  endpoint: string
-}
-
-const siteNameFromUrl = (originalArticleUrl: string): string => {
-  try {
-    return new URL(originalArticleUrl).hostname.replace(/^www\./, '')
-  } catch {
-    return ''
-  }
-}
-
-const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
-
-const getQueryFromFilter = (filter: Filter, customQuery: string): string => {
-  switch (filter) {
-    case Filter.ALL:
-      return ''
-    case Filter.HIGHLIGHTS:
-      return `has:highlights`
-    case Filter.ADVANCED:
-      return customQuery
-    default:
-      return ''
-  }
-}
 
 const isValidCurrentGraph = async (): Promise<boolean> => {
   const settings = logseq.settings as Settings
@@ -83,6 +43,41 @@ const deleteBlocks = async (blocks: BlockEntity[]) => {
   for await (const block of blocks) {
     await logseq.Editor.removeBlock(block.uuid)
   }
+}
+
+const startSyncJob = () => {
+  const settings = logseq.settings as Settings
+  // sync every frequency minutes
+  if (settings.frequency > 0) {
+    const intervalId = setInterval(
+      async () => {
+        if (await isValidCurrentGraph()) {
+          await fetchOmnivore(true)
+        }
+      },
+      settings.frequency * 1000 * 60,
+      settings.syncAt
+    )
+    logseq.updateSettings({ syncJobId: intervalId })
+  }
+}
+
+const resetLoadingState = () => {
+  console.log('reset loading state')
+  const settings = logseq.settings as Settings
+  settings.loading && logseq.updateSettings({ loading: false })
+}
+
+const resetSyncJob = () => {
+  console.log('reset sync job')
+  const settings = logseq.settings as Settings
+  settings.syncJobId > 0 && clearInterval(settings.syncJobId)
+  logseq.updateSettings({ syncJobId: 0 })
+}
+
+const resetState = () => {
+  resetLoadingState()
+  resetSyncJob()
 }
 
 const fetchOmnivore = async (inBackground = false) => {
@@ -176,7 +171,7 @@ const fetchOmnivore = async (inBackground = false) => {
       hasNextPage;
       after += size
     ) {
-      ;[articles, hasNextPage] = await loadArticles(
+      ;[articles, hasNextPage] = await getOmnivoreArticles(
         apiKey,
         after,
         size,
@@ -186,34 +181,8 @@ const fetchOmnivore = async (inBackground = false) => {
         'markdown',
         endpoint
       )
-
       const articleBatch: IBatchBlock[] = []
       for (const article of articles) {
-        const siteName =
-          article.siteName || siteNameFromUrl(article.originalArticleUrl)
-        const dateSaved = formatDate(
-          new Date(article.savedAt),
-          preferredDateFormat
-        )
-        const datePublished = article.publishedAt
-          ? formatDate(new Date(article.publishedAt), preferredDateFormat)
-          : undefined
-        const note = article.highlights?.find(
-          (h) => h.type === HighlightType.Note
-        )
-        // Build content string based on template
-        const articleVariables = {
-          title: article.title,
-          omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
-          siteName,
-          originalUrl: article.originalArticleUrl,
-          author: article.author,
-          labels: article.labels,
-          dateSaved,
-          content: article.content,
-          datePublished,
-          note: note?.annotation,
-        }
         // filter out notes and redactions
         const highlights = article.highlights?.filter(
           (h) => h.type === HighlightType.Highlight
@@ -246,17 +215,12 @@ const fetchOmnivore = async (inBackground = false) => {
         const highlightBatch: IBatchBlock[] =
           highlights?.map((it) => {
             // Build content string based on template
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            const content = render(highlightTemplate, {
-              ...articleVariables,
-              text: it.quote,
-              labels: it.labels,
-              highlightUrl: `https://omnivore.app/me/${article.slug}#${it.id}`,
-              dateHighlighted: formatDate(
-                new Date(it.updatedAt),
-                preferredDateFormat
-              ),
-            })
+            const content = renderHighlightContent(
+              highlightTemplate,
+              it,
+              article,
+              preferredDateFormat
+            )
             const noteChild = it.annotation
               ? { content: it.annotation }
               : undefined
@@ -285,8 +249,11 @@ const fetchOmnivore = async (inBackground = false) => {
                       [(clojure.string/includes? ?c "${article.slug}")]]`
           )
         ).flat()
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const articleContent = render(articleTemplate, articleVariables)
+        const articleContent = renderArticleContent(
+          articleTemplate,
+          article,
+          preferredDateFormat
+        )
         if (existingBlocks.length > 0) {
           isNewArticle = false
           const existingBlock = existingBlocks[0]
@@ -374,11 +341,11 @@ const fetchOmnivore = async (inBackground = false) => {
 
     // delete blocks where article has been deleted
     for (
-      let hasNextPage = true, deletedArticleSlugs: string[] = [], after = 0;
+      let hasNextPage = true, deletedArticles: DeletedArticle[] = [], after = 0;
       hasNextPage;
       after += size
     ) {
-      ;[deletedArticleSlugs, hasNextPage] = await loadDeletedArticleSlugs(
+      ;[deletedArticles, hasNextPage] = await getDeletedOmnivoreArticles(
         apiKey,
         after,
         size,
@@ -386,7 +353,8 @@ const fetchOmnivore = async (inBackground = false) => {
         endpoint
       )
 
-      for (const slug of deletedArticleSlugs) {
+      for (const deletedArticle of deletedArticles) {
+        const slug = deletedArticle.node.slug
         const existingBlocks = (
           await logseq.DB.datascriptQuery<BlockEntity[]>(
             `[:find (pull ?b [*])
@@ -426,154 +394,14 @@ const fetchOmnivore = async (inBackground = false) => {
   }
 }
 
-const startSyncJob = () => {
-  const settings = logseq.settings as Settings
-  // sync every frequency minutes
-  if (settings.frequency > 0) {
-    const intervalId = setInterval(
-      async () => {
-        if (await isValidCurrentGraph()) {
-          await fetchOmnivore(true)
-        }
-      },
-      settings.frequency * 1000 * 60,
-      settings.syncAt
-    )
-    logseq.updateSettings({ syncJobId: intervalId })
-  }
-}
-
-const resetLoadingState = () => {
-  console.log('reset loading state')
-  const settings = logseq.settings as Settings
-  settings.loading && logseq.updateSettings({ loading: false })
-}
-
-const resetSyncJob = () => {
-  console.log('reset sync job')
-  const settings = logseq.settings as Settings
-  settings.syncJobId > 0 && clearInterval(settings.syncJobId)
-  logseq.updateSettings({ syncJobId: 0 })
-}
-
-const resetState = () => {
-  resetLoadingState()
-  resetSyncJob()
-}
-
 /**
  * main entry
  * @param baseInfo
  */
 const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
-  const settingsSchema: SettingSchemaDesc[] = [
-    {
-      key: 'apiKey',
-      type: 'string',
-      title: 'Enter your Omnivore Api Key',
-      description:
-        'You can create an API key at https://omnivore.app/settings/api',
-      default: '',
-    },
-    {
-      key: 'filter',
-      type: 'enum',
-      title: 'Select an Omnivore search filter type',
-      description: 'Select an Omnivore search filter type',
-      default: Filter.HIGHLIGHTS.toString(),
-      enumPicker: 'select',
-      enumChoices: Object.values(Filter),
-    },
-    {
-      key: 'customQuery',
-      type: 'string',
-      title:
-        'Enter an Omnivore custom search query if advanced filter is selected',
-      description:
-        'See https://omnivore.app/help/search for more info on search query syntax',
-      default: '',
-    },
-    {
-      key: 'frequency',
-      type: 'number',
-      title: 'Enter sync with Omnivore frequency',
-      description:
-        'Enter sync with Omnivore frequency in minutes here or 0 to disable',
-      default: 60,
-    },
-    {
-      key: 'graph',
-      type: 'string',
-      title: 'Enter the graph to sync with Omnivore',
-      description: 'Enter the graph to sync Omnivore articles to',
-      // default is the current graph
-      default: (await logseq.App.getCurrentGraph())?.name as string,
-    },
-    {
-      key: 'syncAt',
-      type: 'string',
-      title: 'Last Sync',
-      description:
-        'The last time Omnivore was synced. Clear this value to completely refresh the sync.',
-      default: '',
-      inputAs: 'datetime-local',
-    },
-    {
-      key: 'highlightOrder',
-      type: 'enum',
-      title: 'Order of Highlights',
-      description: 'Select a way to sort new highlights in your articles',
-      default: HighlightOrder.TIME.toString(),
-      enumPicker: 'select',
-      enumChoices: Object.values(HighlightOrder),
-    },
-    {
-      key: 'pageName',
-      type: 'string',
-      title: 'Enter the page name to sync with Omnivore',
-      description: 'Enter the page name to sync Omnivore articles to',
-      default: 'Omnivore',
-    },
-    {
-      key: 'articleTemplate',
-      type: 'string',
-      title: 'Enter the template to use for new articles',
-      description:
-        'We use {{ mustache }} template: http://mustache.github.io/mustache.5.html. Required variables are: title, omnivoreUrl. Optional variables are: siteName, originalUrl, author, labels, dateSaved, datePublished, note',
-      default: `[{{{title}}}]({{{omnivoreUrl}}})
-collapsed:: true
-site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
-{{#author}}
-author:: {{{author}}}
-{{/author}}
-{{#labels.length}}
-labels:: {{#labels}}[[{{{name}}}]]{{/labels}}
-{{/labels.length}}
-date-saved:: {{{dateSaved}}}
-{{#datePublished}}
-date-published:: {{{datePublished}}}
-{{/datePublished}}`,
-      inputAs: 'textarea',
-    },
-    {
-      key: 'highlightTemplate',
-      type: 'string',
-      title: 'Enter the template to use for new highlights',
-      description:
-        'We use {{ mustache }} template: http://mustache.github.io/mustache.5.html. Required variables are: text, highlightUrl. Optional variables are dateHighlighted. You can also use the variables in the article template.',
-      default: `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}`,
-      inputAs: 'textarea',
-    },
-    {
-      key: 'endpoint',
-      type: 'string',
-      title: 'API Endpoint',
-      description: "Enter the Omnivore server's API endpoint",
-      default: 'https://api-prod.omnivore.app/api/graphql',
-    },
-  ]
-  logseq.useSettingsSchema(settingsSchema)
+
+  logseq.useSettingsSchema(await settingsSchema())
 
   logseq.onSettingsChanged((newSettings: Settings, oldSettings: Settings) => {
     const newFrequency = newSettings.frequency
@@ -641,7 +469,7 @@ date-published:: {{{datePublished}}}
 
   logseq.provideStyle(`
     div[data-id="${baseInfo.id}"] div[data-key="articleTemplate"] textarea {
-      height: 14rem;
+      height: 30rem;
     }
   `)
 
