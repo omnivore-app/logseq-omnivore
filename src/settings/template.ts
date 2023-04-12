@@ -65,6 +65,9 @@ const buildArticleVariables = (
   const rawDateRead = article.readAt
     ? formatDate(new Date(article.readAt), preferredDateFormat)
     : undefined
+  const dateRead = article.readAt
+    ? dateReference(new Date(article.readAt), preferredDateFormat)
+    : undefined
   return {
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -79,6 +82,7 @@ const buildArticleVariables = (
     type: article.pageType,
     rawDatePublished,
     rawDateRead,
+    dateRead,
   }
 }
 
