@@ -1,3 +1,10 @@
+## [1.12.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.2...v1.12.3) (2023-04-12)
+
+
+### Bug Fixes
+
+* add dateRead variable in the article template ([6ac9b3b](https://github.com/omnivore-app/logseq-omnivore/commit/6ac9b3babf6a3a0ef54d022082b0d7d6a6fbac09))
+
 ## [1.12.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.1...v1.12.2) (2023-04-12)
 
 
