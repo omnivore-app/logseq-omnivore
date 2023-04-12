@@ -12,7 +12,6 @@ export interface ArticleVariables {
   note?: string
   type: PageType
   labels?: Label[]
-  highlights?: HighlightVariables[]
   dateSaved: string
   datePublished?: string
   dateRead?: string

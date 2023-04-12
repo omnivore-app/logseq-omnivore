@@ -118,7 +118,7 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     type: 'string',
     title: 'Enter the template to use for new articles',
     description:
-      'We use {{ mustache }} template: http://mustache.github.io/mustache.5.html. Required variables are: title, omnivoreUrl. Optional variables are: siteName, originalUrl, author, labels, dateSaved, datePublished, note',
+      'The template to use for new articles. Refer to this doc for more info: https://docs.omnivore.app/integrations/logseq.html#controlling-the-layout-of-the-data-imported-to-logseq Variables available could be found here: https://docs.omnivore.app/integrations/logseq.html#variables-available-to-the-highlight-template',
     default: defaultArticleTemplate,
     inputAs: 'textarea',
   },
@@ -127,7 +127,7 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     type: 'string',
     title: 'Enter the template to use for new highlights',
     description:
-      'We use {{ mustache }} template: http://mustache.github.io/mustache.5.html. Required variables are: text, highlightUrl. Optional variables are dateHighlighted. You can also use the variables in the article template.',
+      'The template to use for new highlights. Refer to this doc for more info: https://docs.omnivore.app/integrations/logseq.html#controlling-the-layout-of-the-data-imported-to-logseq Variables available could be found here: https://docs.omnivore.app/integrations/logseq.html#variables-available-to-the-highlight-template',
     default: defaultHighlightTemplate,
     inputAs: 'textarea',
   },
