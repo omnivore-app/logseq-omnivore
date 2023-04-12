@@ -1,3 +1,13 @@
+## [1.12.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.1...v1.12.2) (2023-04-12)
+
+
+### Bug Fixes
+
+* add rawDateRead and rawDatePublished in the template ([84f1a78](https://github.com/omnivore-app/logseq-omnivore/commit/84f1a781f01041cb4fdea228edbf18f5c56f7fb2))
+* add type to the template ([c9b81de](https://github.com/omnivore-app/logseq-omnivore/commit/c9b81def99f6679e8d1bdd26d29e37abd0534af2))
+* increase height of template textarea in settings ([7e37da7](https://github.com/omnivore-app/logseq-omnivore/commit/7e37da7d9e7c8d6803ea129b996a8575a1eb9d6c))
+* update description of template settings ([7c56358](https://github.com/omnivore-app/logseq-omnivore/commit/7c56358b9d1da2fe7e0adbad758d773a8780795e))
+
 ## [1.12.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.0...v1.12.1) (2023-04-10)
 
 
