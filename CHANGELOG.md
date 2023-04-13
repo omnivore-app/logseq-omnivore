@@ -1,3 +1,10 @@
+## [1.12.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.3...v1.12.4) (2023-04-13)
+
+
+### Bug Fixes
+
+* replace all empty lines with blockquote ">" to preserve paragraphs ([cfcb32e](https://github.com/omnivore-app/logseq-omnivore/commit/cfcb32e98603fdc176bab6d669e51d0f0e012bc1))
+
 ## [1.12.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.2...v1.12.3) (2023-04-12)
 
 
