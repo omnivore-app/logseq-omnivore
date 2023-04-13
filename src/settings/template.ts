@@ -1,6 +1,11 @@
 import Mustache from 'mustache'
 import { Article, Highlight, HighlightType, Label, PageType } from '../api'
-import { dateReference, formatDate, siteNameFromUrl } from '../util'
+import {
+  dateReference,
+  formatDate,
+  formatHighlightQuote,
+  siteNameFromUrl,
+} from '../util'
 
 export interface ArticleVariables {
   title: string
@@ -107,7 +112,7 @@ export const renderHighlightContent = (
   const articleVariables = buildArticleVariables(article, preferredDateFormat)
   const highlightVariables: TemplateVariables = {
     ...articleVariables,
-    text: highlight.quote,
+    text: formatHighlightQuote(highlight.quote, template),
     labels: highlight.labels,
     highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
     dateHighlighted,

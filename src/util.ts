@@ -85,3 +85,15 @@ export const siteNameFromUrl = (originalArticleUrl: string): string => {
 }
 
 export const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
+
+export const formatHighlightQuote = (
+  quote: string,
+  template: string
+): string => {
+  if (template.startsWith('>')) {
+    // replace all empty lines with blockquote '>' to preserve paragraphs
+    quote = quote.replace(/^(?=\n)$|^\s*?\n/gm, '> ')
+  }
+
+  return quote
+}
