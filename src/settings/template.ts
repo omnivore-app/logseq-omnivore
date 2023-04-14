@@ -30,6 +30,7 @@ export interface HighlightVariables {
   highlightUrl: string
   dateHighlighted: string
   rawDateHighlighted: string
+  note?: string
 }
 
 export type TemplateVariables = ArticleVariables & HighlightVariables
@@ -48,7 +49,9 @@ date-saved:: {{{dateSaved}}}
 date-published:: {{{datePublished}}}
 {{/datePublished}}`
 
-export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}`
+export const defaultHighlightTemplate = `note:: {{{note}}}
+> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}
+`
 
 const buildArticleVariables = (
   article: Article,
@@ -117,6 +120,7 @@ export const renderHighlightContent = (
     highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
     dateHighlighted,
     rawDateHighlighted,
+    note: highlight.annotation,
   }
   return Mustache.render(template, highlightVariables)
 }

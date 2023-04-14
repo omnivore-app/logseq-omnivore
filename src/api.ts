@@ -18,7 +18,7 @@ export enum UpdateReason {
 export interface UpdatesSinceResponse {
   data: {
     updatesSince: {
-      edges: { updateReason: UpdateReason; node: { slug: string } }[]
+      edges: { updateReason: UpdateReason; node: Article }[]
       pageInfo: {
         hasNextPage: boolean
       }
@@ -37,6 +37,7 @@ export enum PageType {
 }
 
 export interface Article {
+  id: string
   title: string
   siteName?: string
   originalArticleUrl: string
@@ -74,13 +75,6 @@ export interface Highlight {
   highlightPositionPercent?: number
 }
 
-export interface DeletedArticle {
-  updateReason: UpdateReason
-  node: {
-    slug: string
-  }
-}
-
 const ENDPOINT = 'https://api-prod.omnivore.app/api/graphql'
 const requestHeaders = (apiKey: string) => ({
   'Content-Type': 'application/json',
@@ -107,6 +101,7 @@ export const getOmnivoreArticles = async (
             ... on SearchSuccess {
               edges {
                 node {
+                  id
                   title
                   slug
                   siteName
@@ -171,7 +166,7 @@ export const getDeletedOmnivoreArticles = async (
   first = 10,
   updatedAt = '',
   endpoint = ENDPOINT
-): Promise<[DeletedArticle[], boolean]> => {
+): Promise<[Article[], boolean]> => {
   const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
     body: JSON.stringify({
@@ -182,6 +177,7 @@ export const getDeletedOmnivoreArticles = async (
               edges {
                 updateReason
                 node {
+                  id
                   slug
                 }
               }
@@ -204,9 +200,9 @@ export const getDeletedOmnivoreArticles = async (
   })
 
   const jsonRes = (await res.json()) as UpdatesSinceResponse
-  const deletedArticles = jsonRes.data.updatesSince.edges.filter(
-    (edge) => edge.updateReason === UpdateReason.DELETED
-  )
+  const deletedArticles = jsonRes.data.updatesSince.edges
+    .filter((edge) => edge.updateReason === UpdateReason.DELETED)
+    .map((edge) => edge.node)
 
   return [deletedArticles, jsonRes.data.updatesSince.pageInfo.hasNextPage]
 }
