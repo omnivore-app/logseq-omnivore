@@ -439,6 +439,12 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
     }
   `)
 
+  logseq.provideStyle(`
+    div[data-id="${baseInfo.id}"] div[data-key="highlightTemplate"] textarea {
+      height: 10rem;
+    }
+  `)
+
   // reset loading state on startup
   resetState()
 
