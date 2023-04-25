@@ -4,6 +4,7 @@ import {
   IBatchBlock,
   LSPluginBaseInfo,
 } from '@logseq/libs/dist/LSPlugin'
+import { PageEntity } from '@logseq/libs/dist/LSPlugin.user'
 import { DateTime } from 'luxon'
 import {
   Article,
@@ -21,11 +22,11 @@ import {
 import {
   renderArticleContent,
   renderHighlightContent,
+  renderPageName,
 } from './settings/template'
 import {
   DATE_FORMAT,
   compareHighlightsInFile,
-  delay,
   getHighlightLocation,
   parseDateTime,
 } from './util'
@@ -95,6 +96,62 @@ const getBlockByContent = async (
   return blocks[0]
 }
 
+const getBlockByTitle = async (
+  pageName: string,
+  title: string
+): Promise<BlockEntity | null> => {
+  const blocks = (
+    await logseq.DB.datascriptQuery<BlockEntity[]>(
+      `[:find (pull ?b [*])
+            :where
+              [?b :block/page ?p]
+              [?p :block/original-name "${pageName}"]
+              [?b :block/content ?c]
+              [(= ?c "${title}")]]`
+    )
+  ).flat()
+
+  return blocks[0] || null
+}
+
+const getOmnivorePage = async (pageName: string): Promise<PageEntity> => {
+  const omnivorePage = await logseq.Editor.getPage(pageName)
+  if (omnivorePage) {
+    return omnivorePage
+  }
+
+  const newOmnivorePage = await logseq.Editor.createPage(pageName, undefined, {
+    createFirstBlock: false,
+  })
+  if (!newOmnivorePage) {
+    await logseq.UI.showMsg(
+      'Failed to create Omnivore page. Please check the pageName in the settings',
+      'error'
+    )
+    throw new Error('Failed to create Omnivore page')
+  }
+
+  return newOmnivorePage
+}
+
+const getOmnivoreBlock = async (
+  pageName: string,
+  title: string
+): Promise<BlockEntity> => {
+  await getOmnivorePage(pageName)
+  const targetBlock = await getBlockByTitle(pageName, title)
+  if (targetBlock) {
+    return targetBlock
+  }
+  const newTargetBlock = await logseq.Editor.prependBlockInPage(pageName, title)
+  if (!newTargetBlock) {
+    await logseq.UI.showMsg('Failed to create Omnivore block', 'error')
+    throw new Error('Failed to create Omnivore block')
+  }
+
+  return newTargetBlock
+}
+
 const fetchOmnivore = async (inBackground = false) => {
   const {
     syncAt,
@@ -102,12 +159,13 @@ const fetchOmnivore = async (inBackground = false) => {
     filter,
     customQuery,
     highlightOrder,
-    pageName,
+    pageName: pageNameTemplate,
     articleTemplate,
     highlightTemplate,
     graph,
     loading,
     endpoint,
+    isSinglePage,
   } = logseq.settings as Settings
   // prevent multiple fetches
   if (loading) {
@@ -143,11 +201,6 @@ const fetchOmnivore = async (inBackground = false) => {
   const fetchingTitle = '🚀 Fetching articles ...'
   const highlightTitle = '### Highlights'
 
-  !inBackground && logseq.App.pushState('page', { name: pageName })
-
-  await delay(300)
-
-  let targetBlock: BlockEntity | null = null
   const userConfigs = await logseq.App.getUserConfigs()
   const preferredDateFormat: string = userConfigs.preferredDateFormat
   const fetchingMsgKey = 'omnivore-fetching'
@@ -159,26 +212,13 @@ const fetchOmnivore = async (inBackground = false) => {
         key: fetchingMsgKey,
       }))
 
-    let omnivorePage = await logseq.Editor.getPage(pageName)
-    if (!omnivorePage) {
-      omnivorePage = await logseq.Editor.createPage(pageName)
-    }
-    if (!omnivorePage) {
-      throw new Error('Failed to create page')
-    }
+    let targetBlockId = ''
+    let pageName = ''
 
-    const pageBlocksTree = await logseq.Editor.getPageBlocksTree(pageName)
-    targetBlock = pageBlocksTree.length > 0 ? pageBlocksTree[0] : null
-    if (targetBlock) {
-      await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
-    } else {
-      targetBlock = await logseq.Editor.appendBlockInPage(
-        pageName,
-        fetchingTitle
-      )
-    }
-    if (!targetBlock) {
-      throw new Error('block error')
+    if (isSinglePage) {
+      // create a single page for all articles
+      pageName = pageNameTemplate
+      targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
     }
 
     const size = 50
@@ -199,6 +239,15 @@ const fetchOmnivore = async (inBackground = false) => {
       )
       const articleBatch: IBatchBlock[] = []
       for (const article of articles) {
+        if (!isSinglePage) {
+          // create a new page for each article
+          pageName = renderPageName(
+            article,
+            pageNameTemplate,
+            preferredDateFormat
+          )
+          targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+        }
         // render article content
         const articleContent = renderArticleContent(
           articleTemplate,
@@ -259,7 +308,7 @@ const fetchOmnivore = async (inBackground = false) => {
         // update existing article block if article is already in the page
         const existingArticleBlock = await getBlockByContent(
           pageName,
-          targetBlock.uuid,
+          targetBlockId,
           article.slug
         )
         if (existingArticleBlock) {
@@ -310,7 +359,7 @@ const fetchOmnivore = async (inBackground = false) => {
       }
 
       if (articleBatch.length > 0) {
-        await logseq.Editor.insertBatchBlock(targetBlock.uuid, articleBatch, {
+        await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
         })
@@ -330,9 +379,19 @@ const fetchOmnivore = async (inBackground = false) => {
         endpoint
       )
       for (const deletedArticle of deletedArticles) {
+        if (!isSinglePage) {
+          // create a new page for each article
+          pageName = renderPageName(
+            deletedArticle,
+            pageNameTemplate,
+            preferredDateFormat
+          )
+          targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+        }
+
         const existingBlock = await getBlockByContent(
           pageName,
-          targetBlock.uuid,
+          targetBlockId,
           deletedArticle.slug
         )
 
@@ -355,8 +414,6 @@ const fetchOmnivore = async (inBackground = false) => {
     console.error(e)
   } finally {
     resetLoadingState()
-    targetBlock &&
-      (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
   }
 }
 
