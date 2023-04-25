@@ -48,6 +48,7 @@ date-published:: {{{datePublished}}}
 {{/datePublished}}`
 
 export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}
+
 note:: {{{note}}}
 `
 
