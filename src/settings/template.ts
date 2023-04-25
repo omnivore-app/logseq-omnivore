@@ -33,8 +33,6 @@ export interface HighlightVariables {
   note?: string
 }
 
-export type TemplateVariables = ArticleVariables & HighlightVariables
-
 export const defaultArticleTemplate = `[{{{title}}}]({{{omnivoreUrl}}})
 collapsed:: true
 site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
@@ -49,8 +47,8 @@ date-saved:: {{{dateSaved}}}
 date-published:: {{{datePublished}}}
 {{/datePublished}}`
 
-export const defaultHighlightTemplate = `note:: {{{note}}}
-> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}
+export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}
+note:: {{{note}}}
 `
 
 const buildArticleVariables = (
@@ -112,9 +110,7 @@ export const renderHighlightContent = (
   const updatedAt = new Date(highlight.updatedAt)
   const dateHighlighted = dateReference(updatedAt, preferredDateFormat)
   const rawDateHighlighted = formatDate(updatedAt, preferredDateFormat)
-  const articleVariables = buildArticleVariables(article, preferredDateFormat)
-  const highlightVariables: TemplateVariables = {
-    ...articleVariables,
+  const highlightVariables: HighlightVariables = {
     text: formatHighlightQuote(highlight.quote, template),
     labels: highlight.labels,
     highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
