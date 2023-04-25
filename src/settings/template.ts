@@ -121,3 +121,15 @@ export const renderHighlightContent = (
   }
   return Mustache.render(template, highlightVariables)
 }
+
+export const renderPageName = (
+  article: Article,
+  pageName: string,
+  preferredDateFormat: string
+) => {
+  const date = formatDate(new Date(article.savedAt), preferredDateFormat)
+  return Mustache.render(pageName, {
+    title: article.title,
+    date,
+  })
+}
