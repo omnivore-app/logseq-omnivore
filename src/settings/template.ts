@@ -37,7 +37,7 @@ export interface HighlightView {
 enum ArticleState {
   Saved = 'SAVED',
   Reading = 'READING',
-  Read = 'READ',
+  Completed = 'COMPLETED',
   Archived = 'ARCHIVED',
 }
 
@@ -66,7 +66,7 @@ const getArticleState = (article: Article): string => {
   }
   if (article.readingProgressPercent > 0) {
     return article.readingProgressPercent === 100
-      ? ArticleState.Read
+      ? ArticleState.Completed
       : ArticleState.Reading
   }
 
