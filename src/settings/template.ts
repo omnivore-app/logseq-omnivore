@@ -133,3 +133,7 @@ export const renderPageName = (
     date,
   })
 }
+
+export const preParseTemplate = (template: string) => {
+  Mustache.parse(template)
+}

@@ -20,6 +20,7 @@ import {
   settingsSchema,
 } from './settings'
 import {
+  preParseTemplate,
   renderArticleContent,
   renderHighlightContent,
   renderPageName,
@@ -28,6 +29,8 @@ import {
   DATE_FORMAT,
   compareHighlightsInFile,
   getHighlightLocation,
+  isBlockPropertiesChanged,
+  parseBlockProperties,
   parseDateTime,
 } from './util'
 
@@ -221,6 +224,10 @@ const fetchOmnivore = async (inBackground = false) => {
       targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
     }
 
+    // pre-parse templates
+    preParseTemplate(articleTemplate)
+    preParseTemplate(highlightTemplate)
+
     const size = 50
     for (
       let hasNextPage = true, articles: Article[] = [], after = 0;
@@ -312,8 +319,15 @@ const fetchOmnivore = async (inBackground = false) => {
           article.slug
         )
         if (existingArticleBlock) {
-          // update the existing article block
-          if (existingArticleBlock.content !== articleContent) {
+          const existingArticleProperties = existingArticleBlock.properties
+          const newArticleProperties = parseBlockProperties(articleContent)
+          // update the existing article block if any of the properties have changed
+          if (
+            isBlockPropertiesChanged(
+              newArticleProperties,
+              existingArticleProperties
+            )
+          ) {
             await logseq.Editor.updateBlock(
               existingArticleBlock.uuid,
               articleContent
