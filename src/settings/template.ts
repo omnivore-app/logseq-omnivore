@@ -7,32 +7,43 @@ import {
   siteNameFromUrl,
 } from '../util'
 
-export interface ArticleView {
-  title: string
-  author?: string
-  omnivoreUrl: string
-  siteName: string
-  content: string
-  originalUrl: string
-  note?: string
-  type: PageType
-  labels?: Label[]
-  dateSaved: string
-  datePublished?: string
-  dateRead?: string
-  rawDatePublished?: string
-  rawDateRead?: string
-  state: string
+type FunctionMap = {
+  [key: string]: () => (
+    text: string,
+    render: (text: string) => string
+  ) => string
 }
 
-export interface HighlightView {
-  text: string
-  labels?: Label[]
-  highlightUrl: string
-  dateHighlighted: string
-  rawDateHighlighted: string
-  note?: string
-}
+export type ArticleView =
+  | {
+      title: string
+      author?: string
+      omnivoreUrl: string
+      siteName: string
+      content: string
+      originalUrl: string
+      note?: string
+      type: PageType
+      labels?: Label[]
+      dateSaved: string
+      datePublished?: string
+      dateRead?: string
+      rawDatePublished?: string
+      rawDateRead?: string
+      state: string
+    }
+  | FunctionMap
+
+export type HighlightView =
+  | {
+      text: string
+      labels?: Label[]
+      highlightUrl: string
+      dateHighlighted: string
+      rawDateHighlighted: string
+      note?: string
+    }
+  | FunctionMap
 
 enum ArticleState {
   Saved = 'SAVED',
@@ -71,6 +82,31 @@ const getArticleState = (article: Article): string => {
   }
 
   return ArticleState.Saved
+}
+
+function lowerCase() {
+  return function (text: string, render: (text: string) => string) {
+    return render(text).toLowerCase()
+  }
+}
+
+function upperCase() {
+  return function (text: string, render: (text: string) => string) {
+    return render(text).toUpperCase()
+  }
+}
+
+function upperCaseFirst() {
+  return function (text: string, render: (text: string) => string) {
+    const str = render(text)
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  }
+}
+
+const functionMap: FunctionMap = {
+  lowerCase,
+  upperCase,
+  upperCaseFirst,
 }
 
 const createArticleView = (
@@ -112,6 +148,7 @@ const createArticleView = (
     rawDateRead,
     dateRead,
     state: getArticleState(article),
+    ...functionMap,
   }
 }
 
@@ -140,6 +177,7 @@ export const renderHighlightContent = (
     dateHighlighted,
     rawDateHighlighted,
     note: highlight.annotation,
+    ...functionMap,
   }
   return Mustache.render(template, highlightView)
 }
