@@ -7,7 +7,7 @@ import {
   siteNameFromUrl,
 } from '../util'
 
-export interface ArticleVariables {
+export interface ArticleView {
   title: string
   author?: string
   omnivoreUrl: string
@@ -24,7 +24,7 @@ export interface ArticleVariables {
   rawDateRead?: string
 }
 
-export interface HighlightVariables {
+export interface HighlightView {
   text: string
   labels?: Label[]
   highlightUrl: string
@@ -52,10 +52,10 @@ export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}
 note:: {{{note}}}
 `
 
-const buildArticleVariables = (
+const createArticleView = (
   article: Article,
   preferredDateFormat: string
-): ArticleVariables => {
+): ArticleView => {
   const siteName =
     article.siteName || siteNameFromUrl(article.originalArticleUrl)
   const dateSaved = dateReference(
@@ -98,8 +98,8 @@ export const renderArticleContent = (
   article: Article,
   preferredDateFormat: string
 ): string => {
-  const articleVariables = buildArticleVariables(article, preferredDateFormat)
-  return Mustache.render(template, articleVariables)
+  const articleView = createArticleView(article, preferredDateFormat)
+  return Mustache.render(template, articleView)
 }
 
 export const renderHighlightContent = (
@@ -111,7 +111,7 @@ export const renderHighlightContent = (
   const updatedAt = new Date(highlight.updatedAt)
   const dateHighlighted = dateReference(updatedAt, preferredDateFormat)
   const rawDateHighlighted = formatDate(updatedAt, preferredDateFormat)
-  const highlightVariables: HighlightVariables = {
+  const highlightView: HighlightView = {
     text: formatHighlightQuote(highlight.quote, template),
     labels: highlight.labels,
     highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
@@ -119,7 +119,7 @@ export const renderHighlightContent = (
     rawDateHighlighted,
     note: highlight.annotation,
   }
-  return Mustache.render(template, highlightVariables)
+  return Mustache.render(template, highlightView)
 }
 
 export const renderPageName = (
