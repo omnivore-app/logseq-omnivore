@@ -33,7 +33,9 @@ export enum PageType {
   Profile = 'PROFILE',
   Unknown = 'UNKNOWN',
   Website = 'WEBSITE',
-  Highlights = 'HIGHLIGHTS',
+  Tweet = 'TWEET',
+  Video = 'VIDEO',
+  Image = 'IMAGE',
 }
 
 export interface Article {
@@ -52,6 +54,8 @@ export interface Article {
   content: string
   publishedAt?: string
   readAt?: string
+  readingProgressPercent: number
+  isArchived: boolean
 }
 
 export interface Label {
@@ -130,6 +134,8 @@ export const getOmnivoreArticles = async (
                   labels {
                     name
                   }
+                  isArchived
+                  readingProgressPercent
                 }
               }
               pageInfo {

@@ -22,6 +22,7 @@ export interface ArticleView {
   dateRead?: string
   rawDatePublished?: string
   rawDateRead?: string
+  state: string
 }
 
 export interface HighlightView {
@@ -31,6 +32,13 @@ export interface HighlightView {
   dateHighlighted: string
   rawDateHighlighted: string
   note?: string
+}
+
+enum ArticleState {
+  Saved = 'SAVED',
+  Reading = 'READING',
+  Read = 'READ',
+  Archived = 'ARCHIVED',
 }
 
 export const defaultArticleTemplate = `[{{{title}}}]({{{omnivoreUrl}}})
@@ -51,6 +59,19 @@ export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}
 
 note:: {{{note}}}
 `
+
+const getArticleState = (article: Article): string => {
+  if (article.isArchived) {
+    return ArticleState.Archived
+  }
+  if (article.readingProgressPercent > 0) {
+    return article.readingProgressPercent === 100
+      ? ArticleState.Read
+      : ArticleState.Reading
+  }
+
+  return ArticleState.Saved
+}
 
 const createArticleView = (
   article: Article,
@@ -90,6 +111,7 @@ const createArticleView = (
     rawDatePublished,
     rawDateRead,
     dateRead,
+    state: getArticleState(article),
   }
 }
 
