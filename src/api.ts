@@ -185,6 +185,8 @@ export const getDeletedOmnivoreArticles = async (
                 node {
                   id
                   slug
+                  title
+                  savedAt
                 }
               }
               pageInfo {

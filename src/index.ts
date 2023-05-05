@@ -398,15 +398,21 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         endpoint
       )
-      for (const deletedArticle of deletedArticles) {
+      for await (const deletedArticle of deletedArticles) {
         if (!isSinglePage) {
-          // create a new page for each article
           pageName = renderPageName(
             deletedArticle,
             pageNameTemplate,
             preferredDateFormat
           )
           targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+
+          // delete page if article is synced to a separate page and page is not a journal
+          const existingPage = await logseq.Editor.getPage(pageName)
+          if (existingPage && !existingPage['journal?']) {
+            await logseq.Editor.deletePage(pageName)
+            continue
+          }
         }
 
         const existingBlock = await getBlockByContent(
