@@ -141,12 +141,12 @@ const getOmnivoreBlock = async (
   pageName: string,
   title: string
 ): Promise<BlockEntity> => {
-  await getOmnivorePage(pageName)
+  const page = await getOmnivorePage(pageName)
   const targetBlock = await getBlockByTitle(pageName, title)
   if (targetBlock) {
     return targetBlock
   }
-  const newTargetBlock = await logseq.Editor.prependBlockInPage(pageName, title)
+  const newTargetBlock = await logseq.Editor.appendBlockInPage(page.uuid, title)
   if (!newTargetBlock) {
     await logseq.UI.showMsg('Failed to create Omnivore block', 'error')
     throw new Error('Failed to create Omnivore block')
@@ -222,6 +222,7 @@ const fetchOmnivore = async (inBackground = false) => {
       // create a single page for all articles
       pageName = pageNameTemplate
       targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+      !inBackground && logseq.App.pushState('page', { name: pageName })
     }
 
     // pre-parse templates
@@ -244,7 +245,7 @@ const fetchOmnivore = async (inBackground = false) => {
         'markdown',
         endpoint
       )
-      const articleBatch: IBatchBlock[] = []
+      const articleBatchMap: Map<string, IBatchBlock[]> = new Map()
       for (const article of articles) {
         if (!isSinglePage) {
           // create a new page for each article
@@ -255,6 +256,11 @@ const fetchOmnivore = async (inBackground = false) => {
           )
           targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
         }
+        const articleBatch = articleBatchMap.get(targetBlockId) || []
+        if (articleBatch.length === 0) {
+          articleBatchMap.set(targetBlockId, articleBatch)
+        }
+
         // render article content
         const articleContent = renderArticleContent(
           articleTemplate,
@@ -372,7 +378,7 @@ const fetchOmnivore = async (inBackground = false) => {
         }
       }
 
-      if (articleBatch.length > 0) {
+      for await (const [targetBlockId, articleBatch] of articleBatchMap) {
         await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
