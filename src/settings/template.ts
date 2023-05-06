@@ -31,6 +31,8 @@ export type ArticleView =
       rawDatePublished?: string
       rawDateRead?: string
       state: string
+      wordsCount?: number
+      readLength?: number
     }
   | FunctionMap
 
@@ -132,6 +134,10 @@ const createArticleView = (
   const dateRead = article.readAt
     ? dateReference(new Date(article.readAt), preferredDateFormat)
     : undefined
+  const wordsCount = article.wordsCount
+  const readLength = wordsCount
+    ? Math.round(Math.max(1, wordsCount / 235))
+    : undefined
   return {
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -148,6 +154,8 @@ const createArticleView = (
     rawDateRead,
     dateRead,
     state: getArticleState(article),
+    wordsCount,
+    readLength,
     ...functionMap,
   }
 }
