@@ -155,6 +155,6 @@ export const isBlockPropertiesChanged = (
       return newBlockProperty.join(',') !== existingBlockProperty.join(',')
     }
 
-    return newBlockProperty !== existingBlockProperty
+    return newBlockProperty != existingBlockProperty
   })
 }
