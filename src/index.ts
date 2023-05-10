@@ -335,34 +335,69 @@ const fetchOmnivore = async (inBackground = false) => {
               articleContent
             )
           }
-          for (const highlight of highlightBatch) {
+          if (highlightBatch.length > 0) {
+            let parentBlockId = existingArticleBlock.uuid
             // check if highlight title block exists
             const existingHighlightTitleBlock = await getBlockByContent(
               pageName,
               existingArticleBlock.uuid,
               highlightTitleBlock.content
             )
-            const parentBlockId = existingHighlightTitleBlock
-              ? existingHighlightTitleBlock.uuid
-              : existingArticleBlock.uuid
-            const existingHighlightBlock = await getBlockByContent(
-              pageName,
-              parentBlockId,
-              highlight.properties?.id as string
-            )
-            if (existingHighlightBlock) {
-              // update existing highlight if content is different
-              if (existingHighlightBlock.content !== highlight.content) {
-                await logseq.Editor.updateBlock(
-                  existingHighlightBlock.uuid,
-                  highlight.content
-                )
-              }
+            if (existingHighlightTitleBlock) {
+              parentBlockId = existingHighlightTitleBlock.uuid
             } else {
-              // append new highlight to existing article block
-              await logseq.Editor.insertBatchBlock(parentBlockId, highlight, {
-                sibling: false,
-              })
+              // append new highlight title block
+              const newHighlightTitleBlock = await logseq.Editor.insertBlock(
+                existingArticleBlock.uuid,
+                highlightTitle,
+                {
+                  sibling: false,
+                  before: true,
+                }
+              )
+              if (newHighlightTitleBlock) {
+                const existingArticleBlockWithChildren =
+                  await logseq.Editor.getBlock(existingArticleBlock.uuid, {
+                    includeChildren: true,
+                  })
+                const existingHighlightBlocks =
+                  (existingArticleBlockWithChildren?.children ||
+                    []) as BlockEntity[]
+                // and move existing highlights to new highlight title block
+                for (const highlight of existingHighlightBlocks) {
+                  await logseq.Editor.moveBlock(
+                    highlight.uuid,
+                    newHighlightTitleBlock.uuid,
+                    {
+                      children: true,
+                    }
+                  )
+                }
+                parentBlockId = newHighlightTitleBlock.uuid
+              }
+            }
+            // append new highlights to existing article block
+            for (const highlight of highlightBatch) {
+              // check if highlight block exists
+              const existingHighlightBlock = await getBlockByContent(
+                pageName,
+                parentBlockId,
+                highlight.properties?.id as string
+              )
+              if (existingHighlightBlock) {
+                // update existing highlight if content is different
+                if (existingHighlightBlock.content !== highlight.content) {
+                  await logseq.Editor.updateBlock(
+                    existingHighlightBlock.uuid,
+                    highlight.content
+                  )
+                }
+              } else {
+                // append new highlight to existing article block
+                await logseq.Editor.insertBatchBlock(parentBlockId, highlight, {
+                  sibling: false,
+                })
+              }
             }
           }
         } else {
