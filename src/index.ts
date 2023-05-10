@@ -257,10 +257,6 @@ const fetchOmnivore = async (inBackground = false) => {
           targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
         }
         const articleBatch = articleBatchMap.get(targetBlockId) || []
-        if (articleBatch.length === 0) {
-          articleBatchMap.set(targetBlockId, articleBatch)
-        }
-
         // render article content
         const articleContent = renderArticleContent(
           articleTemplate,
@@ -375,6 +371,7 @@ const fetchOmnivore = async (inBackground = false) => {
             content: articleContent,
             children: highlightBatch.length > 0 ? [highlightTitleBlock] : [], // add highlight title block if there are highlights
           })
+          articleBatchMap.set(targetBlockId, articleBatch)
         }
       }
 

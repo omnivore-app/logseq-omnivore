@@ -70,8 +70,7 @@ date-published:: {{{datePublished}}}
 
 export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}
 
-note:: {{{note}}}
-`
+{{#note.length}}note:: {{{note}}}{{/note.length}}`
 
 const getArticleState = (article: Article): string => {
   if (article.isArchived) {
