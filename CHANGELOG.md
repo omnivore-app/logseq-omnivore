@@ -1,3 +1,18 @@
+## [1.12.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.4...v1.12.5) (2023-05-11)
+
+
+### Bug Fixes
+
+* add a title block for highlights and add note as a variable in the highlight template ([6ee5090](https://github.com/omnivore-app/logseq-omnivore/commit/6ee5090b7d140c0b8d153b166cd6aa9af54d8556))
+* add function map to the template ([e7b0cb1](https://github.com/omnivore-app/logseq-omnivore/commit/e7b0cb108ea018f80c835b175b27113a3f22f37c))
+* add release notes ([33b37ca](https://github.com/omnivore-app/logseq-omnivore/commit/33b37ca5529a8ebcc9b84970b8df161d6adcd781))
+* add status in the article template ([2eb0d7c](https://github.com/omnivore-app/logseq-omnivore/commit/2eb0d7c9ffc7f266130e29268071d4cc20971bc7))
+* add wordsCount and readLength to the exposed variables in the article template ([d47f983](https://github.com/omnivore-app/logseq-omnivore/commit/d47f98381dd0e31b9531758b1645d2b4bfc2bedf))
+* allow separate page for each article ([db7a2fe](https://github.com/omnivore-app/logseq-omnivore/commit/db7a2fe4dbeb760541a09931cc00cd1dea3c74f2))
+* allow unchanged block properties not being overwritten ([013fa19](https://github.com/omnivore-app/logseq-omnivore/commit/013fa1980c5b1dc0a4496268ae903d863dbe0879))
+* delete page if article is synced to a separate page and page is not a journal ([ca2af3e](https://github.com/omnivore-app/logseq-omnivore/commit/ca2af3e70ecdf99c969c2cc89d7c4c9c5dcba89b))
+* increase height of highlight template textarea in settings ([3cf44f0](https://github.com/omnivore-app/logseq-omnivore/commit/3cf44f0e9bd7e088ec6f7d73278bb94cd07d752c))
+
 ## [1.12.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.3...v1.12.4) (2023-04-13)
 
 
