@@ -27,6 +27,8 @@ export interface Settings {
   loading: boolean
   syncJobId: number
   endpoint: string
+  isSinglePage: boolean
+  version: string
 }
 
 export const getQueryFromFilter = (
@@ -46,6 +48,13 @@ export const getQueryFromFilter = (
 }
 
 export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
+  {
+    key: 'generalSettings',
+    type: 'heading',
+    title: 'General Settings',
+    default: '',
+    description: '',
+  },
   {
     key: 'apiKey',
     type: 'string',
@@ -107,10 +116,19 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     enumChoices: Object.values(HighlightOrder),
   },
   {
+    key: 'isSinglePage',
+    type: 'boolean',
+    title: 'Sync to a single page',
+    description:
+      'Sync all articles to a single page. If this is not selected, each article will be synced to a separate page.',
+    default: true,
+  },
+  {
     key: 'pageName',
     type: 'string',
     title: 'Enter the page name to sync with Omnivore',
-    description: 'Enter the page name to sync Omnivore articles to',
+    description:
+      'Enter the page name to sync Omnivore articles into. This page will be created if it does not exist. If you isSinglePage is off and you want to sync to a separate page for each article, use the variable {{{title}}} or {{{date}}} as the page name. For example, {{{title}}} will create a page for each article with the title of the article.',
     default: 'Omnivore',
   },
   {
@@ -130,6 +148,13 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
       'The template to use for new highlights. Refer to this doc for more info: https://docs.omnivore.app/integrations/logseq.html#controlling-the-layout-of-the-data-imported-to-logseq Variables available could be found here: https://docs.omnivore.app/integrations/logseq.html#variables-available-to-the-highlight-template',
     default: defaultHighlightTemplate,
     inputAs: 'textarea',
+  },
+  {
+    key: 'advancedSettings',
+    type: 'heading',
+    title: 'Advanced Settings',
+    default: '',
+    description: '',
   },
   {
     key: 'endpoint',

@@ -97,3 +97,64 @@ export const formatHighlightQuote = (
 
   return quote
 }
+
+export const parseBlockProperties = (
+  content: string
+): Record<string, unknown> | undefined => {
+  // block properties are stored as key:: value or key::value
+  // e.g. "status:: completed" or "status::completed" becomes { status: 'completed' }
+  const blockProperties = content.matchAll(/(.*)::\s*(.*)/g)
+  const blockPropertiesObj: Record<string, unknown> = {}
+  for (const match of blockProperties) {
+    const [, key, value] = match
+    // convert to array for block references
+    // e.g. "labels:: [[label1]][[label2]]" becomes { labels: ['label1', 'label2'] }
+    const valueArray = Array.from(value.matchAll(/\[\[(.*?)\]\]/g), (m) => m[1])
+    if (valueArray.length > 0) {
+      blockPropertiesObj[key] = valueArray
+      continue
+    }
+
+    blockPropertiesObj[key] = value
+  }
+  return Object.keys(blockPropertiesObj).length > 0
+    ? blockPropertiesObj
+    : undefined
+}
+
+export const isBlockPropertiesChanged = (
+  newBlockProperties?: Record<string, unknown>,
+  existingBlockProperties?: Record<string, unknown>
+): boolean => {
+  if (!newBlockProperties) {
+    return false
+  }
+
+  if (!existingBlockProperties) {
+    return true
+  }
+
+  // do a shallow comparison of the two blocks
+  return Object.keys(newBlockProperties).some((key) => {
+    // skip collapsed property
+    if (key === 'collapsed') {
+      return false
+    }
+    // if the key doesn't exist in the existing block, it's a new property
+    if (!Object.prototype.hasOwnProperty.call(existingBlockProperties, key)) {
+      return true
+    }
+    const newBlockProperty = newBlockProperties[key]
+    const existingBlockProperty = existingBlockProperties[key]
+    // convert an array of values to a string
+    if (Array.isArray(newBlockProperty)) {
+      if (!Array.isArray(existingBlockProperty)) {
+        return true
+      }
+
+      return newBlockProperty.join(',') !== existingBlockProperty.join(',')
+    }
+
+    return newBlockProperty != existingBlockProperty
+  })
+}

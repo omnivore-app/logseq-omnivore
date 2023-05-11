@@ -4,10 +4,10 @@ import {
   IBatchBlock,
   LSPluginBaseInfo,
 } from '@logseq/libs/dist/LSPlugin'
+import { PageEntity } from '@logseq/libs/dist/LSPlugin.user'
 import { DateTime } from 'luxon'
 import {
   Article,
-  DeletedArticle,
   HighlightType,
   PageType,
   getDeletedOmnivoreArticles,
@@ -20,15 +20,17 @@ import {
   settingsSchema,
 } from './settings'
 import {
+  preParseTemplate,
   renderArticleContent,
   renderHighlightContent,
+  renderPageName,
 } from './settings/template'
 import {
   DATE_FORMAT,
   compareHighlightsInFile,
-  delay,
-  escapeQuotationMarks,
   getHighlightLocation,
+  isBlockPropertiesChanged,
+  parseBlockProperties,
   parseDateTime,
 } from './util'
 
@@ -37,12 +39,6 @@ const isValidCurrentGraph = async (): Promise<boolean> => {
   const currentGraph = await logseq.App.getCurrentGraph()
 
   return currentGraph?.name === settings.graph
-}
-
-const deleteBlocks = async (blocks: BlockEntity[]) => {
-  for await (const block of blocks) {
-    await logseq.Editor.removeBlock(block.uuid)
-  }
 }
 
 const startSyncJob = () => {
@@ -80,6 +76,85 @@ const resetState = () => {
   resetSyncJob()
 }
 
+const getBlockByContent = async (
+  pageName: string,
+  parentBlockId: string,
+  content: string
+): Promise<BlockEntity | undefined> => {
+  const blocks = (
+    await logseq.DB.datascriptQuery<BlockEntity[]>(
+      `[:find (pull ?b [*])
+            :where
+              [?b :block/page ?p]
+              [?p :block/original-name "${pageName}"]
+              [?b :block/parent ?parent]
+              [?parent :block/uuid ?u]
+              [(str ?u) ?s]
+              [(= ?s "${parentBlockId}")]
+              [?b :block/content ?c]
+              [(clojure.string/includes? ?c "${content}")]]`
+    )
+  ).flat()
+
+  return blocks[0]
+}
+
+const getBlockByTitle = async (
+  pageName: string,
+  title: string
+): Promise<BlockEntity | null> => {
+  const blocks = (
+    await logseq.DB.datascriptQuery<BlockEntity[]>(
+      `[:find (pull ?b [*])
+            :where
+              [?b :block/page ?p]
+              [?p :block/original-name "${pageName}"]
+              [?b :block/content ?c]
+              [(= ?c "${title}")]]`
+    )
+  ).flat()
+
+  return blocks[0] || null
+}
+
+const getOmnivorePage = async (pageName: string): Promise<PageEntity> => {
+  const omnivorePage = await logseq.Editor.getPage(pageName)
+  if (omnivorePage) {
+    return omnivorePage
+  }
+
+  const newOmnivorePage = await logseq.Editor.createPage(pageName, undefined, {
+    createFirstBlock: false,
+  })
+  if (!newOmnivorePage) {
+    await logseq.UI.showMsg(
+      'Failed to create Omnivore page. Please check the pageName in the settings',
+      'error'
+    )
+    throw new Error('Failed to create Omnivore page')
+  }
+
+  return newOmnivorePage
+}
+
+const getOmnivoreBlock = async (
+  pageName: string,
+  title: string
+): Promise<BlockEntity> => {
+  const page = await getOmnivorePage(pageName)
+  const targetBlock = await getBlockByTitle(pageName, title)
+  if (targetBlock) {
+    return targetBlock
+  }
+  const newTargetBlock = await logseq.Editor.appendBlockInPage(page.uuid, title)
+  if (!newTargetBlock) {
+    await logseq.UI.showMsg('Failed to create Omnivore block', 'error')
+    throw new Error('Failed to create Omnivore block')
+  }
+
+  return newTargetBlock
+}
+
 const fetchOmnivore = async (inBackground = false) => {
   const {
     syncAt,
@@ -87,12 +162,13 @@ const fetchOmnivore = async (inBackground = false) => {
     filter,
     customQuery,
     highlightOrder,
-    pageName,
+    pageName: pageNameTemplate,
     articleTemplate,
     highlightTemplate,
     graph,
     loading,
     endpoint,
+    isSinglePage,
   } = logseq.settings as Settings
   // prevent multiple fetches
   if (loading) {
@@ -126,12 +202,8 @@ const fetchOmnivore = async (inBackground = false) => {
 
   const blockTitle = '## 🔖 Articles'
   const fetchingTitle = '🚀 Fetching articles ...'
+  const highlightTitle = '### Highlights'
 
-  !inBackground && logseq.App.pushState('page', { name: pageName })
-
-  await delay(300)
-
-  let targetBlock: BlockEntity | null = null
   const userConfigs = await logseq.App.getUserConfigs()
   const preferredDateFormat: string = userConfigs.preferredDateFormat
   const fetchingMsgKey = 'omnivore-fetching'
@@ -143,27 +215,19 @@ const fetchOmnivore = async (inBackground = false) => {
         key: fetchingMsgKey,
       }))
 
-    let omnivorePage = await logseq.Editor.getPage(pageName)
-    if (!omnivorePage) {
-      omnivorePage = await logseq.Editor.createPage(pageName)
-    }
-    if (!omnivorePage) {
-      throw new Error('Failed to create page')
+    let targetBlockId = ''
+    let pageName = ''
+
+    if (isSinglePage) {
+      // create a single page for all articles
+      pageName = pageNameTemplate
+      targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+      !inBackground && logseq.App.pushState('page', { name: pageName })
     }
 
-    const pageBlocksTree = await logseq.Editor.getPageBlocksTree(pageName)
-    targetBlock = pageBlocksTree.length > 0 ? pageBlocksTree[0] : null
-    if (targetBlock) {
-      await logseq.Editor.updateBlock(targetBlock.uuid, fetchingTitle)
-    } else {
-      targetBlock = await logseq.Editor.appendBlockInPage(
-        pageName,
-        fetchingTitle
-      )
-    }
-    if (!targetBlock) {
-      throw new Error('block error')
-    }
+    // pre-parse templates
+    preParseTemplate(articleTemplate)
+    preParseTemplate(highlightTemplate)
 
     const size = 50
     for (
@@ -181,8 +245,24 @@ const fetchOmnivore = async (inBackground = false) => {
         'markdown',
         endpoint
       )
-      const articleBatch: IBatchBlock[] = []
+      const articleBatchMap: Map<string, IBatchBlock[]> = new Map()
       for (const article of articles) {
+        if (!isSinglePage) {
+          // create a new page for each article
+          pageName = renderPageName(
+            article,
+            pageNameTemplate,
+            preferredDateFormat
+          )
+          targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+        }
+        const articleBatch = articleBatchMap.get(targetBlockId) || []
+        // render article content
+        const articleContent = renderArticleContent(
+          articleTemplate,
+          article,
+          preferredDateFormat
+        )
         // filter out notes and redactions
         const highlights = article.highlights?.filter(
           (h) => h.type === HighlightType.Highlight
@@ -214,134 +294,132 @@ const fetchOmnivore = async (inBackground = false) => {
         }
         const highlightBatch: IBatchBlock[] =
           highlights?.map((it) => {
-            // Build content string based on template
+            // Render highlight content string based on highlight template
             const content = renderHighlightContent(
               highlightTemplate,
               it,
               article,
               preferredDateFormat
             )
-            const noteChild = it.annotation
-              ? { content: it.annotation }
-              : undefined
             return {
               content,
-              children: noteChild ? [noteChild] : undefined,
               properties: {
                 id: it.id,
               },
             }
           }) || []
 
-        let isNewArticle = true
-        // update existing block if article is already in the page
-        const existingBlocks = (
-          await logseq.DB.datascriptQuery<BlockEntity[]>(
-            `[:find (pull ?b [*])
-                    :where
-                      [?b :block/page ?p]
-                      [?p :block/original-name "${pageName}"]
-                      [?b :block/parent ?parent]
-                      [?parent :block/uuid ?u]
-                      [(str ?u) ?s]
-                      [(= ?s "${targetBlock.uuid}")]
-                      [?b :block/content ?c]
-                      [(clojure.string/includes? ?c "${article.slug}")]]`
-          )
-        ).flat()
-        const articleContent = renderArticleContent(
-          articleTemplate,
-          article,
-          preferredDateFormat
+        // create highlight title block
+        const highlightTitleBlock: IBatchBlock = {
+          content: highlightTitle,
+          children: highlightBatch,
+        }
+        // update existing article block if article is already in the page
+        const existingArticleBlock = await getBlockByContent(
+          pageName,
+          targetBlockId,
+          article.slug
         )
-        if (existingBlocks.length > 0) {
-          isNewArticle = false
-          const existingBlock = existingBlocks[0]
-          // update the first existing block
-          if (existingBlock.content !== articleContent) {
-            await logseq.Editor.updateBlock(existingBlock.uuid, articleContent)
+        if (existingArticleBlock) {
+          const existingArticleProperties = existingArticleBlock.properties
+          const newArticleProperties = parseBlockProperties(articleContent)
+          // update the existing article block if any of the properties have changed
+          if (
+            isBlockPropertiesChanged(
+              newArticleProperties,
+              existingArticleProperties
+            )
+          ) {
+            await logseq.Editor.updateBlock(
+              existingArticleBlock.uuid,
+              articleContent
+            )
           }
-          // delete the rest of the existing blocks
-          await deleteBlocks(existingBlocks.slice(1))
-          // append highlights to existing block
-          for (const highlight of highlightBatch) {
-            const existingHighlights = (
-              await logseq.DB.datascriptQuery<BlockEntity[]>(
-                `[:find (pull ?b [*])
-                          :where
-                            [?b :block/parent ?p]
-                            [?p :block/uuid ?u]
-                            [(str ?u) ?s]
-                            [(= ?s "${existingBlock.uuid}")]
-                            [?b :block/content ?c]
-                            [(clojure.string/includes? ?c "${
-                              highlight.properties?.id as string
-                            }")]]`
+          if (highlightBatch.length > 0) {
+            let parentBlockId = existingArticleBlock.uuid
+            // check if highlight title block exists
+            const existingHighlightTitleBlock = await getBlockByContent(
+              pageName,
+              existingArticleBlock.uuid,
+              highlightTitleBlock.content
+            )
+            if (existingHighlightTitleBlock) {
+              parentBlockId = existingHighlightTitleBlock.uuid
+            } else {
+              // append new highlight title block
+              const newHighlightTitleBlock = await logseq.Editor.insertBlock(
+                existingArticleBlock.uuid,
+                highlightTitle,
+                {
+                  sibling: false,
+                  before: true,
+                }
               )
-            ).flat()
-            if (existingHighlights.length > 0) {
-              const existingHighlight = existingHighlights[0]
-              // update existing highlight if content is different
-              existingHighlight.content !== highlight.content &&
-                (await logseq.Editor.updateBlock(
-                  existingHighlight.uuid,
-                  highlight.content
-                ))
-
-              // checking notes
-              const noteChild = highlight.children?.[0]
-              if (noteChild) {
-                const existingNotes = (
-                  await logseq.DB.datascriptQuery<BlockEntity[]>(
-                    `[:find (pull ?b [*])
-                              :where
-                                [?b :block/parent ?p]
-                                [?p :block/uuid ?u]
-                                [(str ?u) ?s]
-                                [(= ?s "${existingHighlight.uuid}")]
-                                [?b :block/content ?c]
-                                [(= ?c "${escapeQuotationMarks(
-                                  noteChild.content
-                                )}")]]`
-                  )
-                ).flat()
-                if (existingNotes.length == 0) {
-                  // append new note
-                  await logseq.Editor.insertBlock(
-                    existingHighlight.uuid,
-                    noteChild.content,
-                    { sibling: false }
+              if (newHighlightTitleBlock) {
+                const existingArticleBlockWithChildren =
+                  await logseq.Editor.getBlock(existingArticleBlock.uuid, {
+                    includeChildren: true,
+                  })
+                const existingHighlightBlocks =
+                  (existingArticleBlockWithChildren?.children ||
+                    []) as BlockEntity[]
+                // and move existing highlights to new highlight title block
+                for (const highlight of existingHighlightBlocks) {
+                  await logseq.Editor.moveBlock(
+                    highlight.uuid,
+                    newHighlightTitleBlock.uuid,
+                    {
+                      children: true,
+                    }
                   )
                 }
+                parentBlockId = newHighlightTitleBlock.uuid
               }
-            } else {
-              // append new highlight
-              await logseq.Editor.insertBatchBlock(
-                existingBlock.uuid,
-                highlight,
-                { sibling: false }
+            }
+            // append new highlights to existing article block
+            for (const highlight of highlightBatch) {
+              // check if highlight block exists
+              const existingHighlightBlock = await getBlockByContent(
+                pageName,
+                parentBlockId,
+                highlight.properties?.id as string
               )
+              if (existingHighlightBlock) {
+                // update existing highlight if content is different
+                if (existingHighlightBlock.content !== highlight.content) {
+                  await logseq.Editor.updateBlock(
+                    existingHighlightBlock.uuid,
+                    highlight.content
+                  )
+                }
+              } else {
+                // append new highlight to existing article block
+                await logseq.Editor.insertBatchBlock(parentBlockId, highlight, {
+                  sibling: false,
+                })
+              }
             }
           }
-        }
-
-        isNewArticle &&
+        } else {
+          // append new article block
           articleBatch.unshift({
             content: articleContent,
-            children: highlightBatch,
+            children: highlightBatch.length > 0 ? [highlightTitleBlock] : [], // add highlight title block if there are highlights
           })
+          articleBatchMap.set(targetBlockId, articleBatch)
+        }
       }
 
-      articleBatch.length > 0 &&
-        (await logseq.Editor.insertBatchBlock(targetBlock.uuid, articleBatch, {
+      for await (const [targetBlockId, articleBatch] of articleBatchMap) {
+        await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
-        }))
+        })
+      }
     }
-
-    // delete blocks where article has been deleted
+    // delete blocks where article has been deleted from omnivore
     for (
-      let hasNextPage = true, deletedArticles: DeletedArticle[] = [], after = 0;
+      let hasNextPage = true, deletedArticles: Article[] = [], after = 0;
       hasNextPage;
       after += size
     ) {
@@ -352,26 +430,31 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         endpoint
       )
-
-      for (const deletedArticle of deletedArticles) {
-        const slug = deletedArticle.node.slug
-        const existingBlocks = (
-          await logseq.DB.datascriptQuery<BlockEntity[]>(
-            `[:find (pull ?b [*])
-                    :where
-                      [?b :block/page ?p]
-                      [?p :block/original-name "${pageName}"]
-                      [?b :block/parent ?parent]
-                      [?parent :block/uuid ?u]
-                      [(str ?u) ?s]
-                      [(= ?s "${targetBlock.uuid}")]
-                      [?b :block/content ?c]
-                      [(clojure.string/includes? ?c "${slug}")]]`
+      for await (const deletedArticle of deletedArticles) {
+        if (!isSinglePage) {
+          pageName = renderPageName(
+            deletedArticle,
+            pageNameTemplate,
+            preferredDateFormat
           )
-        ).flat()
+          targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
 
-        if (existingBlocks.length > 0) {
-          await deleteBlocks(existingBlocks)
+          // delete page if article is synced to a separate page and page is not a journal
+          const existingPage = await logseq.Editor.getPage(pageName)
+          if (existingPage && !existingPage['journal?']) {
+            await logseq.Editor.deletePage(pageName)
+            continue
+          }
+        }
+
+        const existingBlock = await getBlockByContent(
+          pageName,
+          targetBlockId,
+          deletedArticle.slug
+        )
+
+        if (existingBlock) {
+          await logseq.Editor.removeBlock(existingBlock.uuid)
         }
       }
     }
@@ -389,8 +472,6 @@ const fetchOmnivore = async (inBackground = false) => {
     console.error(e)
   } finally {
     resetLoadingState()
-    targetBlock &&
-      (await logseq.Editor.updateBlock(targetBlock.uuid, blockTitle))
   }
 }
 
@@ -402,6 +483,20 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
 
   logseq.useSettingsSchema(await settingsSchema())
+  // update version if needed
+  const latestVersion = baseInfo.version as string
+  const currentVersion = (logseq.settings as Settings).version
+  if (latestVersion !== currentVersion) {
+    logseq.updateSettings({ version: latestVersion })
+    // show release notes
+    const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.
+    
+    What's new: https://github.com/omnivore-app/logseq-omnivore/blob/main/CHANGELOG.md
+    `
+    await logseq.UI.showMsg(releaseNotes, 'success', {
+      timeout: 10000,
+    })
+  }
 
   logseq.onSettingsChanged((newSettings: Settings, oldSettings: Settings) => {
     const newFrequency = newSettings.frequency
@@ -470,6 +565,12 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   logseq.provideStyle(`
     div[data-id="${baseInfo.id}"] div[data-key="articleTemplate"] textarea {
       height: 30rem;
+    }
+  `)
+
+  logseq.provideStyle(`
+    div[data-id="${baseInfo.id}"] div[data-key="highlightTemplate"] textarea {
+      height: 10rem;
     }
   `)
 

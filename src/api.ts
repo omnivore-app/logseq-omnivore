@@ -18,7 +18,7 @@ export enum UpdateReason {
 export interface UpdatesSinceResponse {
   data: {
     updatesSince: {
-      edges: { updateReason: UpdateReason; node: { slug: string } }[]
+      edges: { updateReason: UpdateReason; node: Article }[]
       pageInfo: {
         hasNextPage: boolean
       }
@@ -33,10 +33,13 @@ export enum PageType {
   Profile = 'PROFILE',
   Unknown = 'UNKNOWN',
   Website = 'WEBSITE',
-  Highlights = 'HIGHLIGHTS',
+  Tweet = 'TWEET',
+  Video = 'VIDEO',
+  Image = 'IMAGE',
 }
 
 export interface Article {
+  id: string
   title: string
   siteName?: string
   originalArticleUrl: string
@@ -51,6 +54,9 @@ export interface Article {
   content: string
   publishedAt?: string
   readAt?: string
+  readingProgressPercent: number
+  isArchived: boolean
+  wordsCount?: number
 }
 
 export interface Label {
@@ -72,13 +78,6 @@ export interface Highlight {
   labels?: Label[]
   type: HighlightType
   highlightPositionPercent?: number
-}
-
-export interface DeletedArticle {
-  updateReason: UpdateReason
-  node: {
-    slug: string
-  }
 }
 
 const ENDPOINT = 'https://api-prod.omnivore.app/api/graphql'
@@ -107,6 +106,7 @@ export const getOmnivoreArticles = async (
             ... on SearchSuccess {
               edges {
                 node {
+                  id
                   title
                   slug
                   siteName
@@ -135,6 +135,9 @@ export const getOmnivoreArticles = async (
                   labels {
                     name
                   }
+                  isArchived
+                  readingProgressPercent
+                  wordsCount
                 }
               }
               pageInfo {
@@ -171,7 +174,7 @@ export const getDeletedOmnivoreArticles = async (
   first = 10,
   updatedAt = '',
   endpoint = ENDPOINT
-): Promise<[DeletedArticle[], boolean]> => {
+): Promise<[Article[], boolean]> => {
   const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
     body: JSON.stringify({
@@ -182,7 +185,10 @@ export const getDeletedOmnivoreArticles = async (
               edges {
                 updateReason
                 node {
+                  id
                   slug
+                  title
+                  savedAt
                 }
               }
               pageInfo {
@@ -204,9 +210,9 @@ export const getDeletedOmnivoreArticles = async (
   })
 
   const jsonRes = (await res.json()) as UpdatesSinceResponse
-  const deletedArticles = jsonRes.data.updatesSince.edges.filter(
-    (edge) => edge.updateReason === UpdateReason.DELETED
-  )
+  const deletedArticles = jsonRes.data.updatesSince.edges
+    .filter((edge) => edge.updateReason === UpdateReason.DELETED)
+    .map((edge) => edge.node)
 
   return [deletedArticles, jsonRes.data.updatesSince.pageInfo.hasNextPage]
 }

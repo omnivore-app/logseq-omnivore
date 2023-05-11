@@ -7,32 +7,52 @@ import {
   siteNameFromUrl,
 } from '../util'
 
-export interface ArticleVariables {
-  title: string
-  author?: string
-  omnivoreUrl: string
-  siteName: string
-  content: string
-  originalUrl: string
-  note?: string
-  type: PageType
-  labels?: Label[]
-  dateSaved: string
-  datePublished?: string
-  dateRead?: string
-  rawDatePublished?: string
-  rawDateRead?: string
+type FunctionMap = {
+  [key: string]: () => (
+    text: string,
+    render: (text: string) => string
+  ) => string
 }
 
-export interface HighlightVariables {
-  text: string
-  labels?: Label[]
-  highlightUrl: string
-  dateHighlighted: string
-  rawDateHighlighted: string
-}
+export type ArticleView =
+  | {
+      title: string
+      author?: string
+      omnivoreUrl: string
+      siteName: string
+      content: string
+      originalUrl: string
+      note?: string
+      type: PageType
+      labels?: Label[]
+      dateSaved: string
+      datePublished?: string
+      dateRead?: string
+      rawDatePublished?: string
+      rawDateRead?: string
+      state: string
+      wordsCount?: number
+      readLength?: number
+    }
+  | FunctionMap
 
-export type TemplateVariables = ArticleVariables & HighlightVariables
+export type HighlightView =
+  | {
+      text: string
+      labels?: Label[]
+      highlightUrl: string
+      dateHighlighted: string
+      rawDateHighlighted: string
+      note?: string
+    }
+  | FunctionMap
+
+enum ArticleState {
+  Saved = 'SAVED',
+  Reading = 'READING',
+  Completed = 'COMPLETED',
+  Archived = 'ARCHIVED',
+}
 
 export const defaultArticleTemplate = `[{{{title}}}]({{{omnivoreUrl}}})
 collapsed:: true
@@ -48,12 +68,52 @@ date-saved:: {{{dateSaved}}}
 date-published:: {{{datePublished}}}
 {{/datePublished}}`
 
-export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}`
+export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #[[{{{name}}}]] {{/labels}}
 
-const buildArticleVariables = (
+{{#note.length}}note:: {{{note}}}{{/note.length}}`
+
+const getArticleState = (article: Article): string => {
+  if (article.isArchived) {
+    return ArticleState.Archived
+  }
+  if (article.readingProgressPercent > 0) {
+    return article.readingProgressPercent === 100
+      ? ArticleState.Completed
+      : ArticleState.Reading
+  }
+
+  return ArticleState.Saved
+}
+
+function lowerCase() {
+  return function (text: string, render: (text: string) => string) {
+    return render(text).toLowerCase()
+  }
+}
+
+function upperCase() {
+  return function (text: string, render: (text: string) => string) {
+    return render(text).toUpperCase()
+  }
+}
+
+function upperCaseFirst() {
+  return function (text: string, render: (text: string) => string) {
+    const str = render(text)
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  }
+}
+
+const functionMap: FunctionMap = {
+  lowerCase,
+  upperCase,
+  upperCaseFirst,
+}
+
+const createArticleView = (
   article: Article,
   preferredDateFormat: string
-): ArticleVariables => {
+): ArticleView => {
   const siteName =
     article.siteName || siteNameFromUrl(article.originalArticleUrl)
   const dateSaved = dateReference(
@@ -73,6 +133,10 @@ const buildArticleVariables = (
   const dateRead = article.readAt
     ? dateReference(new Date(article.readAt), preferredDateFormat)
     : undefined
+  const wordsCount = article.wordsCount
+  const readLength = wordsCount
+    ? Math.round(Math.max(1, wordsCount / 235))
+    : undefined
   return {
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -88,6 +152,10 @@ const buildArticleVariables = (
     rawDatePublished,
     rawDateRead,
     dateRead,
+    state: getArticleState(article),
+    wordsCount,
+    readLength,
+    ...functionMap,
   }
 }
 
@@ -96,8 +164,8 @@ export const renderArticleContent = (
   article: Article,
   preferredDateFormat: string
 ): string => {
-  const articleVariables = buildArticleVariables(article, preferredDateFormat)
-  return Mustache.render(template, articleVariables)
+  const articleView = createArticleView(article, preferredDateFormat)
+  return Mustache.render(template, articleView)
 }
 
 export const renderHighlightContent = (
@@ -109,14 +177,30 @@ export const renderHighlightContent = (
   const updatedAt = new Date(highlight.updatedAt)
   const dateHighlighted = dateReference(updatedAt, preferredDateFormat)
   const rawDateHighlighted = formatDate(updatedAt, preferredDateFormat)
-  const articleVariables = buildArticleVariables(article, preferredDateFormat)
-  const highlightVariables: TemplateVariables = {
-    ...articleVariables,
+  const highlightView: HighlightView = {
     text: formatHighlightQuote(highlight.quote, template),
     labels: highlight.labels,
     highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
     dateHighlighted,
     rawDateHighlighted,
+    note: highlight.annotation,
+    ...functionMap,
   }
-  return Mustache.render(template, highlightVariables)
+  return Mustache.render(template, highlightView)
+}
+
+export const renderPageName = (
+  article: Article,
+  pageName: string,
+  preferredDateFormat: string
+) => {
+  const date = formatDate(new Date(article.savedAt), preferredDateFormat)
+  return Mustache.render(pageName, {
+    title: article.title,
+    date,
+  })
+}
+
+export const preParseTemplate = (template: string) => {
+  Mustache.parse(template)
 }
