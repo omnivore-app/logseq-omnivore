@@ -28,6 +28,7 @@ export interface Settings {
   syncJobId: number
   endpoint: string
   isSinglePage: boolean
+  version: string
 }
 
 export const getQueryFromFilter = (
@@ -47,6 +48,13 @@ export const getQueryFromFilter = (
 }
 
 export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
+  {
+    key: 'generalSettings',
+    type: 'heading',
+    title: 'General Settings',
+    default: '',
+    description: '',
+  },
   {
     key: 'apiKey',
     type: 'string',
@@ -140,6 +148,13 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
       'The template to use for new highlights. Refer to this doc for more info: https://docs.omnivore.app/integrations/logseq.html#controlling-the-layout-of-the-data-imported-to-logseq Variables available could be found here: https://docs.omnivore.app/integrations/logseq.html#variables-available-to-the-highlight-template',
     default: defaultHighlightTemplate,
     inputAs: 'textarea',
+  },
+  {
+    key: 'advancedSettings',
+    type: 'heading',
+    title: 'Advanced Settings',
+    default: '',
+    description: '',
   },
   {
     key: 'endpoint',

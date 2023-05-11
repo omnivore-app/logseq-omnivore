@@ -483,6 +483,20 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
 
   logseq.useSettingsSchema(await settingsSchema())
+  // update version if needed
+  const latestVersion = baseInfo.version as string
+  const currentVersion = (logseq.settings as Settings).version
+  if (latestVersion !== currentVersion) {
+    logseq.updateSettings({ version: latestVersion })
+    // show release notes
+    const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.
+    
+    What's new: https://github.com/omnivore-app/logseq-omnivore/blob/main/CHANGELOG.md
+    `
+    await logseq.UI.showMsg(releaseNotes, 'success', {
+      timeout: 10000,
+    })
+  }
 
   logseq.onSettingsChanged((newSettings: Settings, oldSettings: Settings) => {
     const newFrequency = newSettings.frequency
