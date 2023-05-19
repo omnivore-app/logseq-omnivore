@@ -1,3 +1,17 @@
+# [1.13.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.5...v1.13.0) (2023-05-19)
+
+
+### Bug Fixes
+
+* add dateArchived to the exposed variable in the article template ([e619009](https://github.com/omnivore-app/logseq-omnivore/commit/e6190095b0bfcc86da6bb2364bf3f675ebc88552))
+* escape special characters in the page name ([17e2089](https://github.com/omnivore-app/logseq-omnivore/commit/17e20898701d6d4638e00b0a23cb0b7320a91f03))
+* truncate filename length to 100 ([bca3f75](https://github.com/omnivore-app/logseq-omnivore/commit/bca3f75e437b2037239e1953a16bfebc223d924f))
+
+
+### Features
+
+* export highlighted markdown content using {{{ content }}} in the article template ([18628cb](https://github.com/omnivore-app/logseq-omnivore/commit/18628cb4c8727f6bf0113c0c4ac71ae8cc44e7a5))
+
 ## [1.12.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.4...v1.12.5) (2023-05-11)
 
 
