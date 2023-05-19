@@ -243,7 +243,7 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         getQueryFromFilter(filter, customQuery),
         true,
-        'markdown',
+        'highlightedMarkdown',
         endpoint
       )
       const articleBatchMap: Map<string, IBatchBlock[]> = new Map()
