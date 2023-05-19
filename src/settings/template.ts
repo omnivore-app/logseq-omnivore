@@ -139,8 +139,8 @@ const createArticleView = (
   const readLength = wordsCount
     ? Math.round(Math.max(1, wordsCount / 235))
     : undefined
-  const dateArchived = article.dateArchived
-    ? formatDate(new Date(article.dateArchived), preferredDateFormat)
+  const dateArchived = article.archivedAt
+    ? formatDate(new Date(article.archivedAt), preferredDateFormat)
     : undefined
   return {
     title: article.title,
