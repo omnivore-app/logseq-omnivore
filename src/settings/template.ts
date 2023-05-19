@@ -1,3 +1,4 @@
+import { truncate } from 'lodash'
 import Mustache from 'mustache'
 import { Article, Highlight, HighlightType, Label, PageType } from '../api'
 import {
@@ -204,12 +205,10 @@ export const renderPageName = (
     date,
   })
 
-  // reduce the length of the page name to 100 characters
-  // to prevent logseq from throwing an error
-  const maxFilenameLength = 100
-  return renderedPageName.length > maxFilenameLength
-    ? renderedPageName.slice(0, maxFilenameLength - 4) + '...'
-    : renderedPageName
+  // truncate the page name to 100 characters
+  return truncate(renderedPageName, {
+    length: 100,
+  })
 }
 
 export const preParseTemplate = (template: string) => {
