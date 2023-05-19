@@ -27,6 +27,7 @@
     "@logseq/libs": "^0.0.14",
     "date-fns": "^2.29.3",
     "diff-match-patch": "^1.0.5",
+    "lodash": "^4.17.21",
     "luxon": "^3.2.1",
     "markdown-escape": "^1.1.0",
     "mustache": "^4.2.0"
@@ -39,6 +40,7 @@
     "@types/chai": "^4.3.4",
     "@types/chai-string": "^1.4.2",
     "@types/diff-match-patch": "^1.0.32",
+    "@types/lodash": "^4.14.194",
     "@types/luxon": "^2.3.2",
     "@types/markdown-escape": "^1.1.0",
     "@types/mocha": "^10.0.1",

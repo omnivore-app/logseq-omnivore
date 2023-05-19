@@ -1,3 +1,4 @@
+import { truncate } from 'lodash'
 import Mustache from 'mustache'
 import { Article, Highlight, HighlightType, Label, PageType } from '../api'
 import {
@@ -33,6 +34,7 @@ export type ArticleView =
       state: string
       wordsCount?: number
       readLength?: number
+      dateArchived?: string
     }
   | FunctionMap
 
@@ -137,6 +139,9 @@ const createArticleView = (
   const readLength = wordsCount
     ? Math.round(Math.max(1, wordsCount / 235))
     : undefined
+  const dateArchived = article.archivedAt
+    ? formatDate(new Date(article.archivedAt), preferredDateFormat)
+    : undefined
   return {
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -155,6 +160,7 @@ const createArticleView = (
     state: getArticleState(article),
     wordsCount,
     readLength,
+    dateArchived,
     ...functionMap,
   }
 }
@@ -195,9 +201,18 @@ export const renderPageName = (
   preferredDateFormat: string
 ) => {
   const date = formatDate(new Date(article.savedAt), preferredDateFormat)
-  return Mustache.render(pageName, {
-    title: article.title,
+  // replace slash with dash in the title to prevent creating subpages
+  // since there is no way to escape slashes in logseq
+  const title = article.title.replace(/\//g, '-')
+
+  const renderedPageName = Mustache.render(pageName, {
+    title,
     date,
+  })
+
+  // truncate the page name to 100 characters
+  return truncate(renderedPageName, {
+    length: 100,
   })
 }
 
