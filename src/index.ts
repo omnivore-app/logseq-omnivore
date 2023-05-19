@@ -28,6 +28,7 @@ import {
 import {
   DATE_FORMAT,
   compareHighlightsInFile,
+  escapeQuotes,
   getHighlightLocation,
   isBlockPropertiesChanged,
   parseBlockProperties,
@@ -86,13 +87,13 @@ const getBlockByContent = async (
       `[:find (pull ?b [*])
             :where
               [?b :block/page ?p]
-              [?p :block/original-name "${pageName}"]
+              [?p :block/original-name "${escapeQuotes(pageName)}"]
               [?b :block/parent ?parent]
               [?parent :block/uuid ?u]
               [(str ?u) ?s]
               [(= ?s "${parentBlockId}")]
               [?b :block/content ?c]
-              [(clojure.string/includes? ?c "${content}")]]`
+              [(clojure.string/includes? ?c "${escapeQuotes(content)}")]]`
     )
   ).flat()
 
@@ -108,9 +109,9 @@ const getBlockByTitle = async (
       `[:find (pull ?b [*])
             :where
               [?b :block/page ?p]
-              [?p :block/original-name "${pageName}"]
+              [?p :block/original-name "${escapeQuotes(pageName)}"]
               [?b :block/content ?c]
-              [(= ?c "${title}")]]`
+              [(= ?c "${escapeQuotes(title)}")]]`
     )
   ).flat()
 
@@ -430,7 +431,7 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         endpoint
       )
-      for await (const deletedArticle of deletedArticles) {
+      for (const deletedArticle of deletedArticles) {
         if (!isSinglePage) {
           pageName = renderPageName(
             deletedArticle,

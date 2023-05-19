@@ -158,3 +158,7 @@ export const isBlockPropertiesChanged = (
     return newBlockProperty != existingBlockProperty
   })
 }
+
+export const escapeQuotes = (str: string): string => {
+  return str.replace(/"/g, '\\"')
+}

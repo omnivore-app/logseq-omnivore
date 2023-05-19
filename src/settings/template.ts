@@ -195,10 +195,21 @@ export const renderPageName = (
   preferredDateFormat: string
 ) => {
   const date = formatDate(new Date(article.savedAt), preferredDateFormat)
-  return Mustache.render(pageName, {
-    title: article.title,
+  // replace slashes and colon with dash in the title to prevent creating subpages
+  // since there is no way to escape slashes in logseq
+  const title = article.title.replace(/[/:]/g, '-')
+
+  const renderedPageName = Mustache.render(pageName, {
+    title,
     date,
   })
+
+  // reduce the length of the page name to 100 characters
+  // to prevent logseq from throwing an error
+  const maxFilenameLength = 100
+  return renderedPageName.length > maxFilenameLength
+    ? renderedPageName.slice(0, maxFilenameLength - 4) + '...'
+    : renderedPageName
 }
 
 export const preParseTemplate = (template: string) => {
