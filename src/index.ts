@@ -431,7 +431,7 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         endpoint
       )
-      for (const deletedArticle of deletedArticles) {
+      for await (const deletedArticle of deletedArticles) {
         if (!isSinglePage) {
           pageName = renderPageName(
             deletedArticle,

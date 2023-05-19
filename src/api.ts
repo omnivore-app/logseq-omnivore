@@ -57,6 +57,7 @@ export interface Article {
   readingProgressPercent: number
   isArchived: boolean
   wordsCount?: number
+  dateArchived?: string
 }
 
 export interface Label {
@@ -120,6 +121,10 @@ export const getOmnivoreArticles = async (
                   content
                   publishedAt
                   readAt
+                  isArchived
+                  readingProgressPercent
+                  wordsCount
+                  dateArchived
                   highlights {
                     id
                     quote
@@ -135,9 +140,6 @@ export const getOmnivoreArticles = async (
                   labels {
                     name
                   }
-                  isArchived
-                  readingProgressPercent
-                  wordsCount
                 }
               }
               pageInfo {

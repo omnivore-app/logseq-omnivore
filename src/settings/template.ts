@@ -34,6 +34,7 @@ export type ArticleView =
       state: string
       wordsCount?: number
       readLength?: number
+      dateArchived?: string
     }
   | FunctionMap
 
@@ -138,6 +139,9 @@ const createArticleView = (
   const readLength = wordsCount
     ? Math.round(Math.max(1, wordsCount / 235))
     : undefined
+  const dateArchived = article.dateArchived
+    ? formatDate(new Date(article.dateArchived), preferredDateFormat)
+    : undefined
   return {
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -156,6 +160,7 @@ const createArticleView = (
     state: getArticleState(article),
     wordsCount,
     readLength,
+    dateArchived,
     ...functionMap,
   }
 }
@@ -196,9 +201,9 @@ export const renderPageName = (
   preferredDateFormat: string
 ) => {
   const date = formatDate(new Date(article.savedAt), preferredDateFormat)
-  // replace slashes and colon with dash in the title to prevent creating subpages
+  // replace slash with dash in the title to prevent creating subpages
   // since there is no way to escape slashes in logseq
-  const title = article.title.replace(/[/:]/g, '-')
+  const title = article.title.replace(/\//g, '-')
 
   const renderedPageName = Mustache.render(pageName, {
     title,
