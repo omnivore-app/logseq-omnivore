@@ -33,6 +33,7 @@ import {
   isBlockPropertiesChanged,
   parseBlockProperties,
   parseDateTime,
+  replaceIllegalChars,
 } from './util'
 
 const isValidCurrentGraph = async (): Promise<boolean> => {
@@ -250,10 +251,8 @@ const fetchOmnivore = async (inBackground = false) => {
       for (const article of articles) {
         if (!isSinglePage) {
           // create a new page for each article
-          pageName = renderPageName(
-            article,
-            pageNameTemplate,
-            preferredDateFormat
+          pageName = replaceIllegalChars(
+            renderPageName(article, pageNameTemplate, preferredDateFormat)
           )
           targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
         }

@@ -2,6 +2,7 @@ import { format } from 'date-fns'
 import { diff_match_patch } from 'diff-match-patch'
 import { DateTime } from 'luxon'
 import escape from 'markdown-escape'
+import outOfCharacter from 'out-of-character'
 import { Highlight } from './api'
 
 export interface HighlightPoint {
@@ -11,14 +12,25 @@ export interface HighlightPoint {
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`
+export const REPLACEMENT_CHAR = '-'
+// On Unix-like systems / is reserved and <>:"/\|?* as well as non-printable characters \u0000-\u001F on Windows
+// credit: https://github.com/sindresorhus/filename-reserved-regex
+// eslint-disable-next-line no-control-regex
+export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g
 
-export const getHighlightLocation = (patch: string): number => {
+export const getHighlightLocation = (patch: string | null): number => {
+  if (!patch) {
+    return 0
+  }
   const dmp = new diff_match_patch()
   const patches = dmp.patch_fromText(patch)
   return patches[0].start1 || 0
 }
 
-export const getHighlightPoint = (patch: string): HighlightPoint => {
+export const getHighlightPoint = (patch: string | null): HighlightPoint => {
+  if (!patch) {
+    return { left: 0, top: 0 }
+  }
   const { bbox } = JSON.parse(patch) as { bbox: number[] }
   if (!bbox || bbox.length !== 4) {
     return { left: 0, top: 0 }
@@ -87,9 +99,13 @@ export const siteNameFromUrl = (originalArticleUrl: string): string => {
 export const delay = (t = 100) => new Promise((r) => setTimeout(r, t))
 
 export const formatHighlightQuote = (
-  quote: string,
+  quote: string | null,
   template: string
 ): string => {
+  if (!quote) {
+    return ''
+  }
+
   if (template.startsWith('>')) {
     // replace all empty lines with blockquote '>' to preserve paragraphs
     quote = quote.replace(/^(?=\n)$|^\s*?\n/gm, '> ')
@@ -161,4 +177,12 @@ export const isBlockPropertiesChanged = (
 
 export const escapeQuotes = (str: string): string => {
   return str.replace(/"/g, '\\"')
+}
+
+const removeInvisibleChars = (str: string): string => {
+  return outOfCharacter.replace(str)
+}
+
+export const replaceIllegalChars = (str: string): string => {
+  return removeInvisibleChars(str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR))
 }
