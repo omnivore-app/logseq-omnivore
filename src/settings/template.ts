@@ -152,7 +152,7 @@ const createArticleView = (
     dateSaved,
     content: article.content,
     datePublished,
-    note: note?.annotation,
+    note: note?.annotation ?? undefined,
     type: article.pageType,
     rawDatePublished,
     rawDateRead,
@@ -189,7 +189,7 @@ export const renderHighlightContent = (
     highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
     dateHighlighted,
     rawDateHighlighted,
-    note: highlight.annotation,
+    note: highlight.annotation ?? undefined,
     ...functionMap,
   }
   return Mustache.render(template, highlightView)
