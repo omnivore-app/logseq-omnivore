@@ -16,7 +16,7 @@ export const REPLACEMENT_CHAR = '-'
 // On Unix-like systems / is reserved and <>:"/\|?* as well as non-printable characters \u0000-\u001F on Windows
 // credit: https://github.com/sindresorhus/filename-reserved-regex
 // eslint-disable-next-line no-control-regex
-export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g
+export const ILLEGAL_CHAR_REGEX = /[<>:"\\|?*\u0000-\u001F]/g
 
 export const getHighlightLocation = (patch: string | null): number => {
   if (!patch) {
