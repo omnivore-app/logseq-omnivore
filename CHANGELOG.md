@@ -1,3 +1,10 @@
+## [1.13.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.1...v1.13.2) (2023-06-22)
+
+
+### Bug Fixes
+
+* slash converted to dash in the page name ([c99387b](https://github.com/omnivore-app/logseq-omnivore/commit/c99387b05ac49b67efa1efea4fa9c5f03e781ceb))
+
 ## [1.13.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.0...v1.13.1) (2023-06-22)
 
 
