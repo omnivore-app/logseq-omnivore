@@ -2,6 +2,7 @@ import { format } from 'date-fns'
 import { diff_match_patch } from 'diff-match-patch'
 import { DateTime } from 'luxon'
 import escape from 'markdown-escape'
+import outOfCharacter from 'out-of-character'
 import { Highlight } from './api'
 
 export interface HighlightPoint {
@@ -11,6 +12,11 @@ export interface HighlightPoint {
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`
+export const REPLACEMENT_CHAR = '-'
+// On Unix-like systems / is reserved and <>:"/\|?* as well as non-printable characters \u0000-\u001F on Windows
+// credit: https://github.com/sindresorhus/filename-reserved-regex
+// eslint-disable-next-line no-control-regex
+export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g
 
 export const getHighlightLocation = (patch: string | null): number => {
   if (!patch) {
@@ -171,4 +177,12 @@ export const isBlockPropertiesChanged = (
 
 export const escapeQuotes = (str: string): string => {
   return str.replace(/"/g, '\\"')
+}
+
+const removeInvisibleChars = (str: string): string => {
+  return outOfCharacter.replace(str)
+}
+
+export const replaceIllegalChars = (str: string): string => {
+  return removeInvisibleChars(str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR))
 }

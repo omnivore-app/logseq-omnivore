@@ -30,7 +30,8 @@
     "lodash": "^4.17.21",
     "luxon": "^3.2.1",
     "markdown-escape": "^1.1.0",
-    "mustache": "^4.2.0"
+    "mustache": "^4.2.0",
+    "out-of-character": "^1.2.1"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.1",
