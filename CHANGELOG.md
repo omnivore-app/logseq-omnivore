@@ -1,3 +1,11 @@
+## [1.13.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.0...v1.13.1) (2023-06-22)
+
+
+### Bug Fixes
+
+* failed to fetch highlight when quote is null ([3128a10](https://github.com/omnivore-app/logseq-omnivore/commit/3128a10889bc99c0f5804e06feb95d378f42b117))
+* failed to save page in windows by removing invisible characters in the page name ([7a92a9f](https://github.com/omnivore-app/logseq-omnivore/commit/7a92a9f807dd8893cdcaae99f641daa05c935f4c))
+
 # [1.13.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.12.5...v1.13.0) (2023-05-19)
 
 
