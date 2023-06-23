@@ -1,3 +1,10 @@
+## [1.13.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.2...v1.13.3) (2023-06-23)
+
+
+### Bug Fixes
+
+* incorrect highlight position by incorrectly using highlight position percentage which old highlights do not have it ([8733dea](https://github.com/omnivore-app/logseq-omnivore/commit/8733deab124130231dc5ee30a20dfde986ddb5a2))
+
 ## [1.13.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.1...v1.13.2) (2023-06-22)
 
 
