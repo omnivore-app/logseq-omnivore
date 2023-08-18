@@ -1,3 +1,10 @@
+## [1.13.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.3...v1.13.4) (2023-08-18)
+
+
+### Bug Fixes
+
+* duplicate heading block ([918818b](https://github.com/omnivore-app/logseq-omnivore/commit/918818bcd20e5c8e691d7ec3257a2b2ee4bf741e))
+
 ## [1.13.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.2...v1.13.3) (2023-06-23)
 
 
