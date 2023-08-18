@@ -101,24 +101,6 @@ const getBlockByContent = async (
   return blocks[0]
 }
 
-const getBlockByTitle = async (
-  pageName: string,
-  title: string
-): Promise<BlockEntity | null> => {
-  const blocks = (
-    await logseq.DB.datascriptQuery<BlockEntity[]>(
-      `[:find (pull ?b [*])
-            :where
-              [?b :block/page ?p]
-              [?p :block/original-name "${escapeQuotes(pageName)}"]
-              [?b :block/content ?c]
-              [(= ?c "${escapeQuotes(title)}")]]`
-    )
-  ).flat()
-
-  return blocks[0] || null
-}
-
 const getOmnivorePage = async (pageName: string): Promise<PageEntity> => {
   const omnivorePage = await logseq.Editor.getPage(pageName)
   if (omnivorePage) {
@@ -144,7 +126,7 @@ const getOmnivoreBlock = async (
   title: string
 ): Promise<BlockEntity> => {
   const page = await getOmnivorePage(pageName)
-  const targetBlock = await getBlockByTitle(pageName, title)
+  const targetBlock = await getBlockByContent(pageName, page.uuid, title)
   if (targetBlock) {
     return targetBlock
   }
