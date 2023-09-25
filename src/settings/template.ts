@@ -63,7 +63,7 @@ site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
 author:: {{{author}}}
 {{/author}}
 {{#labels.length}}
-labels:: {{#labels}}[[{{{name}}}]]{{/labels}}
+labels:: {{#labels}}[[{{{name}}}]] {{/labels}}
 {{/labels.length}}
 date-saved:: {{{dateSaved}}}
 {{#datePublished}}
