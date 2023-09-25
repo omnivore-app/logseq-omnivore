@@ -78,7 +78,7 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     title:
       'Enter an Omnivore custom search query if advanced filter is selected',
     description:
-      'See https://omnivore.app/help/search for more info on search query syntax',
+      'See https://docs.omnivore.app/using/search.html for more info on search query syntax',
     default: '',
   },
   {
