@@ -46,6 +46,7 @@ export type HighlightView =
       dateHighlighted: string
       rawDateHighlighted: string
       note?: string
+      color: string
     }
   | FunctionMap
 
@@ -190,6 +191,7 @@ export const renderHighlightContent = (
     dateHighlighted,
     rawDateHighlighted,
     note: highlight.annotation ?? undefined,
+    color: highlight.color ?? 'yellow',
     ...functionMap,
   }
   return Mustache.render(template, highlightView)
