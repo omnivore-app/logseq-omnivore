@@ -1,3 +1,10 @@
+## [1.13.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.4...v1.13.5) (2023-09-26)
+
+
+### Bug Fixes
+
+* add space between labels on the default template ([af70f59](https://github.com/omnivore-app/logseq-omnivore/commit/af70f595e9c7461fbc75432979d61ae22f854d02))
+
 ## [1.13.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.3...v1.13.4) (2023-08-18)
 
 
