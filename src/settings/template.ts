@@ -208,6 +208,7 @@ export const renderPageName = (
   const renderedPageName = Mustache.render(pageName, {
     title,
     date,
+    currentDate: formatDate(new Date(), preferredDateFormat),
   })
 
   // truncate the page name to 100 characters
