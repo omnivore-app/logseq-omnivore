@@ -128,7 +128,7 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     type: 'string',
     title: 'Enter the page name to sync with Omnivore',
     description:
-      'Enter the page name to sync Omnivore articles into. This page will be created if it does not exist. If you isSinglePage is off and you want to sync to a separate page for each article, use the variable {{{title}}} or {{{date}}} as the page name. For example, {{{title}}} will create a page for each article with the title of the article.',
+      'Enter the page name to sync Omnivore articles into. This page will be created if it does not exist. If you isSinglePage is off and you want to sync to a separate page for each article, use the variable {{{title}}}, {{{date}}} or {{{currentDate}}} as the page name. For example, {{{title}}} will create a page for each article with the title of the article.',
     default: 'Omnivore',
   },
   {
