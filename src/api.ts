@@ -79,6 +79,7 @@ export interface Highlight {
   labels?: Label[]
   type: HighlightType
   highlightPositionPercent?: number
+  color?: string
 }
 
 const ENDPOINT = 'https://api-prod.omnivore.app/api/graphql'
@@ -136,6 +137,7 @@ export const getOmnivoreArticles = async (
                       name
                     }
                     type
+                    color
                   }
                   labels {
                     name
