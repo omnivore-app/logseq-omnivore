@@ -6,6 +6,7 @@ import {
 } from '@logseq/libs/dist/LSPlugin'
 import { setup as l10nSetup, t } from "logseq-l10n" //https://github.com/sethyuan/logseq-l10n
 import ja from "./translations/ja.json"
+import zhCN from "./translations/zh-CN.json"
 import { PageEntity } from '@logseq/libs/dist/LSPlugin.user'
 import { DateTime } from 'luxon'
 import {
@@ -459,7 +460,7 @@ const fetchOmnivore = async (inBackground = false) => {
 const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
 
-  await l10nSetup({ builtinTranslations: { ja, } }); // logseq-l10n setup (translations)
+  await l10nSetup({ builtinTranslations: { ja, "zh-CN": zhCN } }); // logseq-l10n setup (translations)
 
   logseq.useSettingsSchema(await settingsSchema())
   // update version if needed
