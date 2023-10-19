@@ -4,6 +4,9 @@ import {
   IBatchBlock,
   LSPluginBaseInfo,
 } from '@logseq/libs/dist/LSPlugin'
+import { setup as l10nSetup, t } from "logseq-l10n" //https://github.com/sethyuan/logseq-l10n
+import ja from "./translations/ja.json"
+import zhCN from "./translations/zh-CN.json"
 import { PageEntity } from '@logseq/libs/dist/LSPlugin.user'
 import { DateTime } from 'luxon'
 import {
@@ -112,7 +115,7 @@ const getOmnivorePage = async (pageName: string): Promise<PageEntity> => {
   })
   if (!newOmnivorePage) {
     await logseq.UI.showMsg(
-      'Failed to create Omnivore page. Please check the pageName in the settings',
+      t("Failed to create Omnivore page. Please check the pageName in the settings"),
       'error'
     )
     throw new Error('Failed to create Omnivore page')
@@ -132,7 +135,7 @@ const getOmnivoreBlock = async (
   }
   const newTargetBlock = await logseq.Editor.appendBlockInPage(page.uuid, title)
   if (!newTargetBlock) {
-    await logseq.UI.showMsg('Failed to create Omnivore block', 'error')
+    await logseq.UI.showMsg(t("Failed to create Omnivore block"), 'error')
     throw new Error('Failed to create Omnivore block')
   }
 
@@ -156,7 +159,7 @@ const fetchOmnivore = async (inBackground = false) => {
   } = logseq.settings as Settings
   // prevent multiple fetches
   if (loading) {
-    await logseq.UI.showMsg('Omnivore is already syncing', 'warning', {
+    await logseq.UI.showMsg(t("Omnivore is already syncing"), 'warning', {
       timeout: 3000,
     })
     return
@@ -164,7 +167,7 @@ const fetchOmnivore = async (inBackground = false) => {
   logseq.updateSettings({ loading: true })
 
   if (!apiKey) {
-    await logseq.UI.showMsg('Missing Omnivore api key', 'warning', {
+    await logseq.UI.showMsg(t("Missing Omnivore api key"), 'warning', {
       timeout: 3000,
     }).then(() => {
       logseq.showSettingsUI()
@@ -177,16 +180,16 @@ const fetchOmnivore = async (inBackground = false) => {
 
   if (!(await isValidCurrentGraph())) {
     await logseq.UI.showMsg(
-      `Omnivore is configured to sync into your "${graph}" graph which is not currently active.\nPlease switch to graph "${graph}" to sync Omnivore articles.`,
+      t("Omnivore is configured to sync into your \"") + graph + t("\" graph which is not currently active.\nPlease switch to graph \"") + graph + t("\" to sync Omnivore articles."),
       'error'
     )
 
     return
   }
 
-  const blockTitle = '## 🔖 Articles'
-  const fetchingTitle = '🚀 Fetching articles ...'
-  const highlightTitle = '### Highlights'
+  const blockTitle = t("## 🔖 Articles")
+  const fetchingTitle = t("🚀 Fetching articles ...")
+  const highlightTitle = t("### Highlights")
 
   const userConfigs = await logseq.App.getUserConfigs()
   const preferredDateFormat: string = userConfigs.preferredDateFormat
@@ -436,14 +439,14 @@ const fetchOmnivore = async (inBackground = false) => {
 
     if (!inBackground) {
       logseq.UI.closeMsg(fetchingMsgKey)
-      await logseq.UI.showMsg('🔖 Articles fetched', 'success', {
+      await logseq.UI.showMsg(t("🔖 Articles fetched"), 'success', {
         timeout: 2000,
       })
     }
     logseq.updateSettings({ syncAt: DateTime.local().toFormat(DATE_FORMAT) })
   } catch (e) {
     !inBackground &&
-      (await logseq.UI.showMsg('Failed to fetch articles', 'error'))
+      (await logseq.UI.showMsg(t("Failed to fetch articles"), 'error'))
     console.error(e)
   } finally {
     resetLoadingState()
@@ -457,6 +460,8 @@ const fetchOmnivore = async (inBackground = false) => {
 const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
 
+  await l10nSetup({ builtinTranslations: { ja, "zh-CN": zhCN } }); // logseq-l10n setup (translations)
+
   logseq.useSettingsSchema(await settingsSchema())
   // update version if needed
   const latestVersion = baseInfo.version as string
@@ -464,9 +469,9 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   if (latestVersion !== currentVersion) {
     logseq.updateSettings({ version: latestVersion })
     // show release notes
-    const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.
+    const releaseNotes = `${t("Omnivore plugin is upgraded to")} ${latestVersion}.
     
-    What's new: https://github.com/omnivore-app/logseq-omnivore/blob/main/CHANGELOG.md
+    ${t("What's new")}: https://github.com/omnivore-app/logseq-omnivore/blob/main/CHANGELOG.md
     `
     await logseq.UI.showMsg(releaseNotes, 'success', {
       timeout: 10000,
@@ -510,7 +515,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   logseq.App.registerCommandPalette(
     {
       key: 'omnivore-sync',
-      label: 'Sync Omnivore',
+      label: t("Sync Omnivore"),
     },
     () => {
       void (async () => {
@@ -522,13 +527,13 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   logseq.App.registerCommandPalette(
     {
       key: 'omnivore-resync',
-      label: 'Resync all Omnivore articles',
+      label: t("Resync all Omnivore articles"),
     },
     () => {
       void (async () => {
         // reset the last sync time
         logseq.updateSettings({ syncAt: '' })
-        await logseq.UI.showMsg('Omnivore Last Sync reset', 'warning', {
+        await logseq.UI.showMsg(t("Omnivore Last Sync reset"), 'warning', {
           timeout: 3000,
         })
 
