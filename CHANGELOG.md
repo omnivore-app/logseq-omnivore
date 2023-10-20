@@ -1,3 +1,10 @@
+## [1.13.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.5...v1.13.6) (2023-10-02)
+
+
+### Bug Fixes
+
+* allow users to use {{currentDate}} as the page name ([948e909](https://github.com/omnivore-app/logseq-omnivore/commit/948e909740389c20eecf87ec3f7903c119b04469))
+
 ## [1.13.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.4...v1.13.5) (2023-09-26)
 
 
