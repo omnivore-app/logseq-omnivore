@@ -3402,6 +3402,11 @@ log-symbols@4.1.0:
     chalk "^4.1.0"
     is-unicode-supported "^0.1.0"
 
+logseq-l10n@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/logseq-l10n/-/logseq-l10n-0.2.0.tgz#642ba00f8738dc20dfa983fe223465b5318a6204"
+  integrity sha512-exBSvxVijlAW6Zy6eYRWGroJL3qxAouCZqSQzAeIRuoIU8nA0vN2S2+5slvWTFM159hlqhtdJXqudwgCs4y2Vg==
+
 loupe@^2.3.1:
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/loupe/-/loupe-2.3.6.tgz#76e4af498103c532d1ecc9be102036a21f787b53"
