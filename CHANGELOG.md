@@ -1,3 +1,15 @@
+# [1.14.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.6...v1.14.0) (2023-10-25)
+
+
+### Bug Fixes
+
+* highlight color not available in the template ([#135](https://github.com/omnivore-app/logseq-omnivore/issues/135)) ([6988b32](https://github.com/omnivore-app/logseq-omnivore/commit/6988b326bd1fec0694bfe8c76c2580d140788bd3))
+
+
+### Features
+
+* allow defining custom title of heading block in the settings or leave blank to not create one ([#144](https://github.com/omnivore-app/logseq-omnivore/issues/144)) ([dddb771](https://github.com/omnivore-app/logseq-omnivore/commit/dddb771200cb62e151f067d96db07e7aa1c3a233))
+
 ## [1.13.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.5...v1.13.6) (2023-10-02)
 
 
