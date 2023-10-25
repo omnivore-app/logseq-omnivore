@@ -15,7 +15,8 @@
   "scripts": {
     "dev": "parcel public/index.html --public-url ./",
     "build": "parcel build --public-url . --no-source-maps public/index.html",
-    "test": "yarn mocha -r ts-node/register tests/*.ts"
+    "test": "yarn mocha -r ts-node/register tests/*.ts",
+    "lint": "eslint --ext .ts src"
   },
   "license": "MIT",
   "logseq": {
@@ -24,7 +25,7 @@
     "icon": "./public/icon.png"
   },
   "dependencies": {
-    "@logseq/libs": "^0.0.14",
+    "@logseq/libs": "^0.0.15",
     "date-fns": "^2.29.3",
     "diff-match-patch": "^1.0.5",
     "lodash": "^4.17.21",

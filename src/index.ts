@@ -4,10 +4,8 @@ import {
   IBatchBlock,
   LSPluginBaseInfo,
 } from '@logseq/libs/dist/LSPlugin'
-import { setup as l10nSetup, t } from "logseq-l10n" //https://github.com/sethyuan/logseq-l10n
-import ja from "./translations/ja.json"
-import zhCN from "./translations/zh-CN.json"
 import { PageEntity } from '@logseq/libs/dist/LSPlugin.user'
+import { setup as l10nSetup, t } from 'logseq-l10n' //https://github.com/sethyuan/logseq-l10n
 import { DateTime } from 'luxon'
 import {
   Article,
@@ -28,6 +26,8 @@ import {
   renderHighlightContent,
   renderPageName,
 } from './settings/template'
+import ja from './translations/ja.json'
+import zhCN from './translations/zh-CN.json'
 import {
   DATE_FORMAT,
   compareHighlightsInFile,
@@ -115,7 +115,9 @@ const getOmnivorePage = async (pageName: string): Promise<PageEntity> => {
   })
   if (!newOmnivorePage) {
     await logseq.UI.showMsg(
-      t("Failed to create Omnivore page. Please check the pageName in the settings"),
+      t(
+        'Failed to create Omnivore page. Please check the pageName in the settings'
+      ),
       'error'
     )
     throw new Error('Failed to create Omnivore page')
@@ -124,22 +126,30 @@ const getOmnivorePage = async (pageName: string): Promise<PageEntity> => {
   return newOmnivorePage
 }
 
-const getOmnivoreBlock = async (
+const getOmnivoreBlockIdentity = async (
   pageName: string,
   title: string
-): Promise<BlockEntity> => {
+): Promise<string> => {
   const page = await getOmnivorePage(pageName)
-  const targetBlock = await getBlockByContent(pageName, page.uuid, title)
-  if (targetBlock) {
-    return targetBlock
-  }
-  const newTargetBlock = await logseq.Editor.appendBlockInPage(page.uuid, title)
-  if (!newTargetBlock) {
-    await logseq.UI.showMsg(t("Failed to create Omnivore block"), 'error')
-    throw new Error('Failed to create Omnivore block')
+  if (!title) {
+    // return the page uuid if no title is provided
+    return page.uuid
   }
 
-  return newTargetBlock
+  const targetBlock = await getBlockByContent(pageName, page.uuid, title)
+  if (targetBlock) {
+    return targetBlock.uuid
+  }
+  const newTargetBlock = await logseq.Editor.prependBlockInPage(
+    page.uuid,
+    title
+  )
+  if (!newTargetBlock) {
+    await logseq.UI.showMsg(t('Failed to create Omnivore block'), 'error')
+    throw new Error('Failed to create block')
+  }
+
+  return newTargetBlock.uuid
 }
 
 const fetchOmnivore = async (inBackground = false) => {
@@ -156,10 +166,11 @@ const fetchOmnivore = async (inBackground = false) => {
     loading,
     endpoint,
     isSinglePage,
+    headingBlockTitle,
   } = logseq.settings as Settings
   // prevent multiple fetches
   if (loading) {
-    await logseq.UI.showMsg(t("Omnivore is already syncing"), 'warning', {
+    await logseq.UI.showMsg(t('Omnivore is already syncing'), 'warning', {
       timeout: 3000,
     })
     return
@@ -167,7 +178,7 @@ const fetchOmnivore = async (inBackground = false) => {
   logseq.updateSettings({ loading: true })
 
   if (!apiKey) {
-    await logseq.UI.showMsg(t("Missing Omnivore api key"), 'warning', {
+    await logseq.UI.showMsg(t('Missing Omnivore api key'), 'warning', {
       timeout: 3000,
     }).then(() => {
       logseq.showSettingsUI()
@@ -180,16 +191,20 @@ const fetchOmnivore = async (inBackground = false) => {
 
   if (!(await isValidCurrentGraph())) {
     await logseq.UI.showMsg(
-      t("Omnivore is configured to sync into your \"") + graph + t("\" graph which is not currently active.\nPlease switch to graph \"") + graph + t("\" to sync Omnivore articles."),
+      t('Omnivore is configured to sync into your "') +
+        graph +
+        t('" graph which is not currently active.\nPlease switch to graph "') +
+        graph +
+        t('" to sync Omnivore articles.'),
       'error'
     )
 
     return
   }
 
-  const blockTitle = t("## 🔖 Articles")
-  const fetchingTitle = t("🚀 Fetching articles ...")
-  const highlightTitle = t("### Highlights")
+  const blockTitle = t(headingBlockTitle)
+  const fetchingTitle = t('🚀 Fetching articles ...')
+  const highlightTitle = t('### Highlights')
 
   const userConfigs = await logseq.App.getUserConfigs()
   const preferredDateFormat: string = userConfigs.preferredDateFormat
@@ -208,7 +223,7 @@ const fetchOmnivore = async (inBackground = false) => {
     if (isSinglePage) {
       // create a single page for all articles
       pageName = pageNameTemplate
-      targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+      targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
       !inBackground && logseq.App.pushState('page', { name: pageName })
     }
 
@@ -239,7 +254,7 @@ const fetchOmnivore = async (inBackground = false) => {
           pageName = replaceIllegalChars(
             renderPageName(article, pageNameTemplate, preferredDateFormat)
           )
-          targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+          targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
         }
         const articleBatch = articleBatchMap.get(targetBlockId) || []
         // render article content
@@ -318,7 +333,7 @@ const fetchOmnivore = async (inBackground = false) => {
             // check if highlight title block exists
             const existingHighlightTitleBlock = await getBlockByContent(
               pageName,
-              existingArticleBlock.uuid,
+              parentBlockId,
               highlightTitleBlock.content
             )
             if (existingHighlightTitleBlock) {
@@ -388,7 +403,7 @@ const fetchOmnivore = async (inBackground = false) => {
         }
       }
 
-      for await (const [targetBlockId, articleBatch] of articleBatchMap) {
+      for (const [targetBlockId, articleBatch] of articleBatchMap) {
         await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
@@ -408,14 +423,14 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         endpoint
       )
-      for await (const deletedArticle of deletedArticles) {
+      for (const deletedArticle of deletedArticles) {
         if (!isSinglePage) {
           pageName = renderPageName(
             deletedArticle,
             pageNameTemplate,
             preferredDateFormat
           )
-          targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+          targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
 
           // delete page if article is synced to a separate page and page is not a journal
           const existingPage = await logseq.Editor.getPage(pageName)
@@ -439,14 +454,14 @@ const fetchOmnivore = async (inBackground = false) => {
 
     if (!inBackground) {
       logseq.UI.closeMsg(fetchingMsgKey)
-      await logseq.UI.showMsg(t("🔖 Articles fetched"), 'success', {
+      await logseq.UI.showMsg(t('🔖 Articles fetched'), 'success', {
         timeout: 2000,
       })
     }
     logseq.updateSettings({ syncAt: DateTime.local().toFormat(DATE_FORMAT) })
   } catch (e) {
     !inBackground &&
-      (await logseq.UI.showMsg(t("Failed to fetch articles"), 'error'))
+      (await logseq.UI.showMsg(t('Failed to fetch articles'), 'error'))
     console.error(e)
   } finally {
     resetLoadingState()
@@ -460,7 +475,7 @@ const fetchOmnivore = async (inBackground = false) => {
 const main = async (baseInfo: LSPluginBaseInfo) => {
   console.log('logseq-omnivore loaded')
 
-  await l10nSetup({ builtinTranslations: { ja, "zh-CN": zhCN } }); // logseq-l10n setup (translations)
+  await l10nSetup({ builtinTranslations: { ja, 'zh-CN': zhCN } }) // logseq-l10n setup (translations)
 
   logseq.useSettingsSchema(await settingsSchema())
   // update version if needed
@@ -469,9 +484,13 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   if (latestVersion !== currentVersion) {
     logseq.updateSettings({ version: latestVersion })
     // show release notes
-    const releaseNotes = `${t("Omnivore plugin is upgraded to")} ${latestVersion}.
+    const releaseNotes = `${t(
+      'Omnivore plugin is upgraded to'
+    )} ${latestVersion}.
     
-    ${t("What's new")}: https://github.com/omnivore-app/logseq-omnivore/blob/main/CHANGELOG.md
+    ${t(
+      "What's new"
+    )}: https://github.com/omnivore-app/logseq-omnivore/blob/main/CHANGELOG.md
     `
     await logseq.UI.showMsg(releaseNotes, 'success', {
       timeout: 10000,
@@ -515,7 +534,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   logseq.App.registerCommandPalette(
     {
       key: 'omnivore-sync',
-      label: t("Sync Omnivore"),
+      label: t('Sync Omnivore'),
     },
     () => {
       void (async () => {
@@ -527,13 +546,13 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   logseq.App.registerCommandPalette(
     {
       key: 'omnivore-resync',
-      label: t("Resync all Omnivore articles"),
+      label: t('Resync all Omnivore articles'),
     },
     () => {
       void (async () => {
         // reset the last sync time
         logseq.updateSettings({ syncAt: '' })
-        await logseq.UI.showMsg(t("Omnivore Last Sync reset"), 'warning', {
+        await logseq.UI.showMsg(t('Omnivore Last Sync reset'), 'warning', {
           timeout: 3000,
         })
 
