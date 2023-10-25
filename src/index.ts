@@ -126,22 +126,30 @@ const getOmnivorePage = async (pageName: string): Promise<PageEntity> => {
   return newOmnivorePage
 }
 
-const getOmnivoreBlock = async (
+const getOmnivoreBlockIdentity = async (
   pageName: string,
   title: string
-): Promise<BlockEntity> => {
+): Promise<string> => {
   const page = await getOmnivorePage(pageName)
-  const targetBlock = await getBlockByContent(pageName, page.uuid, title)
-  if (targetBlock) {
-    return targetBlock
-  }
-  const newTargetBlock = await logseq.Editor.appendBlockInPage(page.uuid, title)
-  if (!newTargetBlock) {
-    await logseq.UI.showMsg(t('Failed to create Omnivore block'), 'error')
-    throw new Error('Failed to create Omnivore block')
+  if (!title) {
+    // return the page uuid if no title is provided
+    return page.uuid
   }
 
-  return newTargetBlock
+  const targetBlock = await getBlockByContent(pageName, page.uuid, title)
+  if (targetBlock) {
+    return targetBlock.uuid
+  }
+  const newTargetBlock = await logseq.Editor.prependBlockInPage(
+    page.uuid,
+    title
+  )
+  if (!newTargetBlock) {
+    await logseq.UI.showMsg(t('Failed to create Omnivore block'), 'error')
+    throw new Error('Failed to create block')
+  }
+
+  return newTargetBlock.uuid
 }
 
 const fetchOmnivore = async (inBackground = false) => {
@@ -158,6 +166,7 @@ const fetchOmnivore = async (inBackground = false) => {
     loading,
     endpoint,
     isSinglePage,
+    headingBlockTitle,
   } = logseq.settings as Settings
   // prevent multiple fetches
   if (loading) {
@@ -193,7 +202,7 @@ const fetchOmnivore = async (inBackground = false) => {
     return
   }
 
-  const blockTitle = t('## 🔖 Articles')
+  const blockTitle = t(headingBlockTitle)
   const fetchingTitle = t('🚀 Fetching articles ...')
   const highlightTitle = t('### Highlights')
 
@@ -214,7 +223,8 @@ const fetchOmnivore = async (inBackground = false) => {
     if (isSinglePage) {
       // create a single page for all articles
       pageName = pageNameTemplate
-      targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+      targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
+      console.log('targetBlockId', targetBlockId)
       !inBackground && logseq.App.pushState('page', { name: pageName })
     }
 
@@ -245,7 +255,7 @@ const fetchOmnivore = async (inBackground = false) => {
           pageName = replaceIllegalChars(
             renderPageName(article, pageNameTemplate, preferredDateFormat)
           )
-          targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+          targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
         }
         const articleBatch = articleBatchMap.get(targetBlockId) || []
         // render article content
@@ -324,7 +334,7 @@ const fetchOmnivore = async (inBackground = false) => {
             // check if highlight title block exists
             const existingHighlightTitleBlock = await getBlockByContent(
               pageName,
-              existingArticleBlock.uuid,
+              parentBlockId,
               highlightTitleBlock.content
             )
             if (existingHighlightTitleBlock) {
@@ -394,7 +404,8 @@ const fetchOmnivore = async (inBackground = false) => {
         }
       }
 
-      for await (const [targetBlockId, articleBatch] of articleBatchMap) {
+      for (const [targetBlockId, articleBatch] of articleBatchMap) {
+        console.log('targetBlockId', targetBlockId)
         await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
@@ -414,14 +425,14 @@ const fetchOmnivore = async (inBackground = false) => {
         parseDateTime(syncAt).toISO(),
         endpoint
       )
-      for await (const deletedArticle of deletedArticles) {
+      for (const deletedArticle of deletedArticles) {
         if (!isSinglePage) {
           pageName = renderPageName(
             deletedArticle,
             pageNameTemplate,
             preferredDateFormat
           )
-          targetBlockId = (await getOmnivoreBlock(pageName, blockTitle)).uuid
+          targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
 
           // delete page if article is synced to a separate page and page is not a journal
           const existingPage = await logseq.Editor.getPage(pageName)

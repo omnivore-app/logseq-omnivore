@@ -30,6 +30,7 @@ export interface Settings {
   endpoint: string
   isSinglePage: boolean
   version: string
+  headingBlockTitle: string
 }
 
 export const getQueryFromFilter = (
@@ -173,6 +174,17 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     title: t('Enter the page name to sync with Omnivore'),
     description: t('This page will be created if it does not exist.'),
     default: 'Omnivore',
+  },
+  {
+    key: 'headingBlockTitle',
+    type: 'string',
+    title: t(
+      'Enter the title of the heading block to place synced articles under'
+    ),
+    description: t(
+      'This heading block will be created if it does not exist. Default is "## 🔖 Articles". Leave blank to not create a heading block.'
+    ),
+    default: '## 🔖 Articles',
   },
   {
     key: 'endpoint',
