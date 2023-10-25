@@ -13,9 +13,8 @@
     "url": "https://github.com/omnivore-app/logseq-omnivore"
   },
   "scripts": {
-    "dev": "parcel public/index.html --public-url ./",
-    "build": "parcel build --public-url . --no-source-maps public/index.html",
-    "test": "yarn mocha -r ts-node/register tests/*.ts",
+    "dev": "vite dev public --base=./",
+    "build": "vite build public --outDir ../dist --base=./",
     "lint": "eslint --ext .ts src"
   },
   "license": "MIT",
@@ -56,13 +55,14 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "mocha": "^10.2.0",
-    "parcel": "^2.0.0",
     "prettier": "^2.5.1",
+    "vite": "^4.5.0",
+    "vite-plugin-logseq": "^1.1.2",
     "semantic-release": "^19.0.3",
     "typescript": "^4.4.3"
   },
   "volta": {
     "node": "16.15.1",
-    "yarn": "1.22.19"
+    "pnpm": "8.9.2"
   }
 }
