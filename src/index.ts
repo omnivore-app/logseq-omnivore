@@ -224,7 +224,6 @@ const fetchOmnivore = async (inBackground = false) => {
       // create a single page for all articles
       pageName = pageNameTemplate
       targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
-      console.log('targetBlockId', targetBlockId)
       !inBackground && logseq.App.pushState('page', { name: pageName })
     }
 
@@ -405,7 +404,6 @@ const fetchOmnivore = async (inBackground = false) => {
       }
 
       for (const [targetBlockId, articleBatch] of articleBatchMap) {
-        console.log('targetBlockId', targetBlockId)
         await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
