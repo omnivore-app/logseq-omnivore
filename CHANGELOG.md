@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.14.0...v1.14.1) (2023-10-25)
+
+
+### Bug Fixes
+
+* v1.14.0 failed to boot up due to corrupted bundle ([58562d9](https://github.com/omnivore-app/logseq-omnivore/commit/58562d98cf716838acee9549a8e8527ef9e6aa7b))
+
 # [1.14.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.13.6...v1.14.0) (2023-10-25)
 
 
