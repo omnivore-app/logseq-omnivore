@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.14.1...v1.15.0) (2023-11-06)
+
+
+### Features
+
+* expose positionPercent and positionAnchorIndex variables in highlight template ([#150](https://github.com/omnivore-app/logseq-omnivore/issues/150)) ([9d4f20d](https://github.com/omnivore-app/logseq-omnivore/commit/9d4f20dfab49e8decda934f3393a63c7b9406d7a))
+
 ## [1.14.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.14.0...v1.14.1) (2023-10-25)
 
 
