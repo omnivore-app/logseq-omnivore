@@ -195,7 +195,7 @@ export const renderHighlightContent = (
     note: highlight.annotation ?? undefined,
     color: highlight.color ?? 'yellow',
     positionPercent: highlight.highlightPositionPercent,
-    positionAnchorIndex: highlight.highlightPositionAnchorIndex,
+    positionAnchorIndex: highlight.highlightPositionAnchorIndex + 1,
     ...functionMap,
   }
   return Mustache.render(template, highlightView)
