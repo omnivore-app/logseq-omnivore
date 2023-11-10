@@ -166,7 +166,7 @@ const createArticleView = (
   }
 }
 
-export const renderArticleContent = (
+export const renderArticle = (
   template: string,
   article: Article,
   preferredDateFormat: string

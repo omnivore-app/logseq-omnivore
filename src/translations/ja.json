@@ -43,5 +43,8 @@
     "Advanced Settings": "詳細設定",
     "API Endpoint": "APIエンドポイント",
     "Enter the Omnivore server's API endpoint here (default: https://api-prod.omnivore.app/api/graphql )": "OmnivoreサーバーのAPIエンドポイントをここに入力してください（デフォルト: https://api-prod.omnivore.app/api/graphql ）",
-    "Failed to create Omnivore page. Please check the pageName in the settings": "Omnivoreページの作成に失敗しました。設定のページ名を確認してください"
+    "Failed to create Omnivore page. Please check the pageName in the settings": "Omnivoreページの作成に失敗しました。設定のページ名を確認してください",
+    "### Content": "### 内容",
+    "Sync article content": "記事の内容を同期する",
+    "Sync article content into the content block. If this is not selected, only highlights will be synced.": "記事の内容をコンテンツブロックに同期します。これが選択されていない場合、ハイライトのみが同期されます。"
 }
