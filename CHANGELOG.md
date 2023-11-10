@@ -1,3 +1,16 @@
+# [1.16.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.15.0...v1.16.0) (2023-11-10)
+
+
+### Bug Fixes
+
+* importing article {{{ content }}} stops at first section ([#154](https://github.com/omnivore-app/logseq-omnivore/issues/154)) ([0df230a](https://github.com/omnivore-app/logseq-omnivore/commit/0df230ab6643369ec586b215c72b7e52e0cd07f1))
+* PDF page numbers start at 1 ([#153](https://github.com/omnivore-app/logseq-omnivore/issues/153)) ([ebe7eb2](https://github.com/omnivore-app/logseq-omnivore/commit/ebe7eb2f8e397705e7acf5910255b67db2f083c8))
+
+
+### Features
+
+* use id as filename ([#152](https://github.com/omnivore-app/logseq-omnivore/issues/152)) ([b5944e1](https://github.com/omnivore-app/logseq-omnivore/commit/b5944e1a3ac3bce44e4737bb119ba2f9f2510c27))
+
 # [1.15.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.14.1...v1.15.0) (2023-11-06)
 
 
