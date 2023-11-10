@@ -17,6 +17,7 @@ type FunctionMap = {
 
 export type ArticleView =
   | {
+      id: string
       title: string
       author?: string
       omnivoreUrl: string
@@ -146,6 +147,7 @@ const createArticleView = (
     ? formatDate(new Date(article.archivedAt), preferredDateFormat)
     : undefined
   return {
+    id: article.id,
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
     siteName,
