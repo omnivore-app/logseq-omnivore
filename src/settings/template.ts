@@ -22,7 +22,6 @@ export type ArticleView =
       author?: string
       omnivoreUrl: string
       siteName: string
-      content: string
       originalUrl: string
       note?: string
       type: PageType
@@ -155,7 +154,6 @@ const createArticleView = (
     author: article.author,
     labels: article.labels,
     dateSaved,
-    content: article.content,
     datePublished,
     note: note?.annotation ?? undefined,
     type: article.pageType,
@@ -170,7 +168,7 @@ const createArticleView = (
   }
 }
 
-export const renderArticleContent = (
+export const renderArticle = (
   template: string,
   article: Article,
   preferredDateFormat: string

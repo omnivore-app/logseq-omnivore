@@ -51,7 +51,7 @@ export interface Article {
   updatedAt: string
   savedAt: string
   pageType: PageType
-  content: string
+  content?: string
   publishedAt?: string
   readAt?: string
   readingProgressPercent: number

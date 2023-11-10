@@ -31,6 +31,7 @@ export interface Settings {
   isSinglePage: boolean
   version: string
   headingBlockTitle: string
+  syncContent: boolean
 }
 
 export const getQueryFromFilter = (
@@ -135,6 +136,15 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     description: t('The template to use for new highlights.'),
     default: defaultHighlightTemplate,
     inputAs: 'textarea',
+  },
+  {
+    key: 'syncContent',
+    type: 'boolean',
+    title: t('Sync article content'),
+    description: t(
+      'Sync article content into the content block. If this is not selected, only highlights will be synced.'
+    ),
+    default: false,
   },
   {
     key: 'advancedSettings',

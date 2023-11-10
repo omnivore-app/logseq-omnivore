@@ -43,5 +43,8 @@
     "Advanced Settings": "高级设置",
     "API Endpoint": "API 终点",
     "Enter the Omnivore server's API endpoint here (default: https://api-prod.omnivore.app/api/graphql )": "在此处输入 Omnivore 服务器的 API 终点（默认: https://api-prod.omnivore.app/api/graphql ）",
-    "Failed to create Omnivore page. Please check the pageName in the settings": "创建 Omnivore 页面失败。请检查设置中的页面名称"
+    "Failed to create Omnivore page. Please check the pageName in the settings": "创建 Omnivore 页面失败。请检查设置中的页面名称",
+    "### Content": "### 内容",
+    "Sync article content": "同步文章内容",
+    "Sync article content into the content block. If this is not selected, only highlights will be synced.": "将文章内容同步到内容块。如果未选择此选项，将仅同步高亮。"
 }
