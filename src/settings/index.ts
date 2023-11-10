@@ -108,7 +108,7 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     title: t('Article Template'),
     default: '',
     description: t(
-      'If the above item is off, want to sync to a separate page for each article, use the variable `{{{title}}}`, `{{{date}}}` or `{{{currentDate}}}` as the page name. For example, `{{{title}}}` will create a page for each article with the title of the article.'
+      'If the above item is off, want to sync to a separate page for each article, use the variable `{{id}}`, `{{{title}}}`, `{{{date}}}` or `{{{currentDate}}}` as the page name. For example, `{{{title}}}` will create a page for each article with the title of the article.'
     ),
   },
   {
