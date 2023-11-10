@@ -34,6 +34,7 @@ import {
   escapeQuotes,
   getHighlightLocation,
   isBlockPropertiesChanged,
+  markdownEscape,
   parseBlockProperties,
   parseDateTime,
   replaceIllegalChars,
@@ -167,6 +168,7 @@ const fetchOmnivore = async (inBackground = false) => {
     endpoint,
     isSinglePage,
     headingBlockTitle,
+    syncContent,
   } = logseq.settings as Settings
   // prevent multiple fetches
   if (loading) {
@@ -205,6 +207,7 @@ const fetchOmnivore = async (inBackground = false) => {
   const blockTitle = t(headingBlockTitle)
   const fetchingTitle = t('🚀 Fetching articles ...')
   const highlightTitle = t('### Highlights')
+  const contentTitle = t('### Content')
 
   const userConfigs = await logseq.App.getUserConfigs()
   const preferredDateFormat: string = userConfigs.preferredDateFormat
@@ -263,6 +266,15 @@ const fetchOmnivore = async (inBackground = false) => {
           article,
           preferredDateFormat
         )
+        // create original content title block
+        const contentBatchBlock: IBatchBlock = {
+          content: contentTitle,
+          children: [
+            {
+              content: markdownEscape(article.content),
+            },
+          ],
+        }
         // filter out notes and redactions
         const highlights = article.highlights?.filter(
           (h) => h.type === HighlightType.Highlight
@@ -326,6 +338,27 @@ const fetchOmnivore = async (inBackground = false) => {
             await logseq.Editor.updateBlock(
               existingArticleBlock.uuid,
               articleContent
+            )
+          }
+          if (syncContent) {
+            // delete existing content block
+            const existingContentBlock = await getBlockByContent(
+              pageName,
+              existingArticleBlock.uuid,
+              contentTitle
+            )
+            if (existingContentBlock) {
+              await logseq.Editor.removeBlock(existingContentBlock.uuid)
+            }
+
+            // append new content block
+            await logseq.Editor.insertBatchBlock(
+              existingArticleBlock.uuid,
+              contentBatchBlock,
+              {
+                sibling: false,
+                before: true,
+              }
             )
           }
           if (highlightBatch.length > 0) {
@@ -394,10 +427,21 @@ const fetchOmnivore = async (inBackground = false) => {
             }
           }
         } else {
+          const children = []
+
+          // add content block if sync content is selected
+          syncContent && children.push(contentBatchBlock)
+
+          // add highlight title block if there are highlights
+          highlightBatch.length > 0 && children.push(highlightTitleBlock)
+
           // append new article block
           articleBatch.unshift({
             content: articleContent,
-            children: highlightBatch.length > 0 ? [highlightTitleBlock] : [], // add highlight title block if there are highlights
+            children,
+            properties: {
+              id: article.id,
+            },
           })
           articleBatchMap.set(targetBlockId, articleBatch)
         }
