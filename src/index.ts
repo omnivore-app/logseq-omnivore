@@ -268,6 +268,9 @@ const fetchOmnivore = async (inBackground = false) => {
         // create original content title block
         const contentBlock: IBatchBlock = {
           content: contentTitle,
+          properties: {
+            collapsed: true,
+          },
           children: [
             {
               // escape # to prevent creating subpages
@@ -318,6 +321,9 @@ const fetchOmnivore = async (inBackground = false) => {
         const highlightBlock: IBatchBlock = {
           content: highlightTitle,
           children: highlightBatch,
+          properties: {
+            collapsed: true,
+          },
         }
         // update existing article block if article is already in the page
         const existingArticleBlock = await getBlockByContent(
