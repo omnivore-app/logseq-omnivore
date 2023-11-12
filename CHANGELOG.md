@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.0...v1.16.1) (2023-11-12)
+
+
+### Bug Fixes
+
+* collapse content and highlight blocks by default ([42306db](https://github.com/omnivore-app/logseq-omnivore/commit/42306dba8b80112bb09d6f8161da3817a555482b))
+
 # [1.16.0](https://github.com/omnivore-app/logseq-omnivore/compare/v1.15.0...v1.16.0) (2023-11-10)
 
 
