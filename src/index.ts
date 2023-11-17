@@ -377,7 +377,7 @@ const fetchOmnivore = async (inBackground = false) => {
             }
           }
           if (highlightBatchBlocks.length > 0) {
-            const parentBlockId = existingArticleBlock.uuid
+            let parentBlockId = existingArticleBlock.uuid
             // check if highlight title block exists
             const existingHighlightBlock = await getBlockByContent(
               pageName,
@@ -385,6 +385,7 @@ const fetchOmnivore = async (inBackground = false) => {
               highlightsBlock.content
             )
             if (existingHighlightBlock) {
+              parentBlockId = existingHighlightBlock.uuid
               // append new highlights to existing article block
               for (const highlight of highlightBatchBlocks) {
                 // check if highlight block exists
@@ -408,6 +409,7 @@ const fetchOmnivore = async (inBackground = false) => {
                     highlight,
                     {
                       sibling: false,
+                      keepUUID: true,
                     }
                   )
                 }
@@ -419,12 +421,13 @@ const fetchOmnivore = async (inBackground = false) => {
                 highlightsBlock,
                 {
                   sibling: false,
+                  keepUUID: true,
                 }
               )
             }
           }
         } else {
-          const children = []
+          const children: IBatchBlock[] = []
 
           // add content block if sync content is selected
           syncContent && children.push(contentBlock)
@@ -448,6 +451,7 @@ const fetchOmnivore = async (inBackground = false) => {
         await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
+          keepUUID: true,
         })
       }
     }
