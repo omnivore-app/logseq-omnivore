@@ -1,3 +1,10 @@
+## [1.16.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.1...v1.16.2) (2023-11-17)
+
+
+### Bug Fixes
+
+* remove extra asterisks generated in the article blocks when headingBlockTitle setting is empty ([#162](https://github.com/omnivore-app/logseq-omnivore/issues/162)) ([9d14075](https://github.com/omnivore-app/logseq-omnivore/commit/9d140758ad2d0b4322185863fd5751ea0fe5245d))
+
 ## [1.16.1](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.0...v1.16.1) (2023-11-12)
 
 
