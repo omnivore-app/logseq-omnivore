@@ -1,3 +1,10 @@
+## [1.16.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.2...v1.16.3) (2023-11-21)
+
+
+### Bug Fixes
+
+* blocks failed to create because article id is not valid uuid string ([#165](https://github.com/omnivore-app/logseq-omnivore/issues/165)) ([0ba02af](https://github.com/omnivore-app/logseq-omnivore/commit/0ba02af4a3b60b49bcf53e99b9030c73e714141a))
+
 ## [1.16.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.1...v1.16.2) (2023-11-17)
 
 
