@@ -5,7 +5,7 @@ import {
   LSPluginBaseInfo,
 } from '@logseq/libs/dist/LSPlugin'
 import { PageEntity } from '@logseq/libs/dist/LSPlugin.user'
-import { setup as l10nSetup, t } from 'logseq-l10n'; //https://github.com/sethyuan/logseq-l10n
+import { setup as l10nSetup, t } from 'logseq-l10n' //https://github.com/sethyuan/logseq-l10n
 import { DateTime } from 'luxon'
 import {
   Article,
@@ -409,7 +409,6 @@ const fetchOmnivore = async (inBackground = false) => {
                     highlight,
                     {
                       sibling: false,
-                      keepUUID: true,
                     }
                   )
                 }
@@ -421,7 +420,6 @@ const fetchOmnivore = async (inBackground = false) => {
                 highlightsBlock,
                 {
                   sibling: false,
-                  keepUUID: true,
                 }
               )
             }
@@ -451,7 +449,6 @@ const fetchOmnivore = async (inBackground = false) => {
         await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
-          keepUUID: true,
         })
       }
     }
