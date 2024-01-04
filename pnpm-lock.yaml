@@ -104,8 +104,8 @@ devDependencies:
     specifier: ^4.4.3
     version: 4.4.3
   vite:
-    specifier: ^4.5.0
-    version: 4.5.0
+    specifier: ^4.5.1
+    version: 4.5.1
   vite-plugin-logseq:
     specifier: ^1.1.2
     version: 1.1.2
@@ -3508,8 +3508,8 @@ packages:
       magic-string: 0.26.7
     dev: true
 
-  /vite@4.5.0:
-    resolution: {integrity: sha512-ulr8rNLA6rkyFAlVWw2q5YJ91v098AFQ2R0PRFwPzREXOUJQPtFUG0t+/ZikhaOCDqFoDhN6/v8Sq0o4araFAw==}
+  /vite@4.5.1:
+    resolution: {integrity: sha512-AXXFaAJ8yebyqzoNB9fu2pHoo/nWX+xZlaRwoeYUxEqBO+Zj4msE5G+BhGBll9lYEKv9Hfks52PAF2X7qDYXQA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
