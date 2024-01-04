@@ -205,6 +205,7 @@ const fetchOmnivore = async (inBackground = false) => {
 
   const blockTitle = t(headingBlockTitle)
   const fetchingTitle = t('🚀 Fetching articles ...')
+  const noteTitle = t('### Note')
   const highlightsTitle = t('### Highlights')
   const contentTitle = t('### Content')
 
@@ -320,6 +321,23 @@ const fetchOmnivore = async (inBackground = false) => {
             }
           }) || []
 
+        // create a note block
+        const noteText = article.highlights?.find((h) => h.type === HighlightType.Note)?.annotation ?? undefined
+        const noteTextBlocks: IBatchBlock[] | undefined =
+          noteText?.split("\n").map((it) => {
+            return {
+              content: it
+            }
+          })
+
+        const noteBlock: IBatchBlock | undefined = noteTextBlocks ? {
+          content: noteTitle,
+          children: noteTextBlocks,
+          properties: {
+            collapsed: false,
+          }
+        } : undefined
+
         // create highlight title block
         const highlightsBlock: IBatchBlock = {
           content: highlightsTitle,
@@ -376,6 +394,30 @@ const fetchOmnivore = async (inBackground = false) => {
               )
             }
           }
+          if (noteBlock) {
+            let parentBlockId = existingArticleBlock.uuid
+            // check if note title block exists
+            const existingNoteBlock = await getBlockByContent(
+              pageName,
+              existingArticleBlock.uuid,
+              noteBlock.content
+            )
+            if (existingNoteBlock) {
+              await logseq.Editor.updateBlock(
+                existingNoteBlock.uuid,
+                noteBlock.content
+              )
+            } else {
+              // append new note block
+              await logseq.Editor.insertBatchBlock(
+                existingArticleBlock.uuid,
+                noteBlock,
+                {
+                  sibling: false,
+                }
+              )
+            }
+          }
           if (highlightBatchBlocks.length > 0) {
             let parentBlockId = existingArticleBlock.uuid
             // check if highlight title block exists
@@ -424,14 +466,17 @@ const fetchOmnivore = async (inBackground = false) => {
               )
             }
           }
-        } else {
+        } else { // existingArticleBlock
           const children: IBatchBlock[] = []
 
           // add content block if sync content is selected
           syncContent && children.push(contentBlock)
 
+          // add note block if present
+          noteBlock && children.push(noteBlock)
           // add highlights block if there are highlights
           highlightBatchBlocks.length > 0 && children.push(highlightsBlock)
+
 
           // append new article block
           articleBatchBlocks.unshift({
