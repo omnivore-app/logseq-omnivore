@@ -40,9 +40,9 @@ export const getQueryFromFilter = (
 ): string => {
   switch (filter) {
     case Filter.ALL:
-      return ''
+      return 'in:all'
     case Filter.HIGHLIGHTS:
-      return `has:highlights`
+      return `has:highlights in:all`
     case Filter.ADVANCED:
       return customQuery
     default:
