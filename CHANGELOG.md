@@ -1,3 +1,10 @@
+## [1.16.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.3...v1.16.4) (2024-01-04)
+
+
+### Bug Fixes
+
+* use in:all for highlights filter ([#172](https://github.com/omnivore-app/logseq-omnivore/issues/172)) ([7e0ba00](https://github.com/omnivore-app/logseq-omnivore/commit/7e0ba00efb3bc31c19c1c4eb34d95be1935ba893))
+
 ## [1.16.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.2...v1.16.3) (2023-11-21)
 
 
