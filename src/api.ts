@@ -1,3 +1,5 @@
+import { Omnivore } from '@omnivore-app/api'
+
 export interface SearchResponse {
   data: {
     search: {
@@ -26,61 +28,57 @@ export interface UpdatesSinceResponse {
   }
 }
 
-export enum PageType {
-  Article = 'ARTICLE',
-  Book = 'BOOK',
-  File = 'FILE',
-  Profile = 'PROFILE',
-  Unknown = 'UNKNOWN',
-  Website = 'WEBSITE',
-  Tweet = 'TWEET',
-  Video = 'VIDEO',
-  Image = 'IMAGE',
-}
+export type PageType =
+  | 'ARTICLE'
+  | 'BOOK'
+  | 'FILE'
+  | 'PROFILE'
+  | 'UNKNOWN'
+  | 'WEBSITE'
+  | 'TWEET'
+  | 'VIDEO'
+  | 'IMAGE'
+  | 'HIGHLIGHTS'
 
 export interface Article {
   id: string
   title: string
-  siteName?: string
-  originalArticleUrl: string
-  author?: string
-  description?: string
+  siteName?: string | null
+  originalArticleUrl: string | null
+  author?: string | null
+  description?: string | null
   slug: string
-  labels?: Label[]
-  highlights?: Highlight[]
-  updatedAt: string
+  labels: Label[] | null
+  highlights: Highlight[] | null
+  updatedAt: string | null
   savedAt: string
   pageType: PageType
-  content?: string
-  publishedAt?: string
-  readAt?: string
+  content?: string | null
+  publishedAt?: string | null
+  readAt?: string | null
   readingProgressPercent: number
   isArchived: boolean
-  wordsCount?: number
-  archivedAt?: string
+  wordsCount?: number | null
+  archivedAt?: string | null
 }
 
 export interface Label {
   name: string
 }
 
-export enum HighlightType {
-  Highlight = 'HIGHLIGHT',
-  Note = 'NOTE',
-  Redaction = 'REDACTION',
-}
+export type HighlightType = 'HIGHLIGHT' | 'NOTE' | 'REDACTION'
 
 export interface Highlight {
   id: string
   quote: string | null
   annotation: string | null
   patch: string | null
-  updatedAt: string
-  labels?: Label[]
+  updatedAt: string | null
+  labels?: Label[] | null
   type: HighlightType
-  highlightPositionPercent: number
-  color?: string
-  highlightPositionAnchorIndex: number
+  highlightPositionPercent: number | null
+  color?: string | null
+  highlightPositionAnchorIndex: number | null
 }
 
 const ENDPOINT = 'https://api-prod.omnivore.app/api/graphql'
@@ -100,78 +98,23 @@ export const getOmnivoreArticles = async (
   format = 'html',
   endpoint = ENDPOINT
 ): Promise<[Article[], boolean]> => {
-  const res = await fetch(endpoint, {
-    headers: requestHeaders(apiKey),
-    body: JSON.stringify({
-      query: `
-        query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {
-          search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {
-            ... on SearchSuccess {
-              edges {
-                node {
-                  id
-                  title
-                  slug
-                  siteName
-                  originalArticleUrl
-                  url
-                  author
-                  updatedAt
-                  description
-                  savedAt
-                  pageType
-                  content
-                  publishedAt
-                  readAt
-                  isArchived
-                  readingProgressPercent
-                  wordsCount
-                  archivedAt
-                  highlights {
-                    id
-                    quote
-                    annotation
-                    patch
-                    updatedAt
-                    highlightPositionPercent
-                    highlightPositionAnchorIndex
-                    labels {
-                      name
-                    }
-                    type
-                    color
-                  }
-                  labels {
-                    name
-                  }
-                }
-              }
-              pageInfo {
-                hasNextPage
-              }
-            }
-            ... on SearchError {
-              errorCodes
-            }
-          }
-        }`,
-      variables: {
-        after: `${after}`,
-        first,
-        query: `${
-          updatedAt ? 'updated:' + updatedAt : ''
-        } sort:saved-asc ${query}`,
-        includeContent,
-        format,
-      },
-    }),
-    method: 'POST',
+  const omnivore = new Omnivore({
+    authToken: apiKey,
+    baseUrl: endpoint,
+    timeoutMs: 10000,
   })
 
-  const jsonRes = (await res.json()) as SearchResponse
-  const articles = jsonRes.data.search.edges.map((e) => e.node)
+  const result = await omnivore.items.search({
+    after: after.toString(),
+    first,
+    query: `${updatedAt ? 'updated:' + updatedAt : ''} sort:saved-asc ${query}`,
+    includeContent,
+    format: format as 'html' | 'markdown',
+  })
 
-  return [articles, jsonRes.data.search.pageInfo.hasNextPage]
+  const items = result.edges.map((e) => e.node)
+
+  return [items, result.pageInfo.hasNextPage]
 }
 
 export const getDeletedOmnivoreArticles = async (

@@ -1,6 +1,6 @@
 import { truncate } from 'lodash'
 import Mustache from 'mustache'
-import { Article, Highlight, HighlightType, Label, PageType } from '../api'
+import { Article, Highlight, Label, PageType } from '../api'
 import {
   dateReference,
   formatDate,
@@ -120,7 +120,7 @@ const createArticleView = (
   preferredDateFormat: string
 ): ArticleView => {
   const siteName =
-    article.siteName || siteNameFromUrl(article.originalArticleUrl)
+    article.siteName || siteNameFromUrl(article.originalArticleUrl || '')
   const dateSaved = dateReference(
     new Date(article.savedAt),
     preferredDateFormat
@@ -128,7 +128,7 @@ const createArticleView = (
   const datePublished = article.publishedAt
     ? dateReference(new Date(article.publishedAt), preferredDateFormat)
     : undefined
-  const note = article.highlights?.find((h) => h.type === HighlightType.Note)
+  const note = article.highlights?.find((h) => h.type === 'NOTE')
   const rawDatePublished = article.publishedAt
     ? formatDate(new Date(article.publishedAt), preferredDateFormat)
     : undefined
@@ -150,9 +150,9 @@ const createArticleView = (
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
     siteName,
-    originalUrl: article.originalArticleUrl,
-    author: article.author,
-    labels: article.labels,
+    originalUrl: article.originalArticleUrl || '',
+    author: article.author || 'unknown',
+    labels: article.labels || [],
     dateSaved,
     datePublished,
     note: note?.annotation ?? undefined,
@@ -161,7 +161,7 @@ const createArticleView = (
     rawDateRead,
     dateRead,
     state: getArticleState(article),
-    wordsCount,
+    wordsCount: article.wordsCount || 0,
     readLength,
     dateArchived,
     ...functionMap,
@@ -183,19 +183,19 @@ export const renderHighlightContent = (
   article: Article,
   preferredDateFormat: string
 ): string => {
-  const updatedAt = new Date(highlight.updatedAt)
+  const updatedAt = new Date(highlight.updatedAt || '')
   const dateHighlighted = dateReference(updatedAt, preferredDateFormat)
   const rawDateHighlighted = formatDate(updatedAt, preferredDateFormat)
   const highlightView: HighlightView = {
     text: formatHighlightQuote(highlight.quote, template),
-    labels: highlight.labels,
+    labels: highlight.labels || [],
     highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
     dateHighlighted,
     rawDateHighlighted,
     note: highlight.annotation ?? undefined,
     color: highlight.color ?? 'yellow',
-    positionPercent: highlight.highlightPositionPercent,
-    positionAnchorIndex: highlight.highlightPositionAnchorIndex + 1,
+    positionPercent: highlight.highlightPositionPercent || 0,
+    positionAnchorIndex: (highlight.highlightPositionAnchorIndex || 0) + 1,
     ...functionMap,
   }
   return Mustache.render(template, highlightView)
