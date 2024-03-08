@@ -7,13 +7,7 @@ import {
 import { PageEntity } from '@logseq/libs/dist/LSPlugin.user'
 import { setup as l10nSetup, t } from 'logseq-l10n' //https://github.com/sethyuan/logseq-l10n
 import { DateTime } from 'luxon'
-import {
-  Article,
-  HighlightType,
-  PageType,
-  getDeletedOmnivoreArticles,
-  getOmnivoreArticles,
-} from './api'
+import { Article, getDeletedOmnivoreArticles, getOmnivoreArticles } from './api'
 import {
   HighlightOrder,
   Settings,
@@ -283,13 +277,13 @@ const fetchOmnivore = async (inBackground = false) => {
         }
         // filter out notes and redactions
         const highlights = article.highlights?.filter(
-          (h) => h.type === HighlightType.Highlight
+          (h) => h.type === 'HIGHLIGHT'
         )
         // sort highlights by location if selected in options
         if (highlightOrder === HighlightOrder.LOCATION) {
           highlights?.sort((a, b) => {
             try {
-              if (article.pageType === PageType.File) {
+              if (article.pageType === 'FILE') {
                 // sort by location in file
                 return compareHighlightsInFile(a, b)
               }
