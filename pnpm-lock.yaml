@@ -8,6 +8,9 @@ dependencies:
   '@logseq/libs':
     specifier: ^0.0.15
     version: 0.0.15
+  '@omnivore-app/api':
+    specifier: ^1.0.0
+    version: 1.0.0(graphql@16.8.1)(react@18.2.0)
   date-fns:
     specifier: ^2.29.3
     version: 2.29.3
@@ -111,6 +114,17 @@ devDependencies:
     version: 1.1.2
 
 packages:
+
+  /@0no-co/graphql.web@1.0.4(graphql@16.8.1):
+    resolution: {integrity: sha512-W3ezhHGfO0MS1PtGloaTpg0PbaT8aZSmmaerL7idtU5F7oCI+uu25k+MsMS31BVFlp4aMkHSrNRxiD72IlK8TA==}
+    peerDependencies:
+      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+    peerDependenciesMeta:
+      graphql:
+        optional: true
+    dependencies:
+      graphql: 16.8.1
+    dev: false
 
   /@aashutoshrathi/word-wrap@1.2.6:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
@@ -361,6 +375,13 @@ packages:
       - supports-color
     dev: true
 
+  /@gql.tada/cli-utils@0.1.0:
+    resolution: {integrity: sha512-hM1u0eZlCBuMQ26q3D/dzbsdEK98pbhhJLLa3xJWGLHmsRiySijyoKTIMrBhdqV2v5LvQP2dX/6k1rvQt2Mvhg==}
+    dependencies:
+      '@urql/introspection': 1.0.3(graphql@16.8.1)
+      graphql: 16.8.1
+    dev: false
+
   /@humanwhocodes/config-array@0.9.5:
     resolution: {integrity: sha512-ObyMyWxZiCu/yTisA7uzx81s40xR2fD5Cg/2Kq7G02ajkNubJf6BopgDTmDyc3U7sXpNKM8cYOw7s7Tyr+DnCw==}
     engines: {node: '>=10.10.0'}
@@ -521,6 +542,17 @@ packages:
     dependencies:
       '@octokit/openapi-types': 18.1.1
     dev: true
+
+  /@omnivore-app/api@1.0.0(graphql@16.8.1)(react@18.2.0):
+    resolution: {integrity: sha512-7q6tC5pi2eM+C8x3k9TZhkGtAJcYVCSooaxSs5i1csfJZh2ZiJ8Dlk0cRK4J5ytYUsng9Qs0V1zZD+N9BxzBQg==}
+    engines: {node: '>=16.0.0'}
+    dependencies:
+      gql.tada: 1.3.1(graphql@16.8.1)
+      urql: 4.0.6(graphql@16.8.1)(react@18.2.0)
+    transitivePeerDependencies:
+      - graphql
+      - react
+    dev: false
 
   /@pnpm/config.env-replace@1.1.0:
     resolution: {integrity: sha512-htyl8TWnKL7K/ESFa1oW2UB5lVDxuF5DpM7tBi6Hu2LNL3mWkIzNLG6N4zoCUP1lCKNxWy/3iu8mS8MvToGd6w==}
@@ -866,6 +898,23 @@ packages:
       '@typescript-eslint/types': 5.9.0
       eslint-visitor-keys: 3.4.3
     dev: true
+
+  /@urql/core@4.3.0(graphql@16.8.1):
+    resolution: {integrity: sha512-wT+FeL8DG4x5o6RfHEnONNFVDM3616ouzATMYUClB6CB+iIu2mwfBKd7xSUxYOZmwtxna5/hDRQdMl3nbQZlnw==}
+    dependencies:
+      '@0no-co/graphql.web': 1.0.4(graphql@16.8.1)
+      wonka: 6.3.4
+    transitivePeerDependencies:
+      - graphql
+    dev: false
+
+  /@urql/introspection@1.0.3(graphql@16.8.1):
+    resolution: {integrity: sha512-5zgnfUDV10c3qudqYvfZ/rOtWVB2QvqanmoDMttqpt+TCCPkSUZdb2qcLCEB6DL7ph8mQRTZhXI29J57nTnqKg==}
+    peerDependencies:
+      graphql: ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+    dependencies:
+      graphql: 16.8.1
+    dev: false
 
   /JSONStream@1.3.5:
     resolution: {integrity: sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ==}
@@ -1879,6 +1928,16 @@ packages:
       slash: 3.0.0
     dev: true
 
+  /gql.tada@1.3.1(graphql@16.8.1):
+    resolution: {integrity: sha512-9+L2v5bi/QOFJmDnqsvr1bRryuso1ZqdfKiZT+5V8LB92iUICC+05TwmF2iUiQFdjp1IWgUOYjhrhjUFMIJILw==}
+    hasBin: true
+    dependencies:
+      '@0no-co/graphql.web': 1.0.4(graphql@16.8.1)
+      '@gql.tada/cli-utils': 0.1.0
+    transitivePeerDependencies:
+      - graphql
+    dev: false
+
   /graceful-fs@4.2.10:
     resolution: {integrity: sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA==}
     dev: true
@@ -1886,6 +1945,11 @@ packages:
   /graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
     dev: true
+
+  /graphql@16.8.1:
+    resolution: {integrity: sha512-59LZHPdGZVh695Ud9lRzPBVTtlX9ZCV150Er2W43ro37wVof0ctenSaskPPjN7lVTIN8mSZt8PHUNKZuNQUuxw==}
+    engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
+    dev: false
 
   /handlebars@4.7.8:
     resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
@@ -2135,7 +2199,6 @@ packages:
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
-    dev: true
 
   /js-yaml@4.1.0:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
@@ -2285,6 +2348,13 @@ packages:
       '@logseq/libs': '>= 0.0.1-alpha.33'
     dependencies:
       '@logseq/libs': 0.0.15
+    dev: false
+
+  /loose-envify@1.4.0:
+    resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
+    hasBin: true
+    dependencies:
+      js-tokens: 4.0.0
     dev: false
 
   /loupe@2.3.7:
@@ -2923,6 +2993,13 @@ packages:
       strip-json-comments: 2.0.1
     dev: true
 
+  /react@18.2.0:
+    resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
+    engines: {node: '>=0.10.0'}
+    dependencies:
+      loose-envify: 1.4.0
+    dev: false
+
   /read-pkg-up@7.0.1:
     resolution: {integrity: sha512-zK0TB7Xd6JpCLmlLmufqykGE+/TlOePD6qKClNW7hHDKFh/J7/7gCWGR7joEQEW1bKq3a3yUZSObOoWLFQ4ohg==}
     engines: {node: '>=8'}
@@ -3481,6 +3558,18 @@ packages:
     resolution: {integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==}
     dev: true
 
+  /urql@4.0.6(graphql@16.8.1)(react@18.2.0):
+    resolution: {integrity: sha512-meXJ2puOd64uCGKh7Fse2R7gPa8+ZpBOoA62jN7CPXXUt7SVZSdeXWSpB3HvlfzLUkEqsWbvshwrgeWRYNNGaQ==}
+    peerDependencies:
+      react: '>= 16.8.0'
+    dependencies:
+      '@urql/core': 4.3.0(graphql@16.8.1)
+      react: 18.2.0
+      wonka: 6.3.4
+    transitivePeerDependencies:
+      - graphql
+    dev: false
+
   /util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
     dev: true
@@ -3561,6 +3650,10 @@ packages:
     dependencies:
       isexe: 2.0.0
     dev: true
+
+  /wonka@6.3.4:
+    resolution: {integrity: sha512-CjpbqNtBGNAeyNS/9W6q3kSkKE52+FjIj7AkFlLr11s/VWGUu6a2CdYSdGxocIhIVjaW/zchesBQUKPVU69Cqg==}
+    dev: false
 
   /wordwrap@1.0.0:
     resolution: {integrity: sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==}
