@@ -1,6 +1,6 @@
 import { SettingSchemaDesc } from '@logseq/libs/dist/LSPlugin.user'
 import { t } from 'logseq-l10n'
-import { defaultArticleTemplate, defaultHighlightTemplate } from './template'
+import { defaultHighlightTemplate, defaultItemTemplate } from './template'
 
 export enum Filter {
   ALL = 'import all my articles',
@@ -126,7 +126,7 @@ export const settingsSchema = async (): Promise<SettingSchemaDesc[]> => [
     type: 'string',
     title: t('Enter the template to use for new articles'),
     description: t('The template to use for new articles.'),
-    default: defaultArticleTemplate,
+    default: defaultItemTemplate,
     inputAs: 'textarea',
   },
   {
