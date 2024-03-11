@@ -9,8 +9,8 @@ dependencies:
     specifier: ^0.0.15
     version: 0.0.15
   '@omnivore-app/api':
-    specifier: ^1.0.0
-    version: 1.0.0(graphql@16.8.1)(react@18.2.0)
+    specifier: ^1.0.4
+    version: 1.0.4(graphql@16.8.1)
   date-fns:
     specifier: ^2.29.3
     version: 2.29.3
@@ -543,15 +543,14 @@ packages:
       '@octokit/openapi-types': 18.1.1
     dev: true
 
-  /@omnivore-app/api@1.0.0(graphql@16.8.1)(react@18.2.0):
-    resolution: {integrity: sha512-7q6tC5pi2eM+C8x3k9TZhkGtAJcYVCSooaxSs5i1csfJZh2ZiJ8Dlk0cRK4J5ytYUsng9Qs0V1zZD+N9BxzBQg==}
-    engines: {node: '>=16.0.0'}
+  /@omnivore-app/api@1.0.4(graphql@16.8.1):
+    resolution: {integrity: sha512-M3a0we1WryUt7qaBV4fI0CmTJaC7eeJ8TAbF5hVTcrIeIJU9I1Lwfdq/coSx5SIHSf2jxOaCUqn1YRB314euRg==}
+    engines: {node: '>=18.0.0'}
     dependencies:
+      '@urql/core': 4.3.0(graphql@16.8.1)
       gql.tada: 1.3.1(graphql@16.8.1)
-      urql: 4.0.6(graphql@16.8.1)(react@18.2.0)
     transitivePeerDependencies:
       - graphql
-      - react
     dev: false
 
   /@pnpm/config.env-replace@1.1.0:
@@ -2199,6 +2198,7 @@ packages:
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+    dev: true
 
   /js-yaml@4.1.0:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
@@ -2348,13 +2348,6 @@ packages:
       '@logseq/libs': '>= 0.0.1-alpha.33'
     dependencies:
       '@logseq/libs': 0.0.15
-    dev: false
-
-  /loose-envify@1.4.0:
-    resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
-    hasBin: true
-    dependencies:
-      js-tokens: 4.0.0
     dev: false
 
   /loupe@2.3.7:
@@ -2993,13 +2986,6 @@ packages:
       strip-json-comments: 2.0.1
     dev: true
 
-  /react@18.2.0:
-    resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      loose-envify: 1.4.0
-    dev: false
-
   /read-pkg-up@7.0.1:
     resolution: {integrity: sha512-zK0TB7Xd6JpCLmlLmufqykGE+/TlOePD6qKClNW7hHDKFh/J7/7gCWGR7joEQEW1bKq3a3yUZSObOoWLFQ4ohg==}
     engines: {node: '>=8'}
@@ -3557,18 +3543,6 @@ packages:
   /url-join@4.0.1:
     resolution: {integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==}
     dev: true
-
-  /urql@4.0.6(graphql@16.8.1)(react@18.2.0):
-    resolution: {integrity: sha512-meXJ2puOd64uCGKh7Fse2R7gPa8+ZpBOoA62jN7CPXXUt7SVZSdeXWSpB3HvlfzLUkEqsWbvshwrgeWRYNNGaQ==}
-    peerDependencies:
-      react: '>= 16.8.0'
-    dependencies:
-      '@urql/core': 4.3.0(graphql@16.8.1)
-      react: 18.2.0
-      wonka: 6.3.4
-    transitivePeerDependencies:
-      - graphql
-    dev: false
 
   /util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
