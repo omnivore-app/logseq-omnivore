@@ -1,3 +1,10 @@
+## [1.16.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.4...v1.16.5) (2024-05-16)
+
+
+### Bug Fixes
+
+* use new get content api ([70958c9](https://github.com/omnivore-app/logseq-omnivore/commit/70958c9ef33af2703a2a7ad5be3d1572b810948a))
+
 ## [1.16.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.3...v1.16.4) (2024-01-04)
 
 
