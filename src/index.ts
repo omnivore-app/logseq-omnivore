@@ -227,7 +227,7 @@ const fetchOmnivore = async (inBackground = false) => {
     preParseTemplate(articleTemplate)
     preParseTemplate(highlightTemplate)
 
-    const size = 50
+    const size = 15
     for (let after = 0; ; after += size) {
       const [items, hasNextPage] = await getOmnivoreItems(
         apiKey,
