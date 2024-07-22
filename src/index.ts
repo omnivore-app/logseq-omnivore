@@ -469,14 +469,14 @@ const fetchOmnivore = async (inBackground = false) => {
         else {
           targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
 
-        const existingBlock = await getBlockByContent(
-          pageName,
-          targetBlockId,
-          deletedItem.slug
-        )
+          const existingBlock = await getBlockByContent(
+            pageName,
+            targetBlockId,
+            deletedItem.slug
+          )
 
-        if (existingBlock) {
-          await logseq.Editor.removeBlock(existingBlock.uuid)
+          if (existingBlock) {
+            await logseq.Editor.removeBlock(existingBlock.uuid)
           }
         }
       }
