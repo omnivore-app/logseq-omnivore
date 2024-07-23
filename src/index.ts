@@ -458,7 +458,6 @@ const fetchOmnivore = async (inBackground = false) => {
             pageNameTemplate,
             preferredDateFormat
           )
-          targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
 
           // delete page if article is synced to a separate page and page is not a journal
           const existingPage = await logseq.Editor.getPage(pageName)
@@ -467,15 +466,18 @@ const fetchOmnivore = async (inBackground = false) => {
             continue
           }
         }
+        else {
+          targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
 
-        const existingBlock = await getBlockByContent(
-          pageName,
-          targetBlockId,
-          deletedItem.slug
-        )
+          const existingBlock = await getBlockByContent(
+            pageName,
+            targetBlockId,
+            deletedItem.slug
+          )
 
-        if (existingBlock) {
-          await logseq.Editor.removeBlock(existingBlock.uuid)
+          if (existingBlock) {
+            await logseq.Editor.removeBlock(existingBlock.uuid)
+          }
         }
       }
 
