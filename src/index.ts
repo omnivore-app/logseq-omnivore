@@ -465,8 +465,7 @@ const fetchOmnivore = async (inBackground = false) => {
             await logseq.Editor.deletePage(pageName)
             continue
           }
-        }
-        else {
+        } else {
           targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
 
           const existingBlock = await getBlockByContent(
