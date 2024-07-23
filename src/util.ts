@@ -3,7 +3,7 @@ import { diff_match_patch } from 'diff-match-patch'
 import { DateTime } from 'luxon'
 import escape from 'markdown-escape'
 import outOfCharacter from 'out-of-character'
-import { Highlight } from './api'
+import { Highlight } from '@omnivore-app/api'
 
 export interface HighlightPoint {
   left: number
