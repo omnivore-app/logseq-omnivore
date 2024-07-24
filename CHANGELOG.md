@@ -1,3 +1,10 @@
+## [1.16.6](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.5...v1.16.6) (2024-07-24)
+
+
+### Bug Fixes
+
+* github action does not trigger a release because pnpm version is wrong ([0f7beb5](https://github.com/omnivore-app/logseq-omnivore/commit/0f7beb523b77eec93789c6a22d29f9fccda70e3b))
+
 ## [1.16.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.4...v1.16.5) (2024-05-16)
 
 
