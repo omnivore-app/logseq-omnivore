@@ -1,3 +1,24 @@
+## [1.16.5](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.4...v1.16.5) (2024-05-16)
+
+
+### Bug Fixes
+
+* use new get content api ([70958c9](https://github.com/omnivore-app/logseq-omnivore/commit/70958c9ef33af2703a2a7ad5be3d1572b810948a))
+
+## [1.16.4](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.3...v1.16.4) (2024-01-04)
+
+
+### Bug Fixes
+
+* use in:all for highlights filter ([#172](https://github.com/omnivore-app/logseq-omnivore/issues/172)) ([7e0ba00](https://github.com/omnivore-app/logseq-omnivore/commit/7e0ba00efb3bc31c19c1c4eb34d95be1935ba893))
+
+## [1.16.3](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.2...v1.16.3) (2023-11-21)
+
+
+### Bug Fixes
+
+* blocks failed to create because article id is not valid uuid string ([#165](https://github.com/omnivore-app/logseq-omnivore/issues/165)) ([0ba02af](https://github.com/omnivore-app/logseq-omnivore/commit/0ba02af4a3b60b49bcf53e99b9030c73e714141a))
+
 ## [1.16.2](https://github.com/omnivore-app/logseq-omnivore/compare/v1.16.1...v1.16.2) (2023-11-17)
 
 

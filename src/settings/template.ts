@@ -1,6 +1,6 @@
+import { Highlight, Item, ItemType, Label } from '@omnivore-app/api'
 import { truncate } from 'lodash'
 import Mustache from 'mustache'
-import { Article, Highlight, HighlightType, Label, PageType } from '../api'
 import {
   dateReference,
   formatDate,
@@ -15,7 +15,7 @@ type FunctionMap = {
   ) => string
 }
 
-export type ArticleView =
+export type ItemView =
   | {
       id: string
       title: string
@@ -24,7 +24,7 @@ export type ArticleView =
       siteName: string
       originalUrl: string
       note?: string
-      type: PageType
+      type: ItemType
       labels?: Label[]
       dateSaved: string
       datePublished?: string
@@ -52,14 +52,14 @@ export type HighlightView =
     }
   | FunctionMap
 
-enum ArticleState {
+enum ItemState {
   Saved = 'SAVED',
   Reading = 'READING',
   Completed = 'COMPLETED',
   Archived = 'ARCHIVED',
 }
 
-export const defaultArticleTemplate = `[{{{title}}}]({{{omnivoreUrl}}})
+export const defaultItemTemplate = `[{{{title}}}]({{{omnivoreUrl}}})
 collapsed:: true
 site:: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
 {{#author}}
@@ -77,17 +77,17 @@ export const defaultHighlightTemplate = `> {{{text}}} [⤴️]({{{highlightUrl}}
 
 {{#note.length}}note:: {{{note}}}{{/note.length}}`
 
-const getArticleState = (article: Article): string => {
-  if (article.isArchived) {
-    return ArticleState.Archived
+const getItemState = (item: Item): string => {
+  if (item.isArchived) {
+    return ItemState.Archived
   }
-  if (article.readingProgressPercent > 0) {
-    return article.readingProgressPercent === 100
-      ? ArticleState.Completed
-      : ArticleState.Reading
+  if (item.readingProgressPercent > 0) {
+    return item.readingProgressPercent === 100
+      ? ItemState.Completed
+      : ItemState.Reading
   }
 
-  return ArticleState.Saved
+  return ItemState.Saved
 }
 
 function lowerCase() {
@@ -115,101 +115,95 @@ const functionMap: FunctionMap = {
   upperCaseFirst,
 }
 
-const createArticleView = (
-  article: Article,
-  preferredDateFormat: string
-): ArticleView => {
+const createItemView = (item: Item, preferredDateFormat: string): ItemView => {
   const siteName =
-    article.siteName || siteNameFromUrl(article.originalArticleUrl)
-  const dateSaved = dateReference(
-    new Date(article.savedAt),
-    preferredDateFormat
-  )
-  const datePublished = article.publishedAt
-    ? dateReference(new Date(article.publishedAt), preferredDateFormat)
+    item.siteName || siteNameFromUrl(item.originalArticleUrl || item.url)
+  const dateSaved = dateReference(new Date(item.savedAt), preferredDateFormat)
+  const datePublished = item.publishedAt
+    ? dateReference(new Date(item.publishedAt), preferredDateFormat)
     : undefined
-  const note = article.highlights?.find((h) => h.type === HighlightType.Note)
-  const rawDatePublished = article.publishedAt
-    ? formatDate(new Date(article.publishedAt), preferredDateFormat)
+  const note = item.highlights?.find((h) => h.type === 'NOTE')
+  const rawDatePublished = item.publishedAt
+    ? formatDate(new Date(item.publishedAt), preferredDateFormat)
     : undefined
-  const rawDateRead = article.readAt
-    ? formatDate(new Date(article.readAt), preferredDateFormat)
+  const rawDateRead = item.readAt
+    ? formatDate(new Date(item.readAt), preferredDateFormat)
     : undefined
-  const dateRead = article.readAt
-    ? dateReference(new Date(article.readAt), preferredDateFormat)
+  const dateRead = item.readAt
+    ? dateReference(new Date(item.readAt), preferredDateFormat)
     : undefined
-  const wordsCount = article.wordsCount
+  const wordsCount = item.wordsCount
   const readLength = wordsCount
     ? Math.round(Math.max(1, wordsCount / 235))
     : undefined
-  const dateArchived = article.archivedAt
-    ? formatDate(new Date(article.archivedAt), preferredDateFormat)
+  const dateArchived = item.archivedAt
+    ? formatDate(new Date(item.archivedAt), preferredDateFormat)
     : undefined
   return {
-    id: article.id,
-    title: article.title,
-    omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
+    id: item.id,
+    title: item.title,
+    omnivoreUrl: `https://omnivore.app/me/${item.slug}`,
     siteName,
-    originalUrl: article.originalArticleUrl,
-    author: article.author,
-    labels: article.labels,
+    originalUrl: item.originalArticleUrl || '',
+    author: item.author || 'unknown',
+    labels: item.labels || [],
     dateSaved,
     datePublished,
     note: note?.annotation ?? undefined,
-    type: article.pageType,
+    type: item.pageType,
     rawDatePublished,
     rawDateRead,
     dateRead,
-    state: getArticleState(article),
-    wordsCount,
+    state: getItemState(item),
+    wordsCount: item.wordsCount || 0,
     readLength,
     dateArchived,
     ...functionMap,
   }
 }
 
-export const renderArticle = (
+export const renderItem = (
   template: string,
-  article: Article,
+  item: Item,
   preferredDateFormat: string
 ): string => {
-  const articleView = createArticleView(article, preferredDateFormat)
+  const articleView = createItemView(item, preferredDateFormat)
   return Mustache.render(template, articleView)
 }
 
 export const renderHighlightContent = (
   template: string,
   highlight: Highlight,
-  article: Article,
+  item: Item,
   preferredDateFormat: string
 ): string => {
-  const updatedAt = new Date(highlight.updatedAt)
+  const updatedAt = new Date(highlight.updatedAt || '')
   const dateHighlighted = dateReference(updatedAt, preferredDateFormat)
   const rawDateHighlighted = formatDate(updatedAt, preferredDateFormat)
   const highlightView: HighlightView = {
     text: formatHighlightQuote(highlight.quote, template),
-    labels: highlight.labels,
-    highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
+    labels: highlight.labels || [],
+    highlightUrl: `https://omnivore.app/me/${item.slug}#${highlight.id}`,
     dateHighlighted,
     rawDateHighlighted,
     note: highlight.annotation ?? undefined,
     color: highlight.color ?? 'yellow',
-    positionPercent: highlight.highlightPositionPercent,
-    positionAnchorIndex: highlight.highlightPositionAnchorIndex + 1,
+    positionPercent: highlight.highlightPositionPercent || 0,
+    positionAnchorIndex: (highlight.highlightPositionAnchorIndex || 0) + 1,
     ...functionMap,
   }
   return Mustache.render(template, highlightView)
 }
 
 export const renderPageName = (
-  article: Article,
+  item: Item,
   pageName: string,
   preferredDateFormat: string
 ) => {
-  const date = formatDate(new Date(article.savedAt), preferredDateFormat)
+  const date = formatDate(new Date(item.savedAt), preferredDateFormat)
   // replace slash with dash in the title to prevent creating subpages
   // since there is no way to escape slashes in logseq
-  const title = article.title.replace(/\//g, '-')
+  const title = item.title.replace(/\//g, '-')
 
   const renderedPageName = Mustache.render(pageName, {
     title,

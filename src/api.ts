@@ -1,224 +1,148 @@
-export interface SearchResponse {
+import { Item, ItemFormat, Omnivore } from '@omnivore-app/api'
+
+interface GetContentResponse {
   data: {
-    search: {
-      edges: { node: Article }[]
-      pageInfo: {
-        hasNextPage: boolean
-      }
-    }
+    libraryItemId: string
+    downloadUrl: string
+    error?: string
+  }[]
+}
+
+const baseUrl = (endpoint: string) => endpoint.replace(/\/api\/graphql$/, '')
+
+const getContent = async (
+  endpoint: string,
+  apiKey: string,
+  libraryItemIds: string[]
+): Promise<GetContentResponse> => {
+  const response = await fetch(`${baseUrl(endpoint)}/api/content`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      Authorization: apiKey,
+    },
+    body: JSON.stringify({ libraryItemIds, format: 'highlightedMarkdown' }),
+  })
+
+  if (!response.ok) {
+    console.error('Failed to fetch content', response.statusText)
+    throw new Error('Failed to fetch content')
   }
+
+  return (await response.json()) as GetContentResponse
 }
 
-export enum UpdateReason {
-  CREATED = 'CREATED',
-  UPDATED = 'UPDATED',
-  DELETED = 'DELETED',
-}
-
-export interface UpdatesSinceResponse {
-  data: {
-    updatesSince: {
-      edges: { updateReason: UpdateReason; node: Article }[]
-      pageInfo: {
-        hasNextPage: boolean
-      }
+const downloadFromUrl = async (url: string): Promise<string> => {
+  // polling until download is ready or failed
+  const response = await fetch(url)
+  if (!response.ok) {
+    if (response.status === 404) {
+      // retry after 1 second if download returns 404
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      return downloadFromUrl(url)
     }
+
+    console.error('Failed to download content', response.statusText)
+    throw new Error('Failed to download content')
   }
+
+  return await response.text()
 }
 
-export enum PageType {
-  Article = 'ARTICLE',
-  Book = 'BOOK',
-  File = 'FILE',
-  Profile = 'PROFILE',
-  Unknown = 'UNKNOWN',
-  Website = 'WEBSITE',
-  Tweet = 'TWEET',
-  Video = 'VIDEO',
-  Image = 'IMAGE',
+const fetchContentForItems = async (
+  endpoint: string,
+  apiKey: string,
+  items: Item[]
+) => {
+  const content = await getContent(
+    endpoint,
+    apiKey,
+    items.map((a) => a.id)
+  )
+
+  await Promise.allSettled(
+    content.data.map(async (c) => {
+      if (c.error) {
+        console.error('Error fetching content', c.error)
+        return
+      }
+
+      const item = items.find((i) => i.id === c.libraryItemId)
+      if (!item) {
+        console.error('Item not found', c.libraryItemId)
+        return
+      }
+
+      // timeout if download takes too long
+      item.content = await Promise.race([
+        downloadFromUrl(c.downloadUrl),
+        new Promise<string>(
+          (_, reject) => setTimeout(() => reject('Timeout'), 600_000) // 10 minutes
+        ),
+      ])
+    })
+  )
 }
 
-export interface Article {
-  id: string
-  title: string
-  siteName?: string
-  originalArticleUrl: string
-  author?: string
-  description?: string
-  slug: string
-  labels?: Label[]
-  highlights?: Highlight[]
-  updatedAt: string
-  savedAt: string
-  pageType: PageType
-  content?: string
-  publishedAt?: string
-  readAt?: string
-  readingProgressPercent: number
-  isArchived: boolean
-  wordsCount?: number
-  archivedAt?: string
-}
-
-export interface Label {
-  name: string
-}
-
-export enum HighlightType {
-  Highlight = 'HIGHLIGHT',
-  Note = 'NOTE',
-  Redaction = 'REDACTION',
-}
-
-export interface Highlight {
-  id: string
-  quote: string | null
-  annotation: string | null
-  patch: string | null
-  updatedAt: string
-  labels?: Label[]
-  type: HighlightType
-  highlightPositionPercent: number
-  color?: string
-  highlightPositionAnchorIndex: number
-}
-
-const ENDPOINT = 'https://api-prod.omnivore.app/api/graphql'
-const requestHeaders = (apiKey: string) => ({
-  'Content-Type': 'application/json',
-  authorization: apiKey,
-  'X-OmnivoreClient': 'logseq-plugin',
-})
-
-export const getOmnivoreArticles = async (
+export const getOmnivoreItems = async (
   apiKey: string,
   after = 0,
   first = 10,
   updatedAt = '',
   query = '',
   includeContent = false,
-  format = 'html',
-  endpoint = ENDPOINT
-): Promise<[Article[], boolean]> => {
-  const res = await fetch(endpoint, {
-    headers: requestHeaders(apiKey),
-    body: JSON.stringify({
-      query: `
-        query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {
-          search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {
-            ... on SearchSuccess {
-              edges {
-                node {
-                  id
-                  title
-                  slug
-                  siteName
-                  originalArticleUrl
-                  url
-                  author
-                  updatedAt
-                  description
-                  savedAt
-                  pageType
-                  content
-                  publishedAt
-                  readAt
-                  isArchived
-                  readingProgressPercent
-                  wordsCount
-                  archivedAt
-                  highlights {
-                    id
-                    quote
-                    annotation
-                    patch
-                    updatedAt
-                    highlightPositionPercent
-                    highlightPositionAnchorIndex
-                    labels {
-                      name
-                    }
-                    type
-                    color
-                  }
-                  labels {
-                    name
-                  }
-                }
-              }
-              pageInfo {
-                hasNextPage
-              }
-            }
-            ... on SearchError {
-              errorCodes
-            }
-          }
-        }`,
-      variables: {
-        after: `${after}`,
-        first,
-        query: `${
-          updatedAt ? 'updated:' + updatedAt : ''
-        } sort:saved-asc ${query}`,
-        includeContent,
-        format,
-      },
-    }),
-    method: 'POST',
+  format: ItemFormat = 'html',
+  endpoint: string
+): Promise<[Item[], boolean]> => {
+  const omnivore = new Omnivore({
+    apiKey,
+    baseUrl: baseUrl(endpoint),
+    timeoutMs: 10000,
   })
 
-  const jsonRes = (await res.json()) as SearchResponse
-  const articles = jsonRes.data.search.edges.map((e) => e.node)
+  const result = await omnivore.items.search({
+    after,
+    first,
+    query: `${updatedAt ? 'updated:' + updatedAt : ''} sort:saved-asc ${query}`,
+    includeContent: false,
+    format,
+  })
 
-  return [articles, jsonRes.data.search.pageInfo.hasNextPage]
+  const items = result.edges.map((e) => e.node)
+
+  if (includeContent && items.length > 0) {
+    try {
+      await fetchContentForItems(endpoint, apiKey, items)
+    } catch (error) {
+      console.error('Error fetching content', error)
+    }
+  }
+
+  return [items, result.pageInfo.hasNextPage]
 }
 
-export const getDeletedOmnivoreArticles = async (
+export const getDeletedOmnivoreItems = async (
   apiKey: string,
   after = 0,
   first = 10,
   updatedAt = '',
-  endpoint = ENDPOINT
-): Promise<[Article[], boolean]> => {
-  const res = await fetch(endpoint, {
-    headers: requestHeaders(apiKey),
-    body: JSON.stringify({
-      query: `
-        query UpdatesSince($after: String, $first: Int, $since: Date!) {
-          updatesSince(first: $first, after: $after, since: $since) {
-            ... on UpdatesSinceSuccess {
-              edges {
-                updateReason
-                node {
-                  id
-                  slug
-                  title
-                  savedAt
-                }
-              }
-              pageInfo {
-                hasNextPage
-              }
-            }
-            ... on UpdatesSinceError {
-              errorCodes
-            }
-          }
-        }`,
-      variables: {
-        after: `${after}`,
-        first,
-        since: updatedAt || '2021-01-01',
-      },
-    }),
-    method: 'POST',
+  endpoint: string
+): Promise<[Item[], boolean]> => {
+  const omnivore = new Omnivore({
+    apiKey,
+    baseUrl: baseUrl(endpoint),
+    timeoutMs: 10000,
   })
 
-  const jsonRes = (await res.json()) as UpdatesSinceResponse
-  const deletedArticles = jsonRes.data.updatesSince.edges
-    .filter((edge) => edge.updateReason === UpdateReason.DELETED)
-    .map((edge) => edge.node)
+  const result = await omnivore.items.updates({
+    after,
+    first,
+    since: updatedAt || '2021-01-01',
+  })
 
-  return [deletedArticles, jsonRes.data.updatesSince.pageInfo.hasNextPage]
+  const deletedItems = result.edges
+    .filter((edge) => edge.updateReason === 'DELETED' && edge.node)
+    .map((edge) => edge.node) as Item[]
+
+  return [deletedItems, result.pageInfo.hasNextPage]
 }

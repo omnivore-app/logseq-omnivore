@@ -7,13 +7,7 @@ import {
 import { PageEntity } from '@logseq/libs/dist/LSPlugin.user'
 import { setup as l10nSetup, t } from 'logseq-l10n' //https://github.com/sethyuan/logseq-l10n
 import { DateTime } from 'luxon'
-import {
-  Article,
-  HighlightType,
-  PageType,
-  getDeletedOmnivoreArticles,
-  getOmnivoreArticles,
-} from './api'
+import { getDeletedOmnivoreItems, getOmnivoreItems } from './api'
 import {
   HighlightOrder,
   Settings,
@@ -22,8 +16,8 @@ import {
 } from './settings'
 import {
   preParseTemplate,
-  renderArticle,
   renderHighlightContent,
+  renderItem,
   renderPageName,
 } from './settings/template'
 import ja from './translations/ja.json'
@@ -196,7 +190,7 @@ const fetchOmnivore = async (inBackground = false) => {
         graph +
         t('" graph which is not currently active.\nPlease switch to graph "') +
         graph +
-        t('" to sync Omnivore articles.'),
+        t('" to sync Omnivore items.'),
       'error'
     )
 
@@ -204,7 +198,7 @@ const fetchOmnivore = async (inBackground = false) => {
   }
 
   const blockTitle = t(headingBlockTitle)
-  const fetchingTitle = t('🚀 Fetching articles ...')
+  const fetchingTitle = t('🚀 Fetching items ...')
   const noteTitle = t('### Note')
   const highlightsTitle = t('### Highlights')
   const contentTitle = t('### Content')
@@ -224,7 +218,7 @@ const fetchOmnivore = async (inBackground = false) => {
     let pageName = ''
 
     if (isSinglePage) {
-      // create a single page for all articles
+      // create a single page for all items
       pageName = pageNameTemplate
       targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
       !inBackground && logseq.App.pushState('page', { name: pageName })
@@ -234,13 +228,9 @@ const fetchOmnivore = async (inBackground = false) => {
     preParseTemplate(articleTemplate)
     preParseTemplate(highlightTemplate)
 
-    const size = 50
-    for (
-      let hasNextPage = true, articles: Article[] = [], after = 0;
-      hasNextPage;
-      after += size
-    ) {
-      ;[articles, hasNextPage] = await getOmnivoreArticles(
+    const size = 15
+    for (let after = 0; ; after += size) {
+      const [items, hasNextPage] = await getOmnivoreItems(
         apiKey,
         after,
         size,
@@ -250,26 +240,25 @@ const fetchOmnivore = async (inBackground = false) => {
         'highlightedMarkdown',
         endpoint
       )
-      const articleBatchBlocksMap: Map<string, IBatchBlock[]> = new Map()
-      for (const article of articles) {
+      const itemBatchBlocksMap: Map<string, IBatchBlock[]> = new Map()
+      for (const item of items) {
         if (!isSinglePage) {
           // create a new page for each article
           pageName = replaceIllegalChars(
-            renderPageName(article, pageNameTemplate, preferredDateFormat)
+            renderPageName(item, pageNameTemplate, preferredDateFormat)
           )
           targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
         }
-        const articleBatchBlocks =
-          articleBatchBlocksMap.get(targetBlockId) || []
+        const itemBatchBlocks = itemBatchBlocksMap.get(targetBlockId) || []
         // render article
-        const renderedArticle = renderArticle(
+        const renderedItem = renderItem(
           articleTemplate,
-          article,
+          item,
           preferredDateFormat
         )
 
         // escape # to prevent creating subpages
-        const articleContent = article.content?.replaceAll('#', '\\#') || ''
+        const articleContent = item.content?.replaceAll('#', '\\#') || ''
         // create original content title block
         const contentBlock: IBatchBlock = {
           content: contentTitle,
@@ -283,14 +272,14 @@ const fetchOmnivore = async (inBackground = false) => {
           ],
         }
         // filter out notes and redactions
-        const highlights = article.highlights?.filter(
-          (h) => h.type === HighlightType.Highlight
+        const highlights = item.highlights?.filter(
+          (h) => h.type === 'HIGHLIGHT'
         )
         // sort highlights by location if selected in options
         if (highlightOrder === HighlightOrder.LOCATION) {
           highlights?.sort((a, b) => {
             try {
-              if (article.pageType === PageType.File) {
+              if (item.pageType === 'FILE') {
                 // sort by location in file
                 return compareHighlightsInFile(a, b)
               }
@@ -310,7 +299,7 @@ const fetchOmnivore = async (inBackground = false) => {
             const content = renderHighlightContent(
               highlightTemplate,
               it,
-              article,
+              item,
               preferredDateFormat
             )
             return {
@@ -347,31 +336,28 @@ const fetchOmnivore = async (inBackground = false) => {
           },
         }
         // update existing article block if article is already in the page
-        const existingArticleBlock = await getBlockByContent(
+        const existingItemBlock = await getBlockByContent(
           pageName,
           targetBlockId,
-          article.slug
+          item.slug
         )
-        if (existingArticleBlock) {
-          const existingArticleProperties = existingArticleBlock.properties
-          const newArticleProperties = parseBlockProperties(renderedArticle)
+        if (existingItemBlock) {
+          const existingItemProperties = existingItemBlock.properties
+          const newItemProperties = parseBlockProperties(renderedItem)
           // update the existing article block if any of the properties have changed
           if (
-            isBlockPropertiesChanged(
-              newArticleProperties,
-              existingArticleProperties
-            )
+            isBlockPropertiesChanged(newItemProperties, existingItemProperties)
           ) {
             await logseq.Editor.updateBlock(
-              existingArticleBlock.uuid,
-              renderedArticle
+              existingItemBlock.uuid,
+              renderedItem
             )
           }
           if (syncContent) {
             // update existing content block
             const existingContentBlock = await getBlockByContent(
               pageName,
-              existingArticleBlock.uuid,
+              existingItemBlock.uuid,
               contentTitle
             )
             if (existingContentBlock) {
@@ -385,7 +371,7 @@ const fetchOmnivore = async (inBackground = false) => {
             } else {
               // prepend new content block
               await logseq.Editor.insertBatchBlock(
-                existingArticleBlock.uuid,
+                existingItemBlock.uuid,
                 contentBlock,
                 {
                   sibling: false,
@@ -419,11 +405,11 @@ const fetchOmnivore = async (inBackground = false) => {
             }
           }
           if (highlightBatchBlocks.length > 0) {
-            let parentBlockId = existingArticleBlock.uuid
+            let parentBlockId = existingItemBlock.uuid
             // check if highlight title block exists
             const existingHighlightBlock = await getBlockByContent(
               pageName,
-              existingArticleBlock.uuid,
+              existingItemBlock.uuid,
               highlightsBlock.content
             )
             if (existingHighlightBlock) {
@@ -458,7 +444,7 @@ const fetchOmnivore = async (inBackground = false) => {
             } else {
               // append new highlights block
               await logseq.Editor.insertBatchBlock(
-                existingArticleBlock.uuid,
+                existingItemBlock.uuid,
                 highlightsBlock,
                 {
                   sibling: false,
@@ -479,45 +465,44 @@ const fetchOmnivore = async (inBackground = false) => {
 
 
           // append new article block
-          articleBatchBlocks.unshift({
-            content: renderedArticle,
+          itemBatchBlocks.unshift({
+            content: renderedItem,
             children,
             properties: {
-              id: article.id,
+              id: item.id,
             },
           })
-          articleBatchBlocksMap.set(targetBlockId, articleBatchBlocks)
+          itemBatchBlocksMap.set(targetBlockId, itemBatchBlocks)
         }
       }
 
-      for (const [targetBlockId, articleBatch] of articleBatchBlocksMap) {
+      for (const [targetBlockId, articleBatch] of itemBatchBlocksMap) {
         await logseq.Editor.insertBatchBlock(targetBlockId, articleBatch, {
           before: true,
           sibling: false,
         })
       }
+
+      if (!hasNextPage) {
+        break
+      }
     }
     // delete blocks where article has been deleted from omnivore
-    for (
-      let hasNextPage = true, deletedArticles: Article[] = [], after = 0;
-      hasNextPage;
-      after += size
-    ) {
-      ;[deletedArticles, hasNextPage] = await getDeletedOmnivoreArticles(
+    for (let after = 0; ; after += size) {
+      const [deletedItems, hasNextPage] = await getDeletedOmnivoreItems(
         apiKey,
         after,
         size,
         parseDateTime(syncAt).toISO(),
         endpoint
       )
-      for (const deletedArticle of deletedArticles) {
+      for (const deletedItem of deletedItems) {
         if (!isSinglePage) {
           pageName = renderPageName(
-            deletedArticle,
+            deletedItem,
             pageNameTemplate,
             preferredDateFormat
           )
-          targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
 
           // delete page if article is synced to a separate page and page is not a journal
           const existingPage = await logseq.Editor.getPage(pageName)
@@ -525,30 +510,36 @@ const fetchOmnivore = async (inBackground = false) => {
             await logseq.Editor.deletePage(pageName)
             continue
           }
-        }
+        } else {
+          targetBlockId = await getOmnivoreBlockIdentity(pageName, blockTitle)
 
-        const existingBlock = await getBlockByContent(
-          pageName,
-          targetBlockId,
-          deletedArticle.slug
-        )
+          const existingBlock = await getBlockByContent(
+            pageName,
+            targetBlockId,
+            deletedItem.slug
+          )
 
-        if (existingBlock) {
-          await logseq.Editor.removeBlock(existingBlock.uuid)
+          if (existingBlock) {
+            await logseq.Editor.removeBlock(existingBlock.uuid)
+          }
         }
+      }
+
+      if (!hasNextPage) {
+        break
       }
     }
 
     if (!inBackground) {
       logseq.UI.closeMsg(fetchingMsgKey)
-      await logseq.UI.showMsg(t('🔖 Articles fetched'), 'success', {
+      await logseq.UI.showMsg(t('🔖 Items fetched'), 'success', {
         timeout: 2000,
       })
     }
     logseq.updateSettings({ syncAt: DateTime.local().toFormat(DATE_FORMAT) })
   } catch (e) {
     !inBackground &&
-      (await logseq.UI.showMsg(t('Failed to fetch articles'), 'error'))
+      (await logseq.UI.showMsg(t('Failed to fetch items'), 'error'))
     console.error(e)
   } finally {
     resetLoadingState()
@@ -633,7 +624,7 @@ const main = async (baseInfo: LSPluginBaseInfo) => {
   logseq.App.registerCommandPalette(
     {
       key: 'omnivore-resync',
-      label: t('Resync all Omnivore articles'),
+      label: t('Resync all Omnivore items'),
     },
     () => {
       void (async () => {
